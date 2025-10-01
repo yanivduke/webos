@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 
 // Import routes
 const systemStatusRoutes = require('./routes/system-status.route');
@@ -8,6 +9,10 @@ const fileOperationsRoutes = require('./routes/file-operations.route');
 const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
+const authRoutes = require('./routes/auth.route');
+
+// Import services
+const WebSocketServer = require('./services/websocket-server');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +34,7 @@ app.use('/api/files', fileOperationsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -91,19 +97,31 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Create HTTP server and attach WebSocket
+const server = http.createServer(app);
+let wsServer;
+
+try {
+  wsServer = new WebSocketServer(server);
+} catch (error) {
+  console.warn('WebSocket server initialization failed (optional feature):', error.message);
+}
+
 // Start server
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log('');
   console.log('═══════════════════════════════════════════════════════');
   console.log('  🖥️  WebOS Server v2.0.0 - Amiga Workbench Style');
   console.log('═══════════════════════════════════════════════════════');
   console.log(`  Server running on: http://localhost:${PORT}`);
+  console.log(`  WebSocket: ws://localhost:${PORT}/ws ${wsServer ? '✓' : '✗'}`);
   console.log(`  Health check: http://localhost:${PORT}/api/health`);
   console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('  ');
   console.log('  📁 File Operations: /api/files');
   console.log('  💾 App State: /api/app-state');
   console.log('  💻 Shell Commands: /api/shell');
+  console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
   console.log('═══════════════════════════════════════════════════════');
@@ -113,6 +131,7 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
+  if (wsServer) wsServer.close();
   server.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
@@ -121,6 +140,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   console.log('\nSIGINT signal received: closing HTTP server');
+  if (wsServer) wsServer.close();
   server.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
