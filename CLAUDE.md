@@ -8,6 +8,14 @@ WebOS is an Amiga Workbench-style operating system interface for the web. It rec
 
 ## Architecture
 
+### Security & Compliance Expectations
+
+- Protect REST endpoints behind authentication/authorization when deployed beyond local development. Do not merge features that assume open access.
+- Always route user-supplied paths or filenames through `sanitizePath`/`sanitizeName` (see `src/server/utils/path-utils.js`) to prevent traversal or injection.
+- Prefer scoped IAM/service accounts when mounting cloud-backed storage; the server process should only reach `src/server/storage`.
+- Enforce HTTPS in front of Express, enable logging, and ship logs to monitoring so REST/file operations are traceable.
+- Keep dependency audits (`npm audit`, `npm outdated`) and automated tests in the CI/CD cycles requested by the project owners.
+
 ### Client-Server Split
 
 The project uses a **monorepo structure with separated client and server**:

@@ -2,18 +2,48 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
+const { randomUUID } = require('crypto');
+const stateManager = require('../utils/state-manager');
+const { sanitizePath, sanitizeName, resolveStoragePath } = require('../utils/path-utils');
 
 // Storage base path
 const STORAGE_BASE = path.join(__dirname, '../storage/workbench');
+const SHELL_STATE_KEY = 'app_shell';
+const MAX_HISTORY = 200;
 
 /**
  * Shell Command Routes - Execute shell commands
  */
 
 // Utility to get full path
-const getFullPath = (diskPath) => {
-  const sanitized = diskPath.replace(/\.\./g, '').replace(/^\/+/, '');
-  return path.join(STORAGE_BASE, sanitized);
+const getFullPath = (diskPath, fileName = '') => {
+  return resolveStoragePath(STORAGE_BASE, diskPath, fileName);
+};
+
+const loadShellState = async () => {
+  return stateManager.load(SHELL_STATE_KEY, {
+    history: [],
+    lastPath: 'dh0',
+    lastExecutedAt: null,
+    savedAt: null
+  });
+};
+
+const saveShellState = async (state) => {
+  const payload = {
+    history: state.history || [],
+    lastPath: state.lastPath || 'dh0',
+    lastExecutedAt: new Date().toISOString()
+  };
+  await stateManager.save(SHELL_STATE_KEY, {
+    ...payload,
+    savedAt: payload.lastExecutedAt
+  });
+  return payload;
+};
+
+const combinePaths = (...segments) => {
+  return sanitizePath(segments.filter(Boolean).join('/'));
 };
 
 // POST /api/shell/execute - Execute shell command
@@ -28,29 +58,32 @@ router.post('/execute', async (req, res) => {
       });
     }
 
+    const shellState = await loadShellState();
+    let activePath = sanitizePath(currentPath || shellState.lastPath || 'dh0');
+
     const parts = command.trim().split(/\s+/);
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1);
 
     let output = '';
     let error = null;
-    let newPath = currentPath;
+    let newPath = activePath;
 
     try {
       switch (cmd) {
         case 'ls':
         case 'dir':
-          output = await executeLS(currentPath);
+          output = await executeLS(activePath);
           break;
 
         case 'cd':
-          const result = await executeCD(currentPath, args[0]);
+          const result = await executeCD(activePath, args[0]);
           output = result.output;
           newPath = result.newPath;
           break;
 
         case 'pwd':
-          output = `${currentPath}:`;
+          output = `${activePath}:`;
           break;
 
         case 'cat':
@@ -58,7 +91,7 @@ router.post('/execute', async (req, res) => {
           if (!args[0]) {
             error = 'cat: missing file operand';
           } else {
-            output = await executeCAT(currentPath, args[0]);
+            output = await executeCAT(activePath, args[0]);
           }
           break;
 
@@ -66,7 +99,7 @@ router.post('/execute', async (req, res) => {
           if (!args[0]) {
             error = 'mkdir: missing operand';
           } else {
-            output = await executeMKDIR(currentPath, args[0]);
+            output = await executeMKDIR(activePath, args[0]);
           }
           break;
 
@@ -75,7 +108,7 @@ router.post('/execute', async (req, res) => {
           if (!args[0]) {
             error = 'rm: missing operand';
           } else {
-            output = await executeRM(currentPath, args[0]);
+            output = await executeRM(activePath, args[0]);
           }
           break;
 
@@ -111,11 +144,33 @@ router.post('/execute', async (req, res) => {
       error = cmdError.message;
     }
 
+    const now = new Date().toISOString();
+    const historyEntry = {
+      id: randomUUID(),
+      command,
+      cwd: activePath,
+      output,
+      error,
+      executedAt: now
+    };
+
+    const history = shellState.history || [];
+    history.push(historyEntry);
+    if (history.length > MAX_HISTORY) {
+      history.splice(0, history.length - MAX_HISTORY);
+    }
+
+    const persisted = await saveShellState({
+      history,
+      lastPath: newPath || activePath
+    });
+
     res.json({
       command: command,
       output: output,
       error: error,
-      currentPath: newPath
+      currentPath: persisted.lastPath,
+      savedAt: persisted.lastExecutedAt
     });
 
   } catch (error) {
@@ -171,7 +226,7 @@ async function executeCD(currentPath, newPath) {
       await fs.access(fullPath);
       return {
         output: `Changed to ${disk}:`,
-        newPath: disk
+        newPath: sanitizePath(disk)
       };
     } catch {
       throw new Error(`cd: ${disk}: No such disk`);
@@ -180,19 +235,28 @@ async function executeCD(currentPath, newPath) {
 
   // Handle relative paths
   if (newPath === '..') {
-    // Go to parent - for now just return current
+    const segments = sanitizePath(currentPath).split('/');
+    if (segments.length <= 1) {
+      return {
+        output: 'dh0:',
+        newPath: 'dh0'
+      };
+    }
+    segments.pop();
+    const parent = segments.join('/');
     return {
-      output: currentPath + ':',
-      newPath: currentPath
+      output: `${parent}:`,
+      newPath: parent
     };
   }
 
   // Try to cd into subdirectory
-  const fullPath = path.join(getFullPath(currentPath), newPath);
+  const combined = combinePaths(currentPath, newPath);
+  const fullPath = getFullPath(combined);
   try {
     const stats = await fs.stat(fullPath);
     if (stats.isDirectory()) {
-      const relPath = path.relative(STORAGE_BASE, fullPath);
+      const relPath = sanitizePath(path.relative(STORAGE_BASE, fullPath));
       return {
         output: `Changed to ${relPath}`,
         newPath: relPath
@@ -207,7 +271,8 @@ async function executeCD(currentPath, newPath) {
 
 // Execute CAT command
 async function executeCAT(currentPath, fileName) {
-  const fullPath = path.join(getFullPath(currentPath), fileName);
+  const targetPath = combinePaths(currentPath, fileName);
+  const fullPath = getFullPath(targetPath);
 
   try {
     const content = await fs.readFile(fullPath, 'utf-8');
@@ -219,7 +284,8 @@ async function executeCAT(currentPath, fileName) {
 
 // Execute MKDIR command
 async function executeMKDIR(currentPath, dirName) {
-  const fullPath = path.join(getFullPath(currentPath), dirName);
+  const targetPath = combinePaths(currentPath, dirName);
+  const fullPath = getFullPath(targetPath);
 
   try {
     await fs.mkdir(fullPath, { recursive: false });
@@ -234,21 +300,24 @@ async function executeMKDIR(currentPath, dirName) {
 
 // Execute RM command
 async function executeRM(currentPath, fileName) {
-  const fullPath = path.join(getFullPath(currentPath), fileName);
+  const targetPath = combinePaths(currentPath, fileName);
+  const fullPath = getFullPath(targetPath);
 
   try {
     const stats = await fs.stat(fullPath);
 
     if (stats.isDirectory()) {
       // Move directory to trash
-      const trashPath = path.join(STORAGE_BASE, 'trash', `${fileName}_${Date.now()}`);
+      const safeBase = sanitizeName(path.basename(targetPath) || fileName);
+      const trashPath = path.join(STORAGE_BASE, 'trash', `${safeBase}_${Date.now()}`);
       await fs.rename(fullPath, trashPath);
-      return `Directory removed: ${fileName}`;
+      return `Directory removed: ${safeBase}`;
     } else {
       // Move file to trash
-      const trashPath = path.join(STORAGE_BASE, 'trash', `${fileName}_${Date.now()}`);
+      const safeBase = sanitizeName(path.basename(targetPath) || fileName);
+      const trashPath = path.join(STORAGE_BASE, 'trash', `${safeBase}_${Date.now()}`);
       await fs.rename(fullPath, trashPath);
-      return `File removed: ${fileName}`;
+      return `File removed: ${safeBase}`;
     }
   } catch (error) {
     throw new Error(`rm: ${fileName}: ${error.code === 'ENOENT' ? 'No such file or directory' : error.message}`);

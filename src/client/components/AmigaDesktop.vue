@@ -120,6 +120,8 @@ import AmigaPaint from './apps/AmigaPaint.vue';
 import AmigaCalculator from './apps/AmigaCalculator.vue';
 import AmigaShell from './apps/AmigaShell.vue';
 import AmigaClock from './apps/AmigaClock.vue';
+import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
+import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 
 interface Disk {
   id: string;
@@ -253,11 +255,12 @@ const openTrash = () => {
   openWindows.value.push(newWindow);
 };
 
-const handleOpenFile = (filePath: string, fileName: string) => {
+const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: string]: any }) => {
+  const fileName = fileMeta?.name || filePath.split('/').pop() || 'Unknown';
+  const lowerName = fileName.toLowerCase();
   console.log('Opening file:', filePath, fileName);
 
-  // Check if it's a text file
-  if (fileName.endsWith('.txt') || fileName.endsWith('.text') || fileName.endsWith('.doc')) {
+  if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
     const newWindow: Window = {
       id: `window-${Date.now()}`,
       title: `NotePad - ${fileName}`,
@@ -269,8 +272,30 @@ const handleOpenFile = (filePath: string, fileName: string) => {
       data: { filePath, fileName }
     };
     openWindows.value.push(newWindow);
+  } else if (lowerName.endsWith('.awml')) {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: `AWML Runner - ${fileName}`,
+      x: 180 + openWindows.value.length * 18,
+      y: 110 + openWindows.value.length * 18,
+      width: 640,
+      height: 480,
+      component: AmigaAwmlRunner,
+      data: { filePath, meta: fileMeta }
+    };
+    openWindows.value.push(newWindow);
   } else {
-    alert('Only text files (.txt, .text, .doc) can be opened with NotePad');
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: `Info - ${fileName}`,
+      x: 160 + openWindows.value.length * 16,
+      y: 120 + openWindows.value.length * 16,
+      width: 420,
+      height: 320,
+      component: AmigaFileInfo,
+      data: { filePath, meta: fileMeta }
+    };
+    openWindows.value.push(newWindow);
   }
 };
 

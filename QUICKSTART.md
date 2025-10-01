@@ -89,6 +89,8 @@ curl http://localhost:3001/api/system/status
 curl http://localhost:3001/api/files?path=df0
 ```
 
+> 🔐 **Security tip**: Before exposing these endpoints on the internet, put them behind authentication, enforce TLS, and reuse the built-in sanitizers (`sanitizePath`, `sanitizeName`) for any new routes dealing with user-supplied file paths.
+
 ## 🔧 Development Scripts
 
 ### Client

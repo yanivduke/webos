@@ -2,14 +2,28 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
+const { sanitizePath, sanitizeName, resolveStoragePath } = require('../utils/path-utils');
 
 // Storage base path
 const STORAGE_BASE = path.join(__dirname, '../storage/workbench');
 
-// Utility function to get full path
+const MIME_TYPES = {
+  '.awml': 'application/xml',
+  '.xml': 'application/xml',
+  '.wasm': 'application/wasm'
+};
+
 const getFullPath = (diskPath, fileName = '') => {
-  const sanitized = diskPath.replace(/\.\./g, '').replace(/^\/+/, '');
-  return path.join(STORAGE_BASE, sanitized, fileName);
+  return resolveStoragePath(STORAGE_BASE, diskPath, fileName);
+};
+
+const getParentPath = (diskPath = '') => {
+  const sanitized = sanitizePath(diskPath);
+  if (!sanitized) return null;
+  const segments = sanitized.split('/');
+  if (segments.length <= 1) return null;
+  segments.pop();
+  return segments.join('/') || null;
 };
 
 // Utility function to get file stats
@@ -38,7 +52,8 @@ const formatFileSize = (bytes) => {
 router.get('/list', async (req, res) => {
   try {
     const { path: diskPath = 'df0' } = req.query;
-    const fullPath = getFullPath(diskPath);
+    const safeDiskPath = sanitizePath(diskPath);
+    const fullPath = getFullPath(safeDiskPath);
 
     // Check if directory exists
     try {
@@ -56,6 +71,7 @@ router.get('/list', async (req, res) => {
     const items = await Promise.all(
       entries.map(async (entry) => {
         const itemPath = path.join(fullPath, entry.name);
+        const childPath = safeDiskPath ? `${safeDiskPath}/${entry.name}` : entry.name;
         const stats = await getFileStats(itemPath);
 
         return {
@@ -64,14 +80,17 @@ router.get('/list', async (req, res) => {
           type: entry.isDirectory() ? 'folder' : 'file',
           size: stats ? stats.size : null,
           created: stats ? stats.created : null,
-          modified: stats ? stats.modified : null
+          modified: stats ? stats.modified : null,
+          path: childPath,
+          isDirectory: entry.isDirectory()
         };
       })
     );
 
     res.json({
-      path: diskPath,
-      name: diskPath.split('/').pop(),
+      path: safeDiskPath,
+      parentPath: getParentPath(safeDiskPath),
+      name: safeDiskPath.split('/').pop(),
       items: items
     });
   } catch (error) {
@@ -94,14 +113,21 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    const fullPath = getFullPath(diskPath, name);
+    const safeName = sanitizeName(name);
+    if (!safeName) {
+      return res.status(400).json({
+        error: 'Invalid name provided'
+      });
+    }
+
+    const fullPath = getFullPath(diskPath, safeName);
 
     // Check if already exists
     try {
       await fs.access(fullPath);
       return res.status(409).json({
         error: 'File or folder already exists',
-        name: name
+        name: safeName
       });
     } catch {
       // Doesn't exist, proceed with creation
@@ -118,8 +144,8 @@ router.post('/create', async (req, res) => {
     res.status(201).json({
       message: `${type} created successfully`,
       item: {
-        id: `${type === 'folder' ? 'd' : 'f'}_${name}`,
-        name: name,
+        id: `${type === 'folder' ? 'd' : 'f'}_${safeName}`,
+        name: safeName,
         type: type,
         size: stats ? stats.size : null,
         created: stats ? stats.created : null,
@@ -146,8 +172,7 @@ router.post('/read', async (req, res) => {
       });
     }
 
-    // For reading files, diskPath should include the filename
-    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+    const fullPath = getFullPath(diskPath);
 
     // Check if file exists
     try {
@@ -197,7 +222,7 @@ router.post('/write', async (req, res) => {
       });
     }
 
-    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+    const fullPath = getFullPath(diskPath);
 
     // Ensure parent directory exists
     const dirPath = path.dirname(fullPath);
@@ -233,7 +258,7 @@ router.delete('/delete', async (req, res) => {
       });
     }
 
-    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+    const fullPath = getFullPath(diskPath);
 
     // Check if exists
     try {
@@ -281,8 +306,15 @@ router.post('/rename', async (req, res) => {
       });
     }
 
-    const oldPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
-    const newPath = path.join(path.dirname(oldPath), newName);
+    const safeNewName = sanitizeName(newName);
+    if (!safeNewName) {
+      return res.status(400).json({
+        error: 'Invalid new name provided'
+      });
+    }
+
+    const oldPath = getFullPath(diskPath);
+    const newPath = path.join(path.dirname(oldPath), safeNewName);
 
     // Check if old path exists
     try {
@@ -299,7 +331,7 @@ router.post('/rename', async (req, res) => {
       await fs.access(newPath);
       return res.status(409).json({
         error: 'A file or folder with that name already exists',
-        name: newName
+        name: safeNewName
       });
     } catch {
       // Doesn't exist, proceed with rename
@@ -310,7 +342,7 @@ router.post('/rename', async (req, res) => {
 
     res.json({
       message: 'Item renamed successfully',
-      name: newName,
+      name: safeNewName,
       size: stats ? stats.size : null,
       modified: stats ? stats.modified : null
     });
@@ -318,6 +350,42 @@ router.post('/rename', async (req, res) => {
     console.error('Error renaming file:', error);
     res.status(500).json({
       error: 'Failed to rename file or folder',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/raw - Fetch raw file data (binary)
+router.get('/raw', async (req, res) => {
+  try {
+    const { path: diskPath } = req.query;
+
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(diskPath));
+    const fullPath = getFullPath(safePath);
+
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File not found',
+        path: diskPath
+      });
+    }
+
+    const ext = path.extname(fullPath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.sendFile(fullPath);
+  } catch (error) {
+    console.error('Error streaming file:', error);
+    res.status(500).json({
+      error: 'Failed to read file',
       message: error.message
     });
   }

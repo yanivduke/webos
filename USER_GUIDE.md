@@ -520,6 +520,14 @@ POST /api/files/rename
 DELETE /api/files/delete?path=dh0/file.txt
 ```
 
+### Security Checklist for Cloud Hosting
+
+- Require authenticated sessions before the UI (or automation) can hit `/api/files`, `/api/app-state`, or `/api/shell` in production.
+- Terminate TLS in front of the Express server so browser windows, REST calls, and JSON state sync are encrypted.
+- Keep storage scoped: mount cloud volumes or object storage with credentials limited to `src/server/storage/workbench/` and rotate them periodically.
+- Log and monitor: preserve server logs for audit trails, alert on repeated errors, and run scheduled integrity checks on JSON state files.
+- Sanitize everything: never bypass the shared `sanitizePath`/`sanitizeName` helpers when building new file operations.
+
 ---
 
 ## 🎯 Tips & Tricks

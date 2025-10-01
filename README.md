@@ -16,6 +16,28 @@ WebOS is designed to serve as a comprehensive platform for developers and end-us
 
 ## Architecture
 
+### Security Best Practices Overview
+
+This project ships with a lightweight Express REST API and a Vue 3/Vite client. When deploying to any hosted environment—especially cloud-based file storage—apply the following practices:
+
+- **Enforce authentication & authorization**: protect every `/api` route behind session or token checks before exposing it publicly.
+- **Validate and sanitize inputs**: reuse the server-side path utilities (`sanitizePath`, `sanitizeName`) for any user-supplied file paths or names and reject unexpected characters early.
+- **Rate limit & log**: configure middleware such as `express-rate-limit` plus structured logging to detect brute-force or scraping attempts.
+- **TLS everywhere**: terminate TLS in front of the Node.js server (e.g., via a reverse proxy) so credentials and file transfers never traverse the network in cleartext.
+- **Least-privilege storage**: run the server with a dedicated OS user that can only read/write within `src/server/storage/workbench/`; mount cloud volumes with scoped IAM roles or service accounts.
+- **Integrity & retention**: version JSON state files and user documents in object storage or backups so tampering can be detected and data can be restored quickly.
+- **Automated security testing**: add CI jobs that lint dependencies (`npm audit`), run type checks, and execute integration tests against the REST API before every deployment cycle.
+
+### WebAssembly Extension SDK (AWML Platform)
+
+Phase 3 introduces a pluggable SDK that allows Workbench extensions to be authored as XML-based **AWML** manifests coupled with WebAssembly binaries. The new runtime provides:
+
+- **AWML descriptors** – XML files with the `.awml` extension declare module metadata, the WebAssembly module to load, the exported entry point, and user configuration (`<config><setting name="key" value="foo"/></config>`). AWML files live inside the workbench storage just like any other document.
+- **Deterministic WASM execution** – On double-click, the Vue client loads the AWML descriptor, resolves the referenced `.wasm` asset via the `/api/files/raw` endpoint, and instantiates it inside an isolated runtime with Amiga-flavoured host bindings.
+- **Host environment** – The SDK exposes `env.awml_log(ptr,len)` for retro console output and passes module configuration as UTF-8 JSON into the declared entry function (by convention, modules export `awml_alloc` for memory allocation and an entry such as `awml_entry(configPtr, configLen)`). Future imports can be added without breaking existing extensions.
+- **Windowed execution shell** – AWML programs run inside `AmigaAwmlRunner`, a desktop window that surfaces runtime status, logs, and resolved metadata so developers can debug their extensions in real-time.
+- **Fallback behaviour** – Files without AWML support now open in a metadata inspector window, ensuring unknown types are still discoverable while AWML and classic text documents retain their specialised experiences.
+
 ### Frontend (Vuetify 3 with TypeScript)
 
 The frontend of WebOS is built using Vuetify 3, a modern, component-based UI framework for Vue.js. Vuetify 3 provides a rich set of pre-designed components that adhere to Material Design principles, ensuring a consistent and visually appealing user interface.

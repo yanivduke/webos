@@ -180,6 +180,18 @@ npm run preview
   - TypeScript
   - RESTful API
 
+## 🔐 Security Best Practices (Cloud & REST)
+
+To keep desktop interactions and the backing file system safe when running in any hosted environment:
+
+- **Authenticate API traffic** – require a login/session token before letting the UI call `/api/files`, `/api/app-state`, or `/api/shell`.
+- **Enforce input sanitization** – the backend already strips `..`, colons, and path separators through shared utilities; do not bypass them when adding new routes.
+- **Apply least privilege to storage** – mount remote disks or buckets with IAM policies scoped to the `workbench` directory only, and rotate credentials regularly.
+- **Transport security** – proxy the Express server behind HTTPS and enable HSTS so browser windows and API calls are encrypted.
+- **Audit & alerts** – capture server logs for failed auth/path traversal attempts and wire them into your SIEM or monitoring stack.
+- **Backup JSON state** – schedule snapshots of `src/server/storage/state/*.json` and replicated volumes to guard against corruption or ransomware.
+- **Review dependencies** – run `npm audit` (client/server) and upgrade vulnerable packages before deploying.
+
 ## 📋 Roadmap
 
 ### Phase 1: Core Desktop ✅

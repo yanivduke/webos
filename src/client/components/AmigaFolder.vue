@@ -1,6 +1,10 @@
 <template>
   <div class="amiga-folder">
-    <!-- Folder Content with Icon View -->
+    <div class="folder-header">
+      <button class="amiga-button" :disabled="!canNavigateUp" @click="navigateUp">Parent</button>
+      <div class="path-display">{{ displayPath }}</div>
+    </div>
+
     <div class="folder-content">
       <div
         v-for="(item, index) in items"
@@ -62,7 +66,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 
 interface Props {
@@ -77,11 +81,13 @@ interface FolderItem {
   icon?: string;
   created?: string;
   modified?: string;
+  path?: string;
+  isDirectory?: boolean;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  openFile: [path: string, name: string];
+  openFile: [path: string, item: FolderItem];
   openTool: [toolName: string];
 }>();
 
@@ -103,11 +109,11 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => [
   { label: 'Info', action: 'info', icon: 'ℹ', disabled: true }
 ]);
 
-// Get the current path based on the data
-const currentPath = computed(() => {
-  if (!props.data) return 'dh0';
-  return props.data.id || 'dh0';
-});
+const currentPath = ref<string>(props.data?.id || 'dh0');
+const parentPath = ref<string | null>(null);
+
+const displayPath = computed(() => currentPath.value || '');
+const canNavigateUp = computed(() => parentPath.value !== null);
 
 // Load files from the server
 const loadFiles = async () => {
@@ -125,6 +131,8 @@ const loadFiles = async () => {
         { id: 'u5', name: 'Shell', type: 'tool' },
         { id: 'u6', name: 'More', type: 'folder' }
       ];
+      parentPath.value = null;
+      selectedItems.value = [];
       isLoading.value = false;
       return;
     }
@@ -137,6 +145,9 @@ const loadFiles = async () => {
 
     const data = await response.json();
     items.value = data.items || [];
+    currentPath.value = data.path || currentPath.value;
+    parentPath.value = data.parentPath ?? null;
+    selectedItems.value = [];
   } catch (error) {
     console.error('Error loading files:', error);
     errorMessage.value = 'Error loading files';
@@ -146,14 +157,15 @@ const loadFiles = async () => {
   }
 };
 
-onMounted(() => {
-  loadFiles();
-});
-
-// Reload when data changes
-watch(() => props.data, () => {
-  loadFiles();
-});
+watch(
+  () => props.data?.id,
+  (newId) => {
+    currentPath.value = newId || 'dh0';
+    parentPath.value = null;
+    loadFiles();
+  },
+  { immediate: true }
+);
 
 const selectedItems = ref<string[]>([]);
 
@@ -173,18 +185,17 @@ const selectItem = (item: FolderItem, event: MouseEvent) => {
 };
 
 const openItem = (item: FolderItem) => {
-  console.log(`Opening: ${item.name}`, item.type);
-
   if (item.type === 'tool') {
     // Emit tool opening event
     emit('openTool', item.name);
   } else if (item.type === 'file') {
     // Build the file path
-    const filePath = `${currentPath.value}/${item.name}`;
-    emit('openFile', filePath, item.name);
+    const filePath = item.path || `${currentPath.value}/${item.name}`;
+    emit('openFile', filePath, item);
   } else if (item.type === 'folder') {
-    // TODO: Navigate into folder (future enhancement)
-    console.log('Folder navigation not yet implemented');
+    if (item.path) {
+      navigateTo(item.path);
+    }
   }
 };
 
@@ -222,7 +233,7 @@ const handleContextAction = async (action: string) => {
 
 const deleteItem = async (item: FolderItem) => {
   try {
-    const itemPath = `${currentPath.value}/${item.name}`;
+    const itemPath = item.path || `${currentPath.value}/${item.name}`;
 
     const response = await fetch(`/api/files/delete?path=${encodeURIComponent(itemPath)}`, {
       method: 'DELETE'
@@ -239,6 +250,17 @@ const deleteItem = async (item: FolderItem) => {
     alert('Error deleting item');
   }
 };
+
+const navigateTo = async (nextPath: string) => {
+  if (!nextPath || nextPath === currentPath.value) return;
+  currentPath.value = nextPath;
+  await loadFiles();
+};
+
+const navigateUp = async () => {
+  if (!parentPath.value) return;
+  await navigateTo(parentPath.value);
+};
 </script>
 
 <style scoped>
@@ -247,6 +269,27 @@ const deleteItem = async (item: FolderItem) => {
   display: flex;
   flex-direction: column;
   background: #ffffff;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 0;
+}
+
+.folder-header .amiga-button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.path-display {
+  font-size: 9px;
+  color: #000000;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 6px;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
 }
 
 .folder-content {
