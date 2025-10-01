@@ -9,6 +9,7 @@
         :class="{ selected: selectedItems.includes(item.id) }"
         @click="selectItem(item, $event)"
         @dblclick="openItem(item)"
+        @contextmenu.prevent="showContextMenu(item, $event)"
       >
         <div class="item-icon">
           <!-- Folder Icon -->
@@ -46,11 +47,23 @@
         <div v-if="item.size" class="item-size">{{ item.size }}</div>
       </div>
     </div>
+
+    <!-- Context Menu -->
+    <AmigaContextMenu
+      v-if="contextMenuVisible"
+      :visible="contextMenuVisible"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :items="contextMenuItems"
+      @close="contextMenuVisible = false"
+      @action="handleContextAction"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 
 interface Props {
   data?: any;
@@ -62,26 +75,49 @@ interface FolderItem {
   type: 'folder' | 'file' | 'disk' | 'tool';
   size?: string;
   icon?: string;
+  created?: string;
+  modified?: string;
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+  openFile: [path: string, name: string];
+  openTool: [toolName: string];
+}>();
 
-// Sample items based on folder type
-const items = computed<FolderItem[]>(() => {
-  if (!props.data) {
-    return defaultItems.value;
-  }
+const items = ref<FolderItem[]>([]);
+const isLoading = ref(false);
+const errorMessage = ref('');
+const contextMenuVisible = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const contextMenuItem = ref<FolderItem | null>(null);
 
-  switch (props.data.id) {
-    case 'ram':
-      return [
-        { id: 'r1', name: 'Clipboards', type: 'folder' },
-        { id: 'r2', name: 'T', type: 'folder' },
-        { id: 'r3', name: 'ENV', type: 'folder' }
-      ];
+const contextMenuItems = computed<ContextMenuItem[]>(() => [
+  { label: 'Open', action: 'open', icon: '▶' },
+  { label: '', action: '', separator: true },
+  { label: 'Copy', action: 'copy', icon: '📋', disabled: true },
+  { label: 'Rename', action: 'rename', icon: '✏', disabled: true },
+  { label: 'Delete', action: 'delete', icon: '🗑' },
+  { label: '', action: '', separator: true },
+  { label: 'Info', action: 'info', icon: 'ℹ', disabled: true }
+]);
 
-    case 'utils':
-      return [
+// Get the current path based on the data
+const currentPath = computed(() => {
+  if (!props.data) return 'dh0';
+  return props.data.id || 'dh0';
+});
+
+// Load files from the server
+const loadFiles = async () => {
+  isLoading.value = true;
+  errorMessage.value = '';
+
+  try {
+    // Special handling for utils (tools) - use static list
+    if (currentPath.value === 'utils') {
+      items.value = [
         { id: 'u1', name: 'Clock', type: 'tool' },
         { id: 'u2', name: 'Calculator', type: 'tool' },
         { id: 'u3', name: 'MultiView', type: 'tool' },
@@ -89,33 +125,35 @@ const items = computed<FolderItem[]>(() => {
         { id: 'u5', name: 'Shell', type: 'tool' },
         { id: 'u6', name: 'More', type: 'folder' }
       ];
+      isLoading.value = false;
+      return;
+    }
 
-    case 'trash':
-      return [];
+    const response = await fetch(`/api/files/list?path=${encodeURIComponent(currentPath.value)}`);
 
-    default:
-      return [
-        { id: 'd1', name: 'Devs', type: 'folder' },
-        { id: 'd2', name: 'Expansion', type: 'folder' },
-        { id: 'd3', name: 'Fonts', type: 'folder' },
-        { id: 'd4', name: 'Libs', type: 'folder' },
-        { id: 'd5', name: 'Prefs', type: 'folder' },
-        { id: 'd6', name: 'System', type: 'folder' },
-        { id: 'd7', name: 'Tools', type: 'folder' },
-        { id: 'd8', name: 'Utilities', type: 'folder' },
-        { id: 'f1', name: 'Shell-Startup', type: 'file', size: '1.2K' },
-        { id: 'f2', name: 'Startup-Sequence', type: 'file', size: '856' }
-      ];
+    if (!response.ok) {
+      throw new Error('Failed to load files');
+    }
+
+    const data = await response.json();
+    items.value = data.items || [];
+  } catch (error) {
+    console.error('Error loading files:', error);
+    errorMessage.value = 'Error loading files';
+    items.value = [];
+  } finally {
+    isLoading.value = false;
   }
+};
+
+onMounted(() => {
+  loadFiles();
 });
 
-const defaultItems = ref<FolderItem[]>([
-  { id: '1', name: 'Documents', type: 'folder' },
-  { id: '2', name: 'Pictures', type: 'folder' },
-  { id: '3', name: 'Music', type: 'folder' },
-  { id: '4', name: 'ReadMe.txt', type: 'file', size: '1.2K' },
-  { id: '5', name: 'Info.doc', type: 'file', size: '4.5K' }
-]);
+// Reload when data changes
+watch(() => props.data, () => {
+  loadFiles();
+});
 
 const selectedItems = ref<string[]>([]);
 
@@ -135,8 +173,71 @@ const selectItem = (item: FolderItem, event: MouseEvent) => {
 };
 
 const openItem = (item: FolderItem) => {
-  console.log(`Opening: ${item.name}`);
-  // Emit event to parent to open new window
+  console.log(`Opening: ${item.name}`, item.type);
+
+  if (item.type === 'tool') {
+    // Emit tool opening event
+    emit('openTool', item.name);
+  } else if (item.type === 'file') {
+    // Build the file path
+    const filePath = `${currentPath.value}/${item.name}`;
+    emit('openFile', filePath, item.name);
+  } else if (item.type === 'folder') {
+    // TODO: Navigate into folder (future enhancement)
+    console.log('Folder navigation not yet implemented');
+  }
+};
+
+const showContextMenu = (item: FolderItem, event: MouseEvent) => {
+  contextMenuItem.value = item;
+  contextMenuX.value = event.clientX;
+  contextMenuY.value = event.clientY;
+  contextMenuVisible.value = true;
+};
+
+const handleContextAction = async (action: string) => {
+  if (!contextMenuItem.value) return;
+
+  const item = contextMenuItem.value;
+
+  switch (action) {
+    case 'open':
+      openItem(item);
+      break;
+    case 'delete':
+      if (confirm(`Delete "${item.name}"?`)) {
+        await deleteItem(item);
+      }
+      break;
+    case 'copy':
+    case 'rename':
+    case 'info':
+      alert(`${action} is not yet implemented`);
+      break;
+  }
+
+  contextMenuVisible.value = false;
+  contextMenuItem.value = null;
+};
+
+const deleteItem = async (item: FolderItem) => {
+  try {
+    const itemPath = `${currentPath.value}/${item.name}`;
+
+    const response = await fetch(`/api/files/delete?path=${encodeURIComponent(itemPath)}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete item');
+    }
+
+    // Reload the file list
+    await loadFiles();
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    alert('Error deleting item');
+  }
 };
 </script>
 

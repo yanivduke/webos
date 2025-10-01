@@ -1,189 +1,326 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs').promises;
+const path = require('path');
 
-// Mock file system data
-const fileSystem = {
-  'df0': {
-    name: 'Workbench3.1',
-    items: [
-      { id: 'd1', name: 'Devs', type: 'folder', size: null },
-      { id: 'd2', name: 'Expansion', type: 'folder', size: null },
-      { id: 'd3', name: 'Fonts', type: 'folder', size: null },
-      { id: 'd4', name: 'Libs', type: 'folder', size: null },
-      { id: 'd5', name: 'Prefs', type: 'folder', size: null },
-      { id: 'd6', name: 'System', type: 'folder', size: null },
-      { id: 'd7', name: 'Tools', type: 'folder', size: null },
-      { id: 'd8', name: 'Utilities', type: 'folder', size: null },
-      { id: 'f1', name: 'Shell-Startup', type: 'file', size: '1.2K' },
-      { id: 'f2', name: 'Startup-Sequence', type: 'file', size: '856' }
-    ]
-  },
-  'dh0': {
-    name: 'System',
-    items: [
-      { id: 's1', name: 'Documents', type: 'folder', size: null },
-      { id: 's2', name: 'Programs', type: 'folder', size: null },
-      { id: 's3', name: 'Games', type: 'folder', size: null },
-      { id: 's4', name: 'readme.txt', type: 'file', size: '2.4K' }
-    ]
-  },
-  'dh1': {
-    name: 'Work',
-    items: [
-      { id: 'w1', name: 'Projects', type: 'folder', size: null },
-      { id: 'w2', name: 'Documents', type: 'folder', size: null },
-      { id: 'w3', name: 'Pictures', type: 'folder', size: null },
-      { id: 'w4', name: 'Music', type: 'folder', size: null }
-    ]
-  },
-  'ram': {
-    name: 'RAM Disk',
-    items: [
-      { id: 'r1', name: 'Clipboards', type: 'folder', size: null },
-      { id: 'r2', name: 'T', type: 'folder', size: null },
-      { id: 'r3', name: 'ENV', type: 'folder', size: null }
-    ]
-  },
-  'utils': {
-    name: 'Utilities',
-    items: [
-      { id: 'u1', name: 'Clock', type: 'tool', size: '12K' },
-      { id: 'u2', name: 'Calculator', type: 'tool', size: '18K' },
-      { id: 'u3', name: 'MultiView', type: 'tool', size: '24K' },
-      { id: 'u4', name: 'NotePad', type: 'tool', size: '16K' },
-      { id: 'u5', name: 'Shell', type: 'tool', size: '32K' },
-      { id: 'u6', name: 'More', type: 'folder', size: null }
-    ]
-  },
-  'trash': {
-    name: 'Trash',
-    items: []
+// Storage base path
+const STORAGE_BASE = path.join(__dirname, '../storage/workbench');
+
+// Utility function to get full path
+const getFullPath = (diskPath, fileName = '') => {
+  const sanitized = diskPath.replace(/\.\./g, '').replace(/^\/+/, '');
+  return path.join(STORAGE_BASE, sanitized, fileName);
+};
+
+// Utility function to get file stats
+const getFileStats = async (filePath) => {
+  try {
+    const stats = await fs.stat(filePath);
+    return {
+      size: stats.isDirectory() ? null : formatFileSize(stats.size),
+      created: stats.birthtime,
+      modified: stats.mtime,
+      isDirectory: stats.isDirectory()
+    };
+  } catch (error) {
+    return null;
   }
 };
 
-// GET /api/files - List files in a directory
-router.get('/', (req, res) => {
-  const { path = 'df0' } = req.query;
+// Format file size
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return `${bytes}`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}M`;
+};
 
-  const directory = fileSystem[path];
+// GET /api/files/list - List files in a directory
+router.get('/list', async (req, res) => {
+  try {
+    const { path: diskPath = 'df0' } = req.query;
+    const fullPath = getFullPath(diskPath);
 
-  if (!directory) {
-    return res.status(404).json({
-      error: 'Directory not found',
-      path: path
+    // Check if directory exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'Directory not found',
+        path: diskPath
+      });
+    }
+
+    // Read directory contents
+    const entries = await fs.readdir(fullPath, { withFileTypes: true });
+
+    const items = await Promise.all(
+      entries.map(async (entry) => {
+        const itemPath = path.join(fullPath, entry.name);
+        const stats = await getFileStats(itemPath);
+
+        return {
+          id: `${entry.isDirectory() ? 'd' : 'f'}_${entry.name}`,
+          name: entry.name,
+          type: entry.isDirectory() ? 'folder' : 'file',
+          size: stats ? stats.size : null,
+          created: stats ? stats.created : null,
+          modified: stats ? stats.modified : null
+        };
+      })
+    );
+
+    res.json({
+      path: diskPath,
+      name: diskPath.split('/').pop(),
+      items: items
+    });
+  } catch (error) {
+    console.error('Error listing directory:', error);
+    res.status(500).json({
+      error: 'Failed to list directory',
+      message: error.message
     });
   }
-
-  res.json({
-    path: path,
-    name: directory.name,
-    items: directory.items
-  });
 });
 
-// POST /api/files - Create a new file or folder
-router.post('/', (req, res) => {
-  const { path = 'df0', name, type = 'file' } = req.body;
+// POST /api/files/create - Create a new file or folder
+router.post('/create', async (req, res) => {
+  try {
+    const { path: diskPath = 'df0', name, type = 'file', content = '' } = req.body;
 
-  if (!name) {
-    return res.status(400).json({
-      error: 'Name is required'
+    if (!name) {
+      return res.status(400).json({
+        error: 'Name is required'
+      });
+    }
+
+    const fullPath = getFullPath(diskPath, name);
+
+    // Check if already exists
+    try {
+      await fs.access(fullPath);
+      return res.status(409).json({
+        error: 'File or folder already exists',
+        name: name
+      });
+    } catch {
+      // Doesn't exist, proceed with creation
+    }
+
+    if (type === 'folder') {
+      await fs.mkdir(fullPath, { recursive: true });
+    } else {
+      await fs.writeFile(fullPath, content, 'utf-8');
+    }
+
+    const stats = await getFileStats(fullPath);
+
+    res.status(201).json({
+      message: `${type} created successfully`,
+      item: {
+        id: `${type === 'folder' ? 'd' : 'f'}_${name}`,
+        name: name,
+        type: type,
+        size: stats ? stats.size : null,
+        created: stats ? stats.created : null,
+        modified: stats ? stats.modified : null
+      }
+    });
+  } catch (error) {
+    console.error('Error creating file/folder:', error);
+    res.status(500).json({
+      error: 'Failed to create file or folder',
+      message: error.message
     });
   }
-
-  const directory = fileSystem[path];
-
-  if (!directory) {
-    return res.status(404).json({
-      error: 'Directory not found',
-      path: path
-    });
-  }
-
-  const newItem = {
-    id: `${type[0]}${Date.now()}`,
-    name: name,
-    type: type,
-    size: type === 'file' ? '0' : null
-  };
-
-  directory.items.push(newItem);
-
-  res.status(201).json({
-    message: `${type} created successfully`,
-    item: newItem
-  });
 });
 
-// PUT /api/files/:id - Update a file or folder
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const { path = 'df0', name } = req.body;
+// POST /api/files/read - Read file contents
+router.post('/read', async (req, res) => {
+  try {
+    const { path: diskPath } = req.body;
 
-  const directory = fileSystem[path];
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
 
-  if (!directory) {
-    return res.status(404).json({
-      error: 'Directory not found',
-      path: path
+    // For reading files, diskPath should include the filename
+    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+
+    // Check if file exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File not found',
+        path: diskPath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+
+    if (stats.isDirectory()) {
+      return res.status(400).json({
+        error: 'Cannot read directory as file'
+      });
+    }
+
+    const content = await fs.readFile(fullPath, 'utf-8');
+    const fileStats = await getFileStats(fullPath);
+
+    res.json({
+      path: diskPath,
+      name: path.basename(fullPath),
+      content: content,
+      size: fileStats ? fileStats.size : null,
+      modified: fileStats ? fileStats.modified : null
+    });
+  } catch (error) {
+    console.error('Error reading file:', error);
+    res.status(500).json({
+      error: 'Failed to read file',
+      message: error.message
     });
   }
-
-  const item = directory.items.find(i => i.id === id);
-
-  if (!item) {
-    return res.status(404).json({
-      error: 'Item not found',
-      id: id
-    });
-  }
-
-  if (name) {
-    item.name = name;
-  }
-
-  res.json({
-    message: 'Item updated successfully',
-    item: item
-  });
 });
 
-// DELETE /api/files/:id - Delete a file or folder
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  const { path = 'df0' } = req.query;
+// POST /api/files/write - Write/update file contents
+router.post('/write', async (req, res) => {
+  try {
+    const { path: diskPath, content = '' } = req.body;
 
-  const directory = fileSystem[path];
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
 
-  if (!directory) {
-    return res.status(404).json({
-      error: 'Directory not found',
-      path: path
+    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+
+    // Ensure parent directory exists
+    const dirPath = path.dirname(fullPath);
+    await fs.mkdir(dirPath, { recursive: true });
+
+    await fs.writeFile(fullPath, content, 'utf-8');
+    const stats = await getFileStats(fullPath);
+
+    res.json({
+      message: 'File written successfully',
+      path: diskPath,
+      name: path.basename(fullPath),
+      size: stats ? stats.size : null,
+      modified: stats ? stats.modified : null
+    });
+  } catch (error) {
+    console.error('Error writing file:', error);
+    res.status(500).json({
+      error: 'Failed to write file',
+      message: error.message
     });
   }
+});
 
-  const index = directory.items.findIndex(i => i.id === id);
+// DELETE /api/files/delete - Delete a file or folder
+router.delete('/delete', async (req, res) => {
+  try {
+    const { path: diskPath } = req.query;
 
-  if (index === -1) {
-    return res.status(404).json({
-      error: 'Item not found',
-      id: id
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const fullPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+
+    // Check if exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File or folder not found',
+        path: diskPath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+    const fileName = path.basename(fullPath);
+
+    // Move to trash instead of permanent delete
+    const trashPath = path.join(STORAGE_BASE, 'trash', `${fileName}_${Date.now()}`);
+
+    if (stats.isDirectory()) {
+      await fs.rename(fullPath, trashPath);
+    } else {
+      await fs.rename(fullPath, trashPath);
+    }
+
+    res.json({
+      message: 'Item moved to trash',
+      name: fileName
+    });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({
+      error: 'Failed to delete file or folder',
+      message: error.message
     });
   }
+});
 
-  const deletedItem = directory.items.splice(index, 1)[0];
+// POST /api/files/rename - Rename a file or folder
+router.post('/rename', async (req, res) => {
+  try {
+    const { path: diskPath, newName } = req.body;
 
-  // Move to trash
-  fileSystem.trash.items.push({
-    ...deletedItem,
-    originalPath: path,
-    deletedAt: new Date().toISOString()
-  });
+    if (!diskPath || !newName) {
+      return res.status(400).json({
+        error: 'Path and new name are required'
+      });
+    }
 
-  res.json({
-    message: 'Item moved to trash',
-    item: deletedItem
-  });
+    const oldPath = path.join(STORAGE_BASE, diskPath.replace(/\.\./g, '').replace(/^\/+/, ''));
+    const newPath = path.join(path.dirname(oldPath), newName);
+
+    // Check if old path exists
+    try {
+      await fs.access(oldPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File or folder not found',
+        path: diskPath
+      });
+    }
+
+    // Check if new name already exists
+    try {
+      await fs.access(newPath);
+      return res.status(409).json({
+        error: 'A file or folder with that name already exists',
+        name: newName
+      });
+    } catch {
+      // Doesn't exist, proceed with rename
+    }
+
+    await fs.rename(oldPath, newPath);
+    const stats = await getFileStats(newPath);
+
+    res.json({
+      message: 'Item renamed successfully',
+      name: newName,
+      size: stats ? stats.size : null,
+      modified: stats ? stats.modified : null
+    });
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    res.status(500).json({
+      error: 'Failed to rename file or folder',
+      message: error.message
+    });
+  }
 });
 
 module.exports = router;

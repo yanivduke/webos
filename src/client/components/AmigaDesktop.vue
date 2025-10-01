@@ -88,7 +88,12 @@
           :height="window.height"
           @close="closeWindow(window.id)"
         >
-          <component :is="window.component" :data="window.data" />
+          <component
+            :is="window.component"
+            :data="window.data"
+            @openFile="handleOpenFile"
+            @openTool="handleOpenTool"
+          />
         </AmigaWindow>
       </div>
     </div>
@@ -109,6 +114,12 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import AmigaWindow from './AmigaWindow.vue';
+import AmigaFolder from './AmigaFolder.vue';
+import AmigaNotePad from './apps/AmigaNotePad.vue';
+import AmigaPaint from './apps/AmigaPaint.vue';
+import AmigaCalculator from './apps/AmigaCalculator.vue';
+import AmigaShell from './apps/AmigaShell.vue';
+import AmigaClock from './apps/AmigaClock.vue';
 
 interface Disk {
   id: string;
@@ -123,7 +134,7 @@ interface Window {
   y: number;
   width: number;
   height: number;
-  component: string;
+  component: any;
   data?: any;
 }
 
@@ -192,7 +203,7 @@ const openDisk = (disk: Disk) => {
     y: 80 + openWindows.value.length * 30,
     width: 500,
     height: 350,
-    component: 'AmigaFolder',
+    component: AmigaFolder,
     data: disk
   };
   openWindows.value.push(newWindow);
@@ -208,7 +219,7 @@ const openRAM = () => {
     y: 100,
     width: 480,
     height: 320,
-    component: 'AmigaFolder',
+    component: AmigaFolder,
     data: { id: 'ram', name: 'RAM Disk', type: 'ram' }
   };
   openWindows.value.push(newWindow);
@@ -222,7 +233,7 @@ const openUtilities = () => {
     y: 120,
     width: 520,
     height: 380,
-    component: 'AmigaFolder',
+    component: AmigaFolder,
     data: { id: 'utils', name: 'Utilities', type: 'drawer' }
   };
   openWindows.value.push(newWindow);
@@ -236,10 +247,100 @@ const openTrash = () => {
     y: 140,
     width: 450,
     height: 300,
-    component: 'AmigaFolder',
+    component: AmigaFolder,
     data: { id: 'trash', name: 'Trash', type: 'trash' }
   };
   openWindows.value.push(newWindow);
+};
+
+const handleOpenFile = (filePath: string, fileName: string) => {
+  console.log('Opening file:', filePath, fileName);
+
+  // Check if it's a text file
+  if (fileName.endsWith('.txt') || fileName.endsWith('.text') || fileName.endsWith('.doc')) {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: `NotePad - ${fileName}`,
+      x: 150 + openWindows.value.length * 20,
+      y: 100 + openWindows.value.length * 20,
+      width: 600,
+      height: 450,
+      component: AmigaNotePad,
+      data: { filePath, fileName }
+    };
+    openWindows.value.push(newWindow);
+  } else {
+    alert('Only text files (.txt, .text, .doc) can be opened with NotePad');
+  }
+};
+
+const handleOpenTool = (toolName: string) => {
+  console.log('Opening tool:', toolName);
+
+  if (toolName === 'NotePad') {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: 'NotePad',
+      x: 150 + openWindows.value.length * 20,
+      y: 100 + openWindows.value.length * 20,
+      width: 600,
+      height: 450,
+      component: AmigaNotePad,
+      data: {}
+    };
+    openWindows.value.push(newWindow);
+  } else if (toolName === 'Calculator') {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: 'Calculator',
+      x: 200 + openWindows.value.length * 20,
+      y: 120 + openWindows.value.length * 20,
+      width: 280,
+      height: 420,
+      component: AmigaCalculator,
+      data: {}
+    };
+    openWindows.value.push(newWindow);
+  } else if (toolName === 'Shell') {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: 'AmigaShell',
+      x: 170 + openWindows.value.length * 20,
+      y: 110 + openWindows.value.length * 20,
+      width: 650,
+      height: 450,
+      component: AmigaShell,
+      data: {}
+    };
+    openWindows.value.push(newWindow);
+  } else if (toolName === 'Clock') {
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: 'Clock',
+      x: 220 + openWindows.value.length * 20,
+      y: 130 + openWindows.value.length * 20,
+      width: 320,
+      height: 480,
+      component: AmigaClock,
+      data: {}
+    };
+    openWindows.value.push(newWindow);
+  } else if (toolName === 'MultiView') {
+    // Open Paint when MultiView is clicked
+    const newWindow: Window = {
+      id: `window-${Date.now()}`,
+      title: 'AmigaPaint',
+      x: 160 + openWindows.value.length * 20,
+      y: 90 + openWindows.value.length * 20,
+      width: 700,
+      height: 550,
+      component: AmigaPaint,
+      data: {}
+    };
+    openWindows.value.push(newWindow);
+  } else {
+    alert(`Tool "${toolName}" is not yet implemented`);
+  }
 };
 
 const closeWindow = (windowId: string) => {
