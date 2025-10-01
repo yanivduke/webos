@@ -1,30 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<awml>
-  <module 
-    name="NotePad" 
-    version="1.0.0" 
-    author="WebOS Team"
-    src="NotePad.wasm" 
-    entry="awml_notepad_main">
-    
-    <metadata>
-      <description>Advanced text editor with syntax highlighting and file management</description>
-      <category>Productivity</category>
-      <icon>document</icon>
-    </metadata>
-    
-    <config>
-      <setting name="font_size" value="12">Editor font size</setting>
-      <setting name="word_wrap" value="true">Enable word wrapping</setting>
-      <setting name="syntax_highlight" value="true">Enable syntax highlighting</setting>
-      <setting name="auto_save" value="false">Auto-save documents</setting>
-      <setting name="default_disk" value="dh0">Default save location</setting>
-      <setting name="max_recent" value="10">Maximum recent files</setting>
-    </config>
-    
+<awml version="1.0">
+  <metadata>
+    <name>NotePad</name>
+    <version>1.0.0</version>
+    <author>WebOS System</author>
+    <description>Text editor for creating and editing documents</description>
+    <icon>resource://notepad.png</icon>
+  </metadata>
+  <runtime>
+    <wasm src="app://notepad.wasm" />
+    <memory initial="256" maximum="512" shared="false" />
     <permissions>
-      <permission>file_system</permission>
-      <permission>local_storage</permission>
+      <filesystem read="true" write="true" paths="dh0:/,dh1:/,ram:/" />
+      <network enabled="false" />
+      <system enabled="false" />
     </permissions>
-  </module>
+  </runtime>
+  <window>
+    <title>NotePad</title>
+    <width>600</width>
+    <height>450</height>
+    <resizable>true</resizable>
+    <minimizable>true</minimizable>
+    <maximizable>true</maximizable>
+  </window>
+  <resources>
+    <resource id="icon" type="image/png" src="resource://notepad.png" />
+  </resources>
+  <config>
+    <setting key="fontFamily" value="Courier New" type="string" description="Default font family" />
+    <setting key="fontSize" value="12" type="number" description="Default font size" />
+    <setting key="theme" value="classic" type="string" description="Editor theme" />
+    <setting key="autoSave" value="true" type="boolean" description="Enable auto-save" />
+    <setting key="wordWrap" value="true" type="boolean" description="Enable word wrap" />
+  </config>
 </awml>

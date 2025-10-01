@@ -1,31 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<awml>
-  <module 
-    name="Clock" 
-    version="1.0.0" 
-    author="WebOS Team"
-    src="Clock.wasm" 
-    entry="awml_clock_main">
-    
-    <metadata>
-      <description>Digital clock with alarms and world time zones</description>
-      <category>Utilities</category>
-      <icon>clock</icon>
-    </metadata>
-    
-    <config>
-      <setting name="time_format" value="24">Time format (12/24)</setting>
-      <setting name="show_seconds" value="true">Display seconds</setting>
-      <setting name="show_date" value="true">Display date</setting>
-      <setting name="timezone" value="local">Default timezone</setting>
-      <setting name="alarm_sound" value="true">Enable alarm sounds</setting>
-      <setting name="update_interval" value="1000">Update interval (ms)</setting>
-    </config>
-    
+<awml version="1.0">
+  <metadata>
+    <name>Clock</name>
+    <version>1.0.0</version>
+    <author>WebOS System</author>
+    <description>Analog and digital clock display</description>
+    <icon>resource://clock.png</icon>
+    <category>Utilities</category>
+  </metadata>
+  <runtime>
+    <wasm src="app://Clock.wasm" />
+    <memory initial="128" maximum="256" shared="false" />
     <permissions>
-      <permission>audio</permission>
-      <permission>local_storage</permission>
-      <permission>notifications</permission>
+      <filesystem read="false" write="false" />
+      <network enabled="false" />
+      <system enabled="false" />
     </permissions>
-  </module>
+  </runtime>
+  <window>
+    <title>Clock</title>
+    <width>350</width>
+    <height>400</height>
+    <resizable>true</resizable>
+    <minimizable>true</minimizable>
+    <maximizable>true</maximizable>
+  </window>
+  <resources>
+    <resource id="icon" type="image/png" src="resource://clock.png" />
+  </resources>
+  <config>
+    <setting key="format" value="12h" type="string" description="Time format (12h/24h)" />
+    <setting key="showAnalog" value="true" type="boolean" description="Show analog clock" />
+    <setting key="showDigital" value="true" type="boolean" description="Show digital time" />
+    <setting key="showDate" value="true" type="boolean" description="Show date" />
+    <setting key="showSeconds" value="true" type="boolean" description="Show seconds hand" />
+    <setting key="timezone" value="local" type="string" description="Timezone" />
+    <setting key="clockFace" value="classic" type="string" description="Clock face style" />
+  </config>
 </awml>

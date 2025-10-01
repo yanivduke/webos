@@ -15,9 +15,17 @@
       "output": "Available Commands:\n─────────────────────────────────────────────\nFile System:\n  ls, dir               List files in current directory\n  cd <path>            Change directory\n  pwd                  Show current directory\n  cat, type <file>     Display file contents\n  mkdir <name>         Create new directory\n  rm, delete <file>    Remove file or directory\n\nSystem:\n  help                 Show this help message\n  clear, cls           Clear screen\n  echo <text>          Display message\n  date                 Show current date and time\n  about                About this system\n  version              Show version information\n─────────────────────────────────────────────",
       "error": null,
       "executedAt": "2025-10-01T12:03:17.510Z"
+    },
+    {
+      "id": "3cf3fa52-9c07-44ee-a792-02ff391b707c",
+      "command": "ls",
+      "cwd": "dh0",
+      "output": "DIR  Documents                      \nDIR  System                         \n     readme.txt                     237\n     test-new.txt                   23\n",
+      "error": null,
+      "executedAt": "2025-10-01T12:03:21.982Z"
     }
   ],
   "lastPath": "dh0",
-  "lastExecutedAt": "2025-10-01T12:03:17.510Z",
-  "savedAt": "2025-10-01T12:03:17.510Z"
+  "lastExecutedAt": "2025-10-01T12:03:21.982Z",
+  "savedAt": "2025-10-01T12:03:21.982Z"
 }

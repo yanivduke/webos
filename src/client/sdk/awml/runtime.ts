@@ -45,32 +45,53 @@ export async function loadAwmlDescriptor(filePath: string): Promise<AwmlDescript
     throw new Error(`Invalid AWML XML: ${parserError.textContent}`);
   }
 
-  const moduleElement = xml.querySelector('module');
-  if (!moduleElement) {
-    throw new Error('AWML file is missing <module> declaration');
+  // Support both new spec (<awml><runtime><wasm>) and old spec (<awml><module>)
+  const awmlElement = xml.querySelector('awml');
+  if (!awmlElement) {
+    throw new Error('AWML file is missing <awml> root element');
   }
 
-  const moduleSrc = moduleElement.getAttribute('src');
+  // Try new spec format first
+  const wasmElement = xml.querySelector('runtime > wasm');
+  let moduleSrc: string | null = null;
+  let entry = 'awml_entry';
+
+  if (wasmElement) {
+    // New specification format
+    moduleSrc = wasmElement.getAttribute('src');
+    if (!moduleSrc) {
+      throw new Error('AWML runtime missing wasm "src" attribute');
+    }
+  } else {
+    // Old specification format
+    const moduleElement = xml.querySelector('module');
+    if (!moduleElement) {
+      throw new Error('AWML file is missing <runtime><wasm> or <module> declaration');
+    }
+    moduleSrc = moduleElement.getAttribute('src');
+    entry = moduleElement.getAttribute('entry') || 'awml_entry';
+  }
+
   if (!moduleSrc) {
-    throw new Error('AWML module declaration missing "src" attribute');
+    throw new Error('AWML missing WASM source reference');
   }
 
-  const entry = moduleElement.getAttribute('entry') || 'awml_entry';
   const descriptor: AwmlDescriptor = {
     filePath,
     modulePath: resolveRelativePath(filePath, moduleSrc),
     entry,
     config: {},
     metadata: {
-      name: moduleElement.getAttribute('name') || payload.name || filePath.split('/').pop() || 'AWML Module',
-      version: moduleElement.getAttribute('version') || extractText(xml, 'metadata > version'),
-      author: moduleElement.getAttribute('author') || extractText(xml, 'metadata > author'),
+      name: extractText(xml, 'metadata > name') || filePath.split('/').pop() || 'AWML Module',
+      version: extractText(xml, 'metadata > version'),
+      author: extractText(xml, 'metadata > author'),
       description: extractText(xml, 'metadata > description')
     }
   };
 
+  // Parse config settings
   xml.querySelectorAll('config > setting').forEach(setting => {
-    const key = setting.getAttribute('name');
+    const key = setting.getAttribute('key') || setting.getAttribute('name');
     const value = setting.getAttribute('value') ?? setting.textContent ?? '';
     if (key) {
       descriptor.config[key] = value.trim();

@@ -1,28 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<awml>
-  <module 
-    name="Calculator" 
-    version="1.0.0" 
-    author="WebOS Team"
-    src="Calculator.wasm" 
-    entry="awml_calculator_main">
-    
-    <metadata>
-      <description>Scientific Calculator with history and memory functions</description>
-      <category>Productivity</category>
-      <icon>calculator</icon>
-    </metadata>
-    
-    <config>
-      <setting name="precision" value="8">Decimal precision</setting>
-      <setting name="mode" value="standard">Calculator mode (standard/scientific)</setting>
-      <setting name="sound" value="true">Button click sounds</setting>
-      <setting name="history_limit" value="100">Maximum history entries</setting>
-    </config>
-    
+<awml version="1.0">
+  <metadata>
+    <name>Calculator</name>
+    <version>1.0.0</version>
+    <author>WebOS System</author>
+    <description>Scientific calculator with basic and advanced functions</description>
+    <icon>resource://calculator.png</icon>
+    <category>Productivity</category>
+  </metadata>
+  <runtime>
+    <wasm src="app://Calculator.wasm" />
+    <memory initial="128" maximum="256" shared="false" />
     <permissions>
-      <permission>local_storage</permission>
-      <permission>audio</permission>
+      <filesystem read="false" write="false" />
+      <network enabled="false" />
+      <system enabled="false" />
+      <clipboard enabled="true" />
     </permissions>
-  </module>
+  </runtime>
+  <window>
+    <title>Calculator</title>
+    <width>350</width>
+    <height>420</height>
+    <resizable>false</resizable>
+    <minimizable>true</minimizable>
+    <maximizable>false</maximizable>
+  </window>
+  <resources>
+    <resource id="icon" type="image/png" src="resource://calculator.png" />
+  </resources>
+  <config>
+    <setting key="mode" value="standard" type="string" description="Calculator mode (standard/scientific)" />
+    <setting key="precision" value="10" type="number" description="Decimal precision" />
+    <setting key="soundEnabled" value="true" type="boolean" description="Button click sound" />
+    <setting key="history" value="true" type="boolean" description="Show calculation history" />
+  </config>
 </awml>

@@ -1,5 +1,11 @@
 <template>
-  <div class="awml-runner">
+  <!-- Legacy Component Mode (fallback when WASM not available) -->
+  <div v-if="useLegacyMode" class="legacy-mode">
+    <AmigaLegacyWrapper :appName="appName" :data="legacyData" />
+  </div>
+
+  <!-- Standard AWML Runner Mode -->
+  <div v-else class="awml-runner">
     <div class="runner-header">
       <div>
         <div class="title">{{ descriptor?.metadata.name || filename }}</div>
@@ -48,6 +54,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { executeAwml, loadAwmlDescriptor, type AwmlDescriptor } from '@/sdk/awml';
 import AmigaAwmlWizard from './AmigaAwmlWizard.vue';
+import AmigaLegacyWrapper from './AmigaLegacyWrapper.vue';
 import { fetchAwmlModule, saveAwmlModule } from '@/services/awmlService';
 
 interface RunnerProps {
@@ -67,6 +74,8 @@ const isRunning = ref(false);
 const showWizard = ref(false);
 const activeConfig = ref<Record<string, string>>({});
 const hasLoadedConfig = ref(false);
+const useLegacyMode = ref(false);
+
 const visibleConfig = computed(() => {
   if (Object.keys(activeConfig.value).length) {
     return activeConfig.value;
@@ -76,6 +85,15 @@ const visibleConfig = computed(() => {
 
 const filename = computed(() => props.data?.meta?.name || props.data?.filePath || 'AWML Program');
 const configKeys = computed(() => (descriptor.value ? Object.keys(descriptor.value.config) : []));
+
+// Extract app name from file path for legacy mode
+const appName = computed(() => {
+  const path = props.data?.filePath || '';
+  const match = path.match(/\/([^/]+)\.awml$/);
+  return match ? match[1] : '';
+});
+
+const legacyData = computed(() => props.data);
 
 const ensureDescriptor = async () => {
   const filePath = props.data?.filePath;
@@ -109,7 +127,10 @@ const handleRun = async () => {
     return;
   }
 
-  if (descriptor.value && requiresWizard(descriptor.value) && Object.keys(activeConfig.value).length === 0) {
+  // Skip wizard for system apps - they should use default config from manifest
+  const isSystemApp = props.data?.filePath?.includes('System/Applications/');
+
+  if (!isSystemApp && descriptor.value && requiresWizard(descriptor.value) && Object.keys(activeConfig.value).length === 0) {
     showWizard.value = true;
     return;
   }
@@ -158,8 +179,18 @@ const runWithConfig = async () => {
     statusMessage.value = 'Execution completed';
   } catch (error) {
     const message = (error as Error).message || 'Unknown error';
-    errorMessage.value = message;
-    statusMessage.value = 'Execution failed';
+
+    // Check if error is due to missing WASM file - switch to legacy mode
+    if (message.includes('Failed to fetch WebAssembly module') ||
+        message.includes('404') ||
+        message.includes('raw')) {
+      console.log(`WASM not found for ${appName.value}, switching to legacy component mode`);
+      useLegacyMode.value = true;
+      statusMessage.value = 'Running in legacy mode';
+    } else {
+      errorMessage.value = message;
+      statusMessage.value = 'Execution failed';
+    }
   } finally {
     isRunning.value = false;
   }
@@ -321,5 +352,12 @@ const cancelWizard = () => {
   border-color: #ffffff #000000 #000000 #ffffff;
   z-index: 10;
   padding: 8px;
+}
+
+.legacy-mode {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>

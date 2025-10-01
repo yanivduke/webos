@@ -1,18 +1,12 @@
 {
-  "drafts": [
-    {
-      "id": "draft1",
-      "title": "Test Document",
-      "content": "Hello WebOS!",
-      "path": "dh0/test.txt",
-      "updatedAt": "2025-10-01T11:45:46.297Z"
-    }
-  ],
+  "drafts": [],
   "recentFiles": [],
   "preferences": {
     "defaultDisk": "dh0",
     "fontSize": 12,
     "wordWrap": true
   },
-  "savedAt": "2025-10-01T11:45:46.297Z"
+  "savedAt": "2025-10-01T12:03:32.450Z",
+  "content": "Test note",
+  "filename": "test.txt"
 }

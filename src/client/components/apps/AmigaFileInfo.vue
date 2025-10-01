@@ -27,11 +27,25 @@
         </li>
       </ul>
     </div>
+
+    <div class="actions-section">
+      <div class="actions-title">Actions</div>
+      <div class="actions-grid">
+        <button class="amiga-button" @click="executeAwml" v-if="isAwmlFile">Execute AWML</button>
+        <button class="amiga-button" @click="editInNotePad" v-if="isTextFile">Edit in NotePad</button>
+        <button class="amiga-button" @click="copyPath">Copy Path</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue';
+
+const emit = defineEmits<{
+  (e: 'executeAwml', path: string): void;
+  (e: 'editFile', path: string): void;
+}>();
 
 interface InfoProps {
   data?: {
@@ -63,6 +77,33 @@ const extraKeys = computed(() => {
   return Object.keys(meta.value || {})
     .filter(key => !base.includes(key) && meta.value[key] !== undefined && meta.value[key] !== null);
 });
+
+const isAwmlFile = computed(() => {
+  const path = filePath.value.toLowerCase();
+  return path.endsWith('.awml');
+});
+
+const isTextFile = computed(() => {
+  const path = filePath.value.toLowerCase();
+  return path.endsWith('.txt') || path.endsWith('.text') || path.endsWith('.doc') || path.endsWith('.awml') || path.endsWith('.xml') || path.endsWith('.json');
+});
+
+const executeAwml = () => {
+  emit('executeAwml', filePath.value);
+};
+
+const editInNotePad = () => {
+  emit('editFile', filePath.value);
+};
+
+const copyPath = async () => {
+  try {
+    await navigator.clipboard.writeText(filePath.value);
+    alert('Path copied to clipboard');
+  } catch (err) {
+    console.error('Failed to copy path:', err);
+  }
+};
 </script>
 
 <style scoped>
@@ -133,5 +174,44 @@ ul {
 li {
   margin-bottom: 4px;
   color: #000000;
+}
+
+.actions-section {
+  background: #f4f4f4;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 10px;
+}
+
+.actions-title {
+  color: #0055aa;
+  margin-bottom: 8px;
+}
+
+.actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.amiga-button {
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 6px 10px;
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  color: #000000;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.amiga-button:hover {
+  background: #b0b0b0;
+}
+
+.amiga-button:active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: #888888;
 }
 </style>

@@ -114,6 +114,8 @@
             :data="window.data"
             @openFile="handleOpenFile"
             @openTool="handleOpenTool"
+            @executeAwml="handleExecuteAwml"
+            @editFile="handleEditFile"
           />
         </AmigaWindow>
       </div>
@@ -144,6 +146,7 @@ import AmigaClock from './apps/AmigaClock.vue';
 import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
+import AmigaPreferences from './apps/AmigaPreferences.vue';
 
 interface Disk {
   id: string;
@@ -300,7 +303,7 @@ const handleWorkbenchAction = (action: string) => {
 const handleWindowAction = (action: string) => {
   switch (action) {
     case 'New Drawer':
-      alert('Create new drawer functionality coming soon!');
+      createNewDrawer();
       break;
     case 'Close Window':
       if (openWindows.value.length > 0) {
@@ -310,11 +313,20 @@ const handleWindowAction = (action: string) => {
     case 'Update':
       // Refresh current window
       if (openWindows.value.length > 0) {
-        alert('Window updated');
+        const currentWindow = openWindows.value[openWindows.value.length - 1];
+        // Force re-render by removing and adding back
+        const windowData = { ...currentWindow };
+        closeWindow(currentWindow.id);
+        setTimeout(() => {
+          openWindows.value.push(windowData);
+        }, 100);
       }
       break;
+    case 'Clean Up':
+      cleanUpWindows();
+      break;
     default:
-      alert(`${action} functionality coming soon!`);
+      break;
   }
 };
 
@@ -324,10 +336,19 @@ const handleIconsAction = (action: string) => {
       openUtilities();
       break;
     case 'Information':
-      alert('File information functionality coming soon!');
+      showIconInformation();
+      break;
+    case 'Copy':
+      copySelectedIcons();
+      break;
+    case 'Rename':
+      renameSelectedIcon();
+      break;
+    case 'Delete':
+      deleteSelectedIcons();
       break;
     default:
-      alert(`${action} functionality coming soon!`);
+      break;
   }
 };
 
@@ -425,15 +446,39 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
 
   let config;
   let data;
-  
+
   if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
-    config = { title: `NotePad - ${fileName}`, ...toolConfigs['NotePad'] };
+    // Open text files directly in NotePad legacy component (not AWML app)
+    config = {
+      title: `NotePad - ${fileName}`,
+      width: 600,
+      height: 450,
+      component: AmigaNotePad,
+      baseX: 150,
+      baseY: 100
+    };
     data = { filePath, fileName };
   } else if (lowerName.endsWith('.awml')) {
-    config = { title: `AWML Runner - ${fileName}`, ...toolConfigs['AWML Runner'] };
+    // AWML files should open in file info viewer by default (not execute)
+    config = {
+      title: `Info - ${fileName}`,
+      width: 420,
+      height: 320,
+      component: AmigaFileInfo,
+      baseX: 160,
+      baseY: 120
+    };
     data = { filePath, meta: fileMeta };
   } else {
-    config = { title: `Info - ${fileName}`, width: 420, height: 320, component: AmigaFileInfo, baseX: 160, baseY: 120 };
+    // All other files open in info viewer
+    config = {
+      title: `Info - ${fileName}`,
+      width: 420,
+      height: 320,
+      component: AmigaFileInfo,
+      baseX: 160,
+      baseY: 120
+    };
     data = { filePath, meta: fileMeta };
   }
 
@@ -460,13 +505,14 @@ const toolConfigs = {
     baseY: 120,
     awmlPath: 'dh0/System/Applications/Calculator.awml'
   },
-  'Shell': { 
-    title: 'AmigaShell', 
-    width: 650, 
-    height: 450, 
-    component: AmigaShell, 
-    baseX: 170, 
-    baseY: 110 
+  'Shell': {
+    title: 'AmigaShell',
+    width: 650,
+    height: 450,
+    component: AmigaAwmlRunner,
+    baseX: 170,
+    baseY: 110,
+    awmlPath: 'dh0/System/Applications/Shell.awml'
   },
   'Clock': { 
     title: 'Clock', 
@@ -544,9 +590,9 @@ const createWindow = (config: any, data = {}) => {
 
 const handleOpenTool = (toolName: string) => {
   console.log('Opening tool:', toolName);
-  
+
   if (toolName === 'Preferences') {
-    alert('Preferences panel coming soon!');
+    openPreferences();
     return;
   }
 
@@ -554,7 +600,135 @@ const handleOpenTool = (toolName: string) => {
   if (config) {
     openWindows.value.push(createWindow(config));
   } else {
-    alert(`Tool "${toolName}" is not yet implemented`);
+    console.log(`Tool "${toolName}" not found in toolConfigs`);
+  }
+};
+
+const handleExecuteAwml = (filePath: string) => {
+  console.log('Executing AWML:', filePath);
+  const fileName = filePath.split('/').pop() || 'AWML App';
+  const config = {
+    title: `${fileName}`,
+    width: 640,
+    height: 480,
+    component: AmigaAwmlRunner,
+    baseX: 160,
+    baseY: 120
+  };
+  const data = {
+    filePath,
+    meta: { name: fileName, type: 'awml' }
+  };
+  openWindows.value.push(createWindow(config, data));
+};
+
+const handleEditFile = (filePath: string) => {
+  console.log('Editing file:', filePath);
+  const fileName = filePath.split('/').pop() || 'File';
+  const config = {
+    title: `NotePad - ${fileName}`,
+    width: 600,
+    height: 450,
+    component: AmigaNotePad,
+    baseX: 150,
+    baseY: 100
+  };
+  const data = { filePath, fileName };
+  openWindows.value.push(createWindow(config, data));
+};
+
+// Preferences
+const openPreferences = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Preferences',
+    x: 200,
+    y: 150,
+    width: 600,
+    height: 450,
+    component: AmigaPreferences,
+    data: {}
+  };
+  openWindows.value.push(newWindow);
+};
+
+// Window management functions
+const createNewDrawer = async () => {
+  const name = prompt('Enter new drawer name:');
+  if (!name) return;
+
+  try {
+    const response = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: `dh0/${name}`,
+        type: 'folder'
+      })
+    });
+
+    if (response.ok) {
+      alert(`Drawer "${name}" created successfully!`);
+      // Refresh dh0 if open
+    } else {
+      alert('Failed to create drawer');
+    }
+  } catch (error) {
+    console.error('Error creating drawer:', error);
+    alert('Error creating drawer');
+  }
+};
+
+const cleanUpWindows = () => {
+  // Arrange windows in a cascade
+  openWindows.value.forEach((window, index) => {
+    window.x = 100 + index * 30;
+    window.y = 80 + index * 30;
+  });
+};
+
+// Icon management functions
+const showIconInformation = () => {
+  if (selectedCount.value === 0) {
+    alert('No icons selected');
+    return;
+  }
+  alert(`${selectedCount.value} icon(s) selected\n\nSelect an icon on the desktop and use this option to view its properties.`);
+};
+
+const copySelectedIcons = () => {
+  if (selectedCount.value === 0) {
+    alert('No icons selected');
+    return;
+  }
+  alert(`Copy functionality: ${selectedCount.value} icon(s) would be copied to clipboard.`);
+};
+
+const renameSelectedIcon = async () => {
+  if (selectedCount.value === 0) {
+    alert('No icons selected');
+    return;
+  }
+  if (selectedCount.value > 1) {
+    alert('Please select only one icon to rename');
+    return;
+  }
+
+  const newName = prompt('Enter new name:');
+  if (newName) {
+    alert(`Icon would be renamed to: ${newName}`);
+  }
+};
+
+const deleteSelectedIcons = async () => {
+  if (selectedCount.value === 0) {
+    alert('No icons selected');
+    return;
+  }
+
+  if (confirm(`Delete ${selectedCount.value} icon(s)?`)) {
+    alert(`${selectedCount.value} icon(s) would be moved to trash.`);
+    selectedCount.value = 0;
   }
 };
 

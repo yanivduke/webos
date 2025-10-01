@@ -30,43 +30,196 @@ This project ships with a lightweight Express REST API and a Vue 3/Vite client. 
 
 ### WebAssembly Extension SDK (AWML Platform)
 
-Phase 3 introduces a pluggable SDK that allows Workbench extensions to be authored as XML-based **AWML** manifests coupled with WebAssembly binaries. The new runtime provides:
+WebOS features a pluggable extension system based on **AWML** (Amiga WebAssembly Markup Language), enabling developers to create executable applications that run natively within the WebOS environment.
 
-- **AWML descriptors** – XML files with the `.awml` extension declare module metadata, the WebAssembly module to load, the exported entry point, and user configuration (`<config><setting name="key" value="foo"/></config>`). AWML files live inside the workbench storage just like any other document.
-- **Deterministic WASM execution** – On double-click, the Vue client loads the AWML descriptor, resolves the referenced `.wasm` asset via the `/api/files/raw` endpoint, and instantiates it inside an isolated runtime with Amiga-flavoured host bindings.
-- **Host environment** – The SDK exposes `env.awml_log(ptr,len)` for retro console output and passes module configuration as UTF-8 JSON into the declared entry function (by convention, modules export `awml_alloc` for memory allocation and an entry such as `awml_entry(configPtr, configLen)`). Future imports can be added without breaking existing extensions.
-- **Windowed execution shell** – AWML programs run inside `AmigaAwmlRunner`, a desktop window that surfaces runtime status, logs, and resolved metadata so developers can debug their extensions in real-time.
-- **Fallback behaviour** – Files without AWML support now open in a metadata inspector window, ensuring unknown types are still discoverable while AWML and classic text documents retain their specialised experiences.
+#### AWML Architecture Components
 
-### Frontend (Vuetify 3 with TypeScript)
+**1. AWML File Format (.awml)**
 
-The frontend of WebOS is built using Vuetify 3, a modern, component-based UI framework for Vue.js. Vuetify 3 provides a rich set of pre-designed components that adhere to Material Design principles, ensuring a consistent and visually appealing user interface.
+AWML files are XML-based descriptors that define WebAssembly applications with complete metadata, runtime requirements, and user configuration:
 
-Key Frontend Components:
-- Responsive layout system with flexible grid and responsive breakpoints
-- Material Design components (buttons, cards, dialogs, forms, navigation bars)
-- Dynamic theming with support for light and dark modes
-- State management using Vuex or Pinia for complex application state
-- TypeScript integration for type safety and better developer experience
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<awml version="1.0">
+  <metadata>
+    <name>My Application</name>
+    <version>1.0.0</version>
+    <author>Your Name</author>
+    <description>Application description</description>
+  </metadata>
+  <runtime>
+    <wasm src="app://main.wasm" />
+    <memory initial="256" maximum="1024" />
+    <permissions>
+      <filesystem read="true" write="false" />
+      <network enabled="false" />
+    </permissions>
+  </runtime>
+  <window>
+    <title>My App</title>
+    <width>640</width>
+    <height>480</height>
+    <resizable>true</resizable>
+  </window>
+  <config>
+    <setting key="theme" value="dark" type="string" />
+  </config>
+</awml>
+```
 
-Vuetify 3 is configured with TypeScript support, requiring Node.js v14 or higher and TypeScript to be installed. The framework is designed to work seamlessly with modern TypeScript features, providing type safety and improved code quality.
+**2. WebAssembly Runtime**
 
-### Backend (Node.js Express with TypeScript and TypeORM 0.31)
+The AWML runtime (`AmigaAwmlRunner.vue`) provides a sandboxed execution environment with:
 
-The backend of WebOS is built using Node.js Express, a minimal and flexible Node.js web application framework. The application leverages TypeScript for type safety and maintainability, and TypeORM 0.31 for database operations.
+- **Memory management**: Configurable linear memory (initial/maximum pages)
+- **Host API bindings**: Pre-defined JavaScript functions accessible from WASM
+- **Event system**: Mouse, keyboard, and lifecycle event handling
+- **Canvas rendering**: Direct pixel manipulation and graphics primitives
+- **File system access**: Read/write operations within allowed paths
+- **Configuration injection**: User settings passed to WASM on initialization
 
-Key Backend Components:
-- RESTful API endpoints for frontend communication
-- TypeORM 0.31 for database modeling and operations
-- Authentication and authorization middleware
-- Data validation and error handling
-- Caching and performance optimization
+**3. Host API Functions**
 
-TypeORM 0.31 requires Node.js 16, 18, or 20 and TypeScript 5.x or later. The framework supports multiple database drivers (PostgreSQL, MySQL, SQLite, etc.) and provides a clean, intuitive API for database operations. The latest release (0.3.27) includes important security updates and breaking changes that should be considered during implementation.
+WASM modules can import these functions from the `env` namespace:
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `awml_log` | `(ptr: i32, len: i32)` | Log messages to runtime console |
+| `awml_gfx_pixel` | `(x: i32, y: i32, r: i32, g: i32, b: i32, a: i32)` | Draw single pixel |
+| `awml_gfx_rect` | `(x: i32, y: i32, w: i32, h: i32, r: i32, g: i32, b: i32, a: i32)` | Draw rectangle |
+| `awml_gfx_clear` | `(r: i32, g: i32, b: i32)` | Clear screen with color |
+| `awml_fs_read` | `(pathPtr: i32, pathLen: i32) -> i32` | Read file, returns content pointer |
+| `awml_fs_write` | `(pathPtr: i32, pathLen: i32, contentPtr: i32, contentLen: i32) -> i32` | Write file, returns success |
+| `awml_sys_time` | `() -> f64` | Get current timestamp |
+| `awml_sys_random` | `() -> f64` | Get random number 0-1 |
+
+**4. WASM Module Exports**
+
+AWML applications should export these functions:
+
+| Export | Signature | Description |
+|--------|-----------|-------------|
+| `awml_alloc` | `(size: i32) -> i32` | Allocate memory, return pointer |
+| `awml_init` | `()` | Initialize application |
+| `awml_entry` | `(configPtr: i32, configLen: i32)` | Entry point with JSON config |
+| `awml_update` | `(deltaTime: i32)` | Update loop (called every frame) |
+| `awml_render` | `()` | Render loop (called every frame) |
+| `awml_on_mouse_down` | `(x: i32, y: i32, button: i32)` | Mouse button pressed |
+| `awml_on_mouse_up` | `(x: i32, y: i32, button: i32)` | Mouse button released |
+| `awml_on_mouse_move` | `(x: i32, y: i32)` | Mouse moved |
+| `awml_on_key_down` | `(keyCode: i32)` | Key pressed |
+| `awml_on_key_up` | `(keyCode: i32)` | Key released |
+| `awml_cleanup` | `()` | Cleanup before termination |
+
+**5. URI Schemes**
+
+AWML supports multiple URI schemes for resource loading:
+
+- `app://` - Relative to AWML file location (e.g., `app://main.wasm`)
+- `data:` - Base64-encoded inline data (e.g., `data:application/wasm;base64,...`)
+- `dh0:/` - Absolute path in workbench filesystem
+- `resource:` - Bundled runtime resources
+
+**6. Permission Model**
+
+AWML applications declare required permissions in the manifest:
+
+- **filesystem**: Read/write access to specific paths or entire filesystem
+- **network**: HTTP requests to specified domains
+- **system**: Ability to execute system commands (restricted)
+- **clipboard**: Read/write clipboard data
+- **media**: Access to audio/video APIs
+
+**7. Execution Flow**
+
+1. User double-clicks `.awml` file in AmigaFolder
+2. `AmigaAwmlRunner` component opens in new window
+3. AWML XML is parsed and validated using `AWMLParser`
+4. WebAssembly binary is loaded from specified URI
+5. Memory is allocated per manifest specifications
+6. Import object created with host API functions
+7. WASM module compiled and instantiated
+8. `awml_init()` called to initialize
+9. `awml_entry(config)` called with user configuration
+10. Render loop starts if `awml_render()` exists
+11. Events forwarded to WASM event handlers
+12. `awml_cleanup()` called on window close
+
+**8. File Type Handling**
+
+- `.awml` files → Open in `AmigaAwmlRunner` for execution
+- `.txt`, `.md`, `.json` → Open in `AmigaNotePad` text editor
+- All other files → Display metadata in `AmigaFileInfo` component
+
+**9. Legacy Component Fallback**
+
+The AWML runner includes a **legacy mode** that automatically activates when WebAssembly binaries are unavailable. This allows pre-installed applications to function using Vue.js components while the WASM implementations are being developed:
+
+- When an AWML file is opened, the runner attempts to load the referenced WASM binary
+- If the WASM file is not found (404 error), the system automatically switches to legacy mode
+- Legacy mode loads the corresponding Vue component (NotePad → `AmigaNotePad.vue`, Paint → `AmigaPaint.vue`, etc.)
+- The application functions identically to the user, but runs using JavaScript instead of WebAssembly
+- No error is shown to the user - the fallback is transparent
+
+This dual-mode architecture allows:
+- Gradual migration from Vue components to WASM applications
+- Testing AWML manifests before WASM binaries are ready
+- Maintaining a working system during SDK development
+- Easy switching between implementations by adding/removing WASM files
+
+See [AWML_SPECIFICATION.md](AWML_SPECIFICATION.md) for complete SDK documentation and examples.
+
+### Frontend (Vue 3 + TypeScript + Vite)
+
+The frontend is built with Vue 3 Composition API and TypeScript, featuring a pixel-perfect recreation of the classic Amiga Workbench aesthetic. The architecture emphasizes:
+
+**Component Architecture:**
+- **AmigaDesktop.vue** - Main orchestrator managing open windows, disk icons, menu bar, and system clock
+- **AmigaWindow.vue** - Draggable/resizable window container with authentic Amiga chrome
+- **AmigaFolder.vue** - File browser with icon grid, multi-select, and real API integration
+- **Application Components** - NotePad (text editor), Paint (drawing), Calculator, Shell (terminal), Clock
+- **AmigaAwmlRunner.vue** - WebAssembly runtime for AWML applications
+- **AmigaFileInfo.vue** - Metadata viewer for non-executable files
+
+**Design System:**
+- Pure CSS (no UI frameworks) with authentic Amiga colors (#a0a0a0 gray, #0055aa blue, #ffaa00 orange)
+- Beveled borders using border-color: #ffffff #000000 #000000 #ffffff
+- Press Start 2P retro pixel font from Google Fonts
+- Instant transitions (0.1s max) matching original Workbench snappiness
+- 16-color palette matching Amiga OCS/ECS chipset
+
+**State Management:**
+- Vue 3 Composition API with ref() and computed() for reactive state
+- No Vuex/Pinia - component-local state with props/events
+- Window management via array in AmigaDesktop with z-index layering
+
+**Build System:**
+- Vite for fast development and optimized production builds
+- TypeScript with strict mode for type safety
+- Proxy configuration to forward `/api` requests to Express backend
+
+### Backend (Node.js Express + CommonJS)
+
+The backend provides RESTful APIs for file operations, application state persistence, shell command execution, and AWML module management.
+
+**Key Backend Components:**
+- **Express Server** (src/server/index.js) - Main entry point with CORS, JSON parsing, route mounting
+- **File Operations** (routes/file-operations.route.js) - Real filesystem CRUD using Node.js fs/promises
+- **Shell Commands** (routes/shell.route.js) - Terminal emulator backend with 12+ commands
+- **App State** (routes/app-state.route.js) - JSON-based persistence for application data
+- **State Manager** (utils/state-manager.js) - Utility class for JSON file storage with caching
+
+**Storage Structure:**
+- `src/server/storage/workbench/` - User filesystem (df0, dh0, dh1, ram, trash)
+- `src/server/storage/state/` - Application state JSON files
+
+**Module System:**
+- CommonJS (require/module.exports) for compatibility
+- No database - all data stored in filesystem and JSON files
 
 ### Integration
 
-The frontend and backend communicate through RESTful API endpoints. Vuetify 3 components make HTTP requests to the Express backend to retrieve data, update user preferences, and perform system operations. The backend processes these requests, validates data, and returns appropriate responses in JSON format.
+The frontend and backend communicate through RESTful API endpoints. Vue 3 components make HTTP requests to the Express backend using the Fetch API. Vite's proxy configuration forwards `/api/*` requests to the backend server on port 3001, enabling seamless development workflow. The backend processes requests, validates data using path sanitization utilities, and returns JSON responses.
 
 ## Installation Guide
 
@@ -74,7 +227,6 @@ The frontend and backend communicate through RESTful API endpoints. Vuetify 3 co
 - Node.js v14 or higher (recommended: v18 or v20)
 - npm or yarn package manager
 - A code editor (e.g., VS Code)
-- A database (PostgreSQL, MySQL, or SQLite) for data storage
 
 ### Step-by-Step Setup
 
@@ -84,39 +236,34 @@ The frontend and backend communicate through RESTful API endpoints. Vuetify 3 co
    cd webos
    ```
 
-2. **Install Dependencies**
+2. **Install Client Dependencies**
    ```bash
+   cd src/client
    npm install
    ```
 
-3. **Configure Environment Variables**
-   Create a `.env` file in the project root with the following content:
-   ```env
-   DATABASE_TYPE=postgres
-   DATABASE_HOST=localhost
-   DATABASE_PORT=5432
-   DATABASE_USERNAME=your_username
-   DATABASE_PASSWORD=your_password
-   DATABASE_NAME=webos
-   ```
-   Adjust the values according to your database configuration.
-
-4. **Set Up the Database**
-   - For PostgreSQL: Ensure PostgreSQL is installed and running on your machine
-   - For MySQL: Install MySQL and configure the database
-   - For SQLite: No separate database server required; files are stored in the project directory
-
-5. **Initialize the Database**
+3. **Install Server Dependencies**
    ```bash
-   npx typeorm migration:run
+   cd ../server
+   npm install
    ```
-   This command will execute all pending migrations and create the necessary database schema.
 
-6. **Start the Application**
+4. **Start the Backend Server**
    ```bash
+   # From src/server directory
+   node index.js
+
+   # Or with auto-restart on changes
    npm run dev
    ```
-   The application will start on http://localhost:3000.
+   The server will start on http://localhost:3001
+
+5. **Start the Frontend (in a new terminal)**
+   ```bash
+   cd src/client
+   npm run dev
+   ```
+   The application will start on http://localhost:3000 and open in your browser.
 
 ## Usage Instructions
 
@@ -135,45 +282,59 @@ After successful installation, you can access the WebOS interface by opening you
 ### API Endpoints
 
 The backend exposes the following RESTful endpoints:
-- `GET /api/system/status` - Retrieve system status information
-- `POST /api/auth/login` - Authenticate user and return JWT token
-- `GET /api/files` - List files in the current directory
-- `POST /api/files` - Create a new file
-- `PUT /api/files/:id` - Update an existing file
-- `DELETE /api/files/:id` - Delete a file
 
-All endpoints return JSON responses with appropriate HTTP status codes.
+**System:**
+- `GET /api/health` - Health check endpoint
+- `GET /api/system/status` - Retrieve Amiga system information
 
-## Compatibility Notes
+**File Operations:**
+- `GET /api/files/list?path=<path>` - List files in directory with metadata
+- `POST /api/files/create` - Create file or directory
+- `POST /api/files/read` - Read file contents
+- `POST /api/files/write` - Write file contents
+- `POST /api/files/rename` - Rename file or directory
+- `DELETE /api/files/delete` - Move file to trash
 
-### Vuetify 3 Requirements
+**Shell Commands:**
+- `POST /api/shell/execute` - Execute terminal command (ls, cd, cat, mkdir, rm, etc.)
+
+**Application State:**
+- `GET /api/app-state/:appId` - Load application state from JSON
+- `POST /api/app-state/:appId` - Save application state to JSON
+- `DELETE /api/app-state/:appId` - Delete application state
+- `GET /api/app-state` - List all stored states
+
+**Settings:**
+- `GET /api/settings` - Retrieve all settings
+- `POST /api/settings` - Update settings
+
+See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for complete endpoint documentation with request/response examples.
+
+## Technical Requirements
+
+### Client Requirements
 - Node.js v14 or higher (recommended: v18 or v20)
-- TypeScript (required for type safety and better developer experience)
-- Vue.js 3 (required for Vuetify 3 integration)
+- Modern web browser with WebAssembly support (Chrome 57+, Firefox 52+, Safari 11+, Edge 79+)
+- TypeScript 5.x or later for development
 
-### TypeORM 0.31 Requirements
-- Node.js 16, 18, or 20
-- TypeScript 5.x or later
-- Compatible database drivers (PostgreSQL, MySQL, SQLite, etc.)
+### Server Requirements
+- Node.js v14 or higher (recommended: v18 or v20)
+- File system write permissions for `src/server/storage/` directory
+- No database required - all data stored in filesystem
 
-### Important Version-Specific Notes
-- **TypeORM Breaking Change (0.3.23)**: Empty objects (`{}`) are no longer allowed in `delete()` or `update()` methods. Use `createQueryBuilder()` for bulk operations:
-  ```ts
-  await repository.createQueryBuilder().delete().execute();
-  ```
-- **MySQL Security Update**: When using MySQL, TypeORM now connects with `stringifyObjects: true` to avoid a potential security vulnerability in the `mysql2` client. You can revert to the old behavior by setting:
-  ```ts
-  extra: {
-    stringifyObjects: false
-  }
-  ```
-- **SAP HANA**: The deprecated `hdb-pool` is no longer needed. Use the built-in pool from `@sap/hana-client` instead.
+### Browser Compatibility
+- **WebAssembly Support**: Required for AWML applications
+- **Canvas API**: Required for Paint app and AWML graphics
+- **Fetch API**: Required for API communication
+- **Local Storage**: Used for client-side preferences
+- **CSS Grid/Flexbox**: Required for layout
 
-### Recommended Development Environment
+### Development Environment
 - Use Node.js v18 or v20 for optimal performance and stability
-- Ensure TypeScript is properly configured with `tsconfig.json` to support modern TypeScript features
-- Test the application with multiple database drivers to ensure compatibility
+- VSCode recommended with Vue, TypeScript, and ESLint extensions
+- Two terminal windows required (one for client, one for server)
 
-Note: The latest TypeORM release is 0.3.27 (as of September 19, 2025), and the version 0.31 mentioned in the task appears to be a reference to an older or potentially outdated version. The current stable version is 0.3.27, which includes the latest security updates and features.
-
-The Vuetify 3 and TypeORM 0.31 combination is viable for the specified use case, with the caveat that TypeORM 0.31 may be an outdated version. The current stable version (0.3.27) provides better compatibility and security features.
+### Port Configuration
+- **Client**: Port 3000 (Vite dev server)
+- **Server**: Port 3001 (Express API)
+- Ensure both ports are available before starting

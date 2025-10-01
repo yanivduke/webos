@@ -15,7 +15,37 @@
       },
       "updatedAt": "2025-10-01T11:45:53.480Z",
       "createdAt": "2025-10-01T11:45:53.480Z"
+    },
+    {
+      "id": "dh0/System/Applications/Calculator.awml",
+      "filePath": "dh0/System/Applications/Calculator.awml",
+      "modulePath": "dh0/System/Applications/app:/Calculator.wasm",
+      "entry": "awml_entry",
+      "metadata": {
+        "name": "Calculator",
+        "version": "1.0.0",
+        "author": "WebOS System",
+        "description": "Scientific calculator with basic and advanced functions"
+      },
+      "config": {},
+      "updatedAt": "2025-10-01T12:29:24.970Z",
+      "createdAt": "2025-10-01T12:16:13.758Z"
+    },
+    {
+      "id": "dh0/System/Applications/NotePad.awml",
+      "filePath": "dh0/System/Applications/NotePad.awml",
+      "modulePath": "dh0/System/Applications/app:/notepad.wasm",
+      "entry": "awml_entry",
+      "metadata": {
+        "name": "NotePad",
+        "version": "1.0.0",
+        "author": "WebOS System",
+        "description": "Text editor for creating and editing documents"
+      },
+      "config": {},
+      "updatedAt": "2025-10-01T12:31:21.101Z",
+      "createdAt": "2025-10-01T12:29:39.937Z"
     }
   ],
-  "savedAt": "2025-10-01T11:45:53.480Z"
+  "savedAt": "2025-10-01T12:31:21.101Z"
 }

@@ -112,11 +112,11 @@ const contextMenuItem = ref<FolderItem | null>(null);
 const contextMenuItems = computed<ContextMenuItem[]>(() => [
   { label: 'Open', action: 'open', icon: '▶' },
   { label: '', action: '', separator: true },
-  { label: 'Copy', action: 'copy', icon: '📋', disabled: true },
-  { label: 'Rename', action: 'rename', icon: '✏', disabled: true },
+  { label: 'Copy', action: 'copy', icon: '📋' },
+  { label: 'Rename', action: 'rename', icon: '✏' },
   { label: 'Delete', action: 'delete', icon: '🗑' },
   { label: '', action: '', separator: true },
-  { label: 'Info', action: 'info', icon: 'ℹ', disabled: true }
+  { label: 'Info', action: 'info', icon: 'ℹ' }
 ]);
 
 const currentPath = ref<string>(props.data?.id || 'dh0');
@@ -270,9 +270,13 @@ const handleContextAction = async (action: string) => {
       }
       break;
     case 'copy':
+      await copyItem(item);
+      break;
     case 'rename':
+      await renameItem(item);
+      break;
     case 'info':
-      alert(`${action} is not yet implemented`);
+      showItemInfo(item);
       break;
   }
 
@@ -298,6 +302,77 @@ const deleteItem = async (item: FolderItem) => {
     console.error('Error deleting item:', error);
     alert('Error deleting item');
   }
+};
+
+const copyItem = async (item: FolderItem) => {
+  const newName = prompt(`Copy "${item.name}" as:`, `${item.name}_copy`);
+  if (!newName) return;
+
+  try {
+    const sourcePath = item.path || `${currentPath.value}/${item.name}`;
+    const targetPath = `${currentPath.value}/${newName}`;
+
+    const readResponse = await fetch('/api/files/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: sourcePath })
+    });
+
+    if (!readResponse.ok) throw new Error('Failed to read source file');
+    const readData = await readResponse.json();
+
+    const writeResponse = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: targetPath,
+        type: item.type === 'folder' ? 'folder' : 'file',
+        content: readData.content || ''
+      })
+    });
+
+    if (!writeResponse.ok) throw new Error('Failed to create copy');
+
+    alert(`"${item.name}" copied to "${newName}"`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error copying item:', error);
+    alert('Failed to copy item');
+  }
+};
+
+const renameItem = async (item: FolderItem) => {
+  const newName = prompt(`Rename "${item.name}" to:`, item.name);
+  if (!newName || newName === item.name) return;
+
+  try {
+    const oldPath = item.path || `${currentPath.value}/${item.name}`;
+    const newPath = `${currentPath.value}/${newName}`;
+
+    const response = await fetch('/api/files/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldPath, newPath })
+    });
+
+    if (!response.ok) throw new Error('Failed to rename item');
+
+    alert(`"${item.name}" renamed to "${newName}"`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error renaming item:', error);
+    alert('Failed to rename item');
+  }
+};
+
+const showItemInfo = (item: FolderItem) => {
+  const info = `Name: ${item.name}
+Type: ${item.type}
+Size: ${item.size || 'N/A'}
+Created: ${item.created || 'N/A'}
+Modified: ${item.modified || 'N/A'}
+Path: ${item.path || currentPath.value + '/' + item.name}`;
+  alert(info);
 };
 
 const navigateTo = async (nextPath: string) => {
