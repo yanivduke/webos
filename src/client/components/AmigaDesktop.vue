@@ -3,8 +3,29 @@
     <!-- Amiga Workbench Menu Bar -->
     <div class="workbench-menu">
       <div class="menu-left">
-        <div class="menu-item" v-for="menu in menus" :key="menu.name" @click="toggleMenu(menu.name)">
+        <div 
+          class="menu-item" 
+          v-for="menu in menus" 
+          :key="menu.name" 
+          :class="{ active: activeMenu === menu.name }"
+          @click="toggleMenu(menu.name)"
+          @mouseenter="hoverMenu(menu.name)"
+          @mouseleave="clearHover"
+        >
           {{ menu.name }}
+          
+          <!-- Dropdown Menu -->
+          <div v-if="activeMenu === menu.name" class="menu-dropdown" @click.stop>
+            <div 
+              v-for="item in menu.items" 
+              :key="item"
+              class="menu-dropdown-item"
+              @click="handleMenuAction(menu.name, item)"
+              :class="{ disabled: isMenuItemDisabled(menu.name, item) }"
+            >
+              {{ item }}
+            </div>
+          </div>
         </div>
       </div>
       <div class="menu-right">
@@ -121,6 +142,7 @@ import AmigaCalculator from './apps/AmigaCalculator.vue';
 import AmigaShell from './apps/AmigaShell.vue';
 import AmigaClock from './apps/AmigaClock.vue';
 import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
+import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 
 interface Disk {
@@ -150,7 +172,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Clock', 'Calculator', 'Shell', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -170,18 +192,26 @@ const disks = ref<Disk[]>([
 // Windows
 const openWindows = ref<Window[]>([]);
 
+// Menu state
+const activeMenu = ref<string | null>(null);
+const menuHoverTimeout = ref<number | null>(null);
+
 // Time update
 let timeInterval: number | undefined;
 
 onMounted(() => {
   updateTime();
   timeInterval = window.setInterval(updateTime, 1000);
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', closeMenuOnClickOutside);
 });
 
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval);
   }
+  document.removeEventListener('click', closeMenuOnClickOutside);
 });
 
 const updateTime = () => {
@@ -193,8 +223,141 @@ const updateTime = () => {
 };
 
 const toggleMenu = (menuName: string) => {
-  console.log(`Menu clicked: ${menuName}`);
-  // Menu implementation
+  activeMenu.value = activeMenu.value === menuName ? null : menuName;
+};
+
+const hoverMenu = (menuName: string) => {
+  if (activeMenu.value && activeMenu.value !== menuName) {
+    activeMenu.value = menuName;
+  }
+};
+
+const clearHover = () => {
+  // Keep menu open when hovering over dropdown
+};
+
+const closeMenuOnClickOutside = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.menu-item')) {
+    activeMenu.value = null;
+  }
+};
+
+const isMenuItemDisabled = (menuName: string, item: string) => {
+  // Disable certain items when no windows are open
+  if (menuName === 'Window' && ['Close Window', 'Update', 'Clean Up'].includes(item)) {
+    return openWindows.value.length === 0;
+  }
+  if (menuName === 'Icons' && ['Copy', 'Rename', 'Delete'].includes(item)) {
+    return selectedCount.value === 0;
+  }
+  return false;
+};
+
+const handleMenuAction = (menuName: string, item: string) => {
+  console.log(`Menu action: ${menuName} -> ${item}`);
+  activeMenu.value = null; // Close menu after action
+  
+  switch (menuName) {
+    case 'Workbench':
+      handleWorkbenchAction(item);
+      break;
+    case 'Window':
+      handleWindowAction(item);
+      break;
+    case 'Icons':
+      handleIconsAction(item);
+      break;
+    case 'Tools':
+      handleToolsAction(item);
+      break;
+  }
+};
+
+const handleWorkbenchAction = (action: string) => {
+  switch (action) {
+    case 'About':
+      showAboutDialog();
+      break;
+    case 'Execute Command':
+      handleOpenTool('Shell');
+      break;
+    case 'Redraw All':
+      // Force re-render of desktop
+      location.reload();
+      break;
+    case 'Update':
+      updateSystemInfo();
+      break;
+    case 'Quit':
+      if (confirm('Really quit Workbench?')) {
+        window.close();
+      }
+      break;
+  }
+};
+
+const handleWindowAction = (action: string) => {
+  switch (action) {
+    case 'New Drawer':
+      alert('Create new drawer functionality coming soon!');
+      break;
+    case 'Close Window':
+      if (openWindows.value.length > 0) {
+        closeWindow(openWindows.value[openWindows.value.length - 1].id);
+      }
+      break;
+    case 'Update':
+      // Refresh current window
+      if (openWindows.value.length > 0) {
+        alert('Window updated');
+      }
+      break;
+    default:
+      alert(`${action} functionality coming soon!`);
+  }
+};
+
+const handleIconsAction = (action: string) => {
+  switch (action) {
+    case 'Open':
+      openUtilities();
+      break;
+    case 'Information':
+      alert('File information functionality coming soon!');
+      break;
+    default:
+      alert(`${action} functionality coming soon!`);
+  }
+};
+
+const handleToolsAction = (action: string) => {
+  handleOpenTool(action);
+};
+
+const showAboutDialog = () => {
+  const aboutText = `WebOS v2.0.0
+Amiga Workbench Style Interface
+
+Built with Vue 3 + TypeScript
+Server: Express.js with JSON persistence
+Features: 8 working applications
+
+© 2024 WebOS Project`;
+  
+  alert(aboutText);
+};
+
+const updateSystemInfo = async () => {
+  try {
+    const response = await fetch('/api/system/status');
+    const data = await response.json();
+    chipMem.value = data.memory?.chipMem || '512K';
+    fastMem.value = data.memory?.fastMem || '512K';
+    console.log('System info updated');
+  } catch (error) {
+    console.error('Failed to update system info:', error);
+  }
 };
 
 const openDisk = (disk: Disk) => {
@@ -260,109 +423,136 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
   const lowerName = fileName.toLowerCase();
   console.log('Opening file:', filePath, fileName);
 
+  let config;
+  let data;
+  
   if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: `NotePad - ${fileName}`,
-      x: 150 + openWindows.value.length * 20,
-      y: 100 + openWindows.value.length * 20,
-      width: 600,
-      height: 450,
-      component: AmigaNotePad,
-      data: { filePath, fileName }
-    };
-    openWindows.value.push(newWindow);
+    config = { title: `NotePad - ${fileName}`, ...toolConfigs['NotePad'] };
+    data = { filePath, fileName };
   } else if (lowerName.endsWith('.awml')) {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: `AWML Runner - ${fileName}`,
-      x: 180 + openWindows.value.length * 18,
-      y: 110 + openWindows.value.length * 18,
-      width: 640,
-      height: 480,
-      component: AmigaAwmlRunner,
-      data: { filePath, meta: fileMeta }
-    };
-    openWindows.value.push(newWindow);
+    config = { title: `AWML Runner - ${fileName}`, ...toolConfigs['AWML Runner'] };
+    data = { filePath, meta: fileMeta };
   } else {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: `Info - ${fileName}`,
-      x: 160 + openWindows.value.length * 16,
-      y: 120 + openWindows.value.length * 16,
-      width: 420,
-      height: 320,
-      component: AmigaFileInfo,
-      data: { filePath, meta: fileMeta }
-    };
-    openWindows.value.push(newWindow);
+    config = { title: `Info - ${fileName}`, width: 420, height: 320, component: AmigaFileInfo, baseX: 160, baseY: 120 };
+    data = { filePath, meta: fileMeta };
   }
+
+  openWindows.value.push(createWindow(config, data));
+};
+
+// Tool configurations for window creation - Updated to use AWML platform
+const toolConfigs = {
+  'NotePad': { 
+    title: 'NotePad', 
+    width: 600, 
+    height: 450, 
+    component: AmigaAwmlRunner, 
+    baseX: 150, 
+    baseY: 100,
+    awmlPath: 'dh0/System/Applications/NotePad.awml'
+  },
+  'Calculator': { 
+    title: 'Calculator', 
+    width: 350, 
+    height: 420, 
+    component: AmigaAwmlRunner, 
+    baseX: 200, 
+    baseY: 120,
+    awmlPath: 'dh0/System/Applications/Calculator.awml'
+  },
+  'Shell': { 
+    title: 'AmigaShell', 
+    width: 650, 
+    height: 450, 
+    component: AmigaShell, 
+    baseX: 170, 
+    baseY: 110 
+  },
+  'Clock': { 
+    title: 'Clock', 
+    width: 400, 
+    height: 320, 
+    component: AmigaAwmlRunner, 
+    baseX: 220, 
+    baseY: 130,
+    awmlPath: 'dh0/System/Applications/Clock.awml'
+  },
+  'Paint': { 
+    title: 'Paint', 
+    width: 700, 
+    height: 550, 
+    component: AmigaAwmlRunner, 
+    baseX: 160, 
+    baseY: 90,
+    awmlPath: 'dh0/System/Applications/Paint.awml'
+  },
+  'MultiView': { 
+    title: 'Paint', 
+    width: 700, 
+    height: 550, 
+    component: AmigaAwmlRunner, 
+    baseX: 160, 
+    baseY: 90,
+    awmlPath: 'dh0/System/Applications/Paint.awml'
+  },
+  'AWML Runner': { 
+    title: 'AWML Runner', 
+    width: 640, 
+    height: 480, 
+    component: AmigaAwmlRunner, 
+    baseX: 180, 
+    baseY: 110 
+  },
+  'AWML Wizard': { 
+    title: 'AWML Wizard', 
+    width: 600, 
+    height: 500, 
+    component: AmigaAwmlWizard, 
+    baseX: 200, 
+    baseY: 130 
+  }
+};
+
+const createWindow = (config: any, data = {}) => {
+  const offset = openWindows.value.length * 20;
+  
+  // If this is an AWML app, prepare AWML-specific data
+  let windowData = data;
+  if (config.awmlPath) {
+    windowData = {
+      ...data,
+      filePath: config.awmlPath,
+      meta: { 
+        name: config.title,
+        type: 'awml',
+        ...data.meta 
+      }
+    };
+  }
+  
+  return {
+    id: `window-${Date.now()}`,
+    title: config.title,
+    x: config.baseX + offset,
+    y: config.baseY + offset,
+    width: config.width,
+    height: config.height,
+    component: config.component,
+    data: windowData
+  };
 };
 
 const handleOpenTool = (toolName: string) => {
   console.log('Opening tool:', toolName);
+  
+  if (toolName === 'Preferences') {
+    alert('Preferences panel coming soon!');
+    return;
+  }
 
-  if (toolName === 'NotePad') {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: 'NotePad',
-      x: 150 + openWindows.value.length * 20,
-      y: 100 + openWindows.value.length * 20,
-      width: 600,
-      height: 450,
-      component: AmigaNotePad,
-      data: {}
-    };
-    openWindows.value.push(newWindow);
-  } else if (toolName === 'Calculator') {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: 'Calculator',
-      x: 200 + openWindows.value.length * 20,
-      y: 120 + openWindows.value.length * 20,
-      width: 280,
-      height: 420,
-      component: AmigaCalculator,
-      data: {}
-    };
-    openWindows.value.push(newWindow);
-  } else if (toolName === 'Shell') {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: 'AmigaShell',
-      x: 170 + openWindows.value.length * 20,
-      y: 110 + openWindows.value.length * 20,
-      width: 650,
-      height: 450,
-      component: AmigaShell,
-      data: {}
-    };
-    openWindows.value.push(newWindow);
-  } else if (toolName === 'Clock') {
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: 'Clock',
-      x: 220 + openWindows.value.length * 20,
-      y: 130 + openWindows.value.length * 20,
-      width: 320,
-      height: 480,
-      component: AmigaClock,
-      data: {}
-    };
-    openWindows.value.push(newWindow);
-  } else if (toolName === 'MultiView') {
-    // Open Paint when MultiView is clicked
-    const newWindow: Window = {
-      id: `window-${Date.now()}`,
-      title: 'AmigaPaint',
-      x: 160 + openWindows.value.length * 20,
-      y: 90 + openWindows.value.length * 20,
-      width: 700,
-      height: 550,
-      component: AmigaPaint,
-      data: {}
-    };
-    openWindows.value.push(newWindow);
+  const config = toolConfigs[toolName as keyof typeof toolConfigs];
+  if (config) {
+    openWindows.value.push(createWindow(config));
   } else {
     alert(`Tool "${toolName}" is not yet implemented`);
   }
@@ -406,6 +596,7 @@ const closeWindow = (windowId: string) => {
 }
 
 .menu-item {
+  position: relative;
   cursor: pointer;
   padding: 2px 8px;
   color: #000000;
@@ -413,9 +604,48 @@ const closeWindow = (windowId: string) => {
   user-select: none;
 }
 
-.menu-item:hover {
+.menu-item:hover,
+.menu-item.active {
   background: #0055aa;
   color: #ffffff;
+}
+
+/* Menu Dropdown */
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  min-width: 180px;
+  font-size: 11px;
+}
+
+.menu-dropdown-item {
+  padding: 4px 12px;
+  cursor: pointer;
+  color: #000000;
+  background: #a0a0a0;
+  border-bottom: 1px solid #808080;
+  transition: all 0.1s;
+  white-space: nowrap;
+}
+
+.menu-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.menu-dropdown-item:hover:not(.disabled) {
+  background: #0055aa;
+  color: #ffffff;
+}
+
+.menu-dropdown-item.disabled {
+  color: #808080;
+  cursor: not-allowed;
 }
 
 .menu-right {

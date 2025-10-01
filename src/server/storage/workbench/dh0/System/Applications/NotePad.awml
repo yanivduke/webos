@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<awml>
+  <module 
+    name="NotePad" 
+    version="1.0.0" 
+    author="WebOS Team"
+    src="NotePad.wasm" 
+    entry="awml_notepad_main">
+    
+    <metadata>
+      <description>Advanced text editor with syntax highlighting and file management</description>
+      <category>Productivity</category>
+      <icon>document</icon>
+    </metadata>
+    
+    <config>
+      <setting name="font_size" value="12">Editor font size</setting>
+      <setting name="word_wrap" value="true">Enable word wrapping</setting>
+      <setting name="syntax_highlight" value="true">Enable syntax highlighting</setting>
+      <setting name="auto_save" value="false">Auto-save documents</setting>
+      <setting name="default_disk" value="dh0">Default save location</setting>
+      <setting name="max_recent" value="10">Maximum recent files</setting>
+    </config>
+    
+    <permissions>
+      <permission>file_system</permission>
+      <permission>local_storage</permission>
+    </permissions>
+  </module>
+</awml>

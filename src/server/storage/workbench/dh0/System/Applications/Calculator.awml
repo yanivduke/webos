@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<awml>
+  <module 
+    name="Calculator" 
+    version="1.0.0" 
+    author="WebOS Team"
+    src="Calculator.wasm" 
+    entry="awml_calculator_main">
+    
+    <metadata>
+      <description>Scientific Calculator with history and memory functions</description>
+      <category>Productivity</category>
+      <icon>calculator</icon>
+    </metadata>
+    
+    <config>
+      <setting name="precision" value="8">Decimal precision</setting>
+      <setting name="mode" value="standard">Calculator mode (standard/scientific)</setting>
+      <setting name="sound" value="true">Button click sounds</setting>
+      <setting name="history_limit" value="100">Maximum history entries</setting>
+    </config>
+    
+    <permissions>
+      <permission>local_storage</permission>
+      <permission>audio</permission>
+    </permissions>
+  </module>
+</awml>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<awml>
+  <module 
+    name="Paint" 
+    version="1.0.0" 
+    author="WebOS Team"
+    src="Paint.wasm" 
+    entry="awml_paint_main">
+    
+    <metadata>
+      <description>Digital painting and drawing application with layers and effects</description>
+      <category>Graphics</category>
+      <icon>palette</icon>
+    </metadata>
+    
+    <config>
+      <setting name="canvas_width" value="640">Default canvas width</setting>
+      <setting name="canvas_height" value="480">Default canvas height</setting>
+      <setting name="brush_size" value="4">Default brush size</setting>
+      <setting name="color_palette" value="amiga">Color palette (amiga/web/custom)</setting>
+      <setting name="grid_snap" value="false">Enable grid snapping</setting>
+      <setting name="max_undo" value="20">Maximum undo steps</setting>
+      <setting name="auto_save" value="true">Auto-save canvas</setting>
+    </config>
+    
+    <permissions>
+      <permission>file_system</permission>
+      <permission>local_storage</permission>
+      <permission>canvas</permission>
+    </permissions>
+  </module>
+</awml>

@@ -1,0 +1,13 @@
+{
+  "canvases": [
+    {
+      "id": "canvas1",
+      "name": "Test Painting",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "width": 640,
+      "height": 400,
+      "updatedAt": "2025-10-01T11:45:46.309Z"
+    }
+  ],
+  "savedAt": "2025-10-01T11:45:46.309Z"
+}

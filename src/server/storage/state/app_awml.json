@@ -1,0 +1,21 @@
+{
+  "modules": [
+    {
+      "id": "dh0/test.awml",
+      "filePath": "dh0/test.awml",
+      "modulePath": null,
+      "entry": null,
+      "metadata": {
+        "author": "WebOS",
+        "description": "Test AWML module"
+      },
+      "config": {
+        "name": "Test Module",
+        "version": "1.0"
+      },
+      "updatedAt": "2025-10-01T11:45:53.480Z",
+      "createdAt": "2025-10-01T11:45:53.480Z"
+    }
+  ],
+  "savedAt": "2025-10-01T11:45:53.480Z"
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<awml>
+  <module 
+    name="Clock" 
+    version="1.0.0" 
+    author="WebOS Team"
+    src="Clock.wasm" 
+    entry="awml_clock_main">
+    
+    <metadata>
+      <description>Digital clock with alarms and world time zones</description>
+      <category>Utilities</category>
+      <icon>clock</icon>
+    </metadata>
+    
+    <config>
+      <setting name="time_format" value="24">Time format (12/24)</setting>
+      <setting name="show_seconds" value="true">Display seconds</setting>
+      <setting name="show_date" value="true">Display date</setting>
+      <setting name="timezone" value="local">Default timezone</setting>
+      <setting name="alarm_sound" value="true">Enable alarm sounds</setting>
+      <setting name="update_interval" value="1000">Update interval (ms)</setting>
+    </config>
+    
+    <permissions>
+      <permission>audio</permission>
+      <permission>local_storage</permission>
+      <permission>notifications</permission>
+    </permissions>
+  </module>
+</awml>

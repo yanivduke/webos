@@ -1,0 +1,12 @@
+{
+  "memory": 0,
+  "history": [
+    {
+      "id": "f3aaba6a-1eb7-4d71-b74e-ce1b58e2fa38",
+      "expression": "2 + 2",
+      "result": 4,
+      "executedAt": "2025-10-01T11:41:11.776Z"
+    }
+  ],
+  "savedAt": "2025-10-01T11:41:11.777Z"
+}

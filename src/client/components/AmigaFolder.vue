@@ -39,6 +39,16 @@
             <circle cx="24" cy="28" r="3" fill="#333"/>
           </svg>
 
+          <!-- AWML App Icon -->
+          <svg v-else-if="item.type === 'awml-app'" viewBox="0 0 48 48" class="icon-svg">
+            <rect x="8" y="8" width="32" height="32" fill="#ff6600" stroke="#000" stroke-width="2"/>
+            <rect x="12" y="12" width="24" height="6" fill="#fff"/>
+            <rect x="12" y="20" width="24" height="6" fill="#fff"/>
+            <rect x="12" y="28" width="24" height="6" fill="#fff"/>
+            <circle cx="38" cy="10" r="4" fill="#00ff00"/>
+            <text x="39" y="13" text-anchor="middle" fill="#000" font-size="6" font-family="monospace">A</text>
+          </svg>
+
           <!-- Tool Icon -->
           <svg v-else-if="item.type === 'tool'" viewBox="0 0 48 48" class="icon-svg">
             <rect x="12" y="8" width="24" height="32" fill="#0055aa" stroke="#000" stroke-width="2"/>
@@ -121,15 +131,50 @@ const loadFiles = async () => {
   errorMessage.value = '';
 
   try {
-    // Special handling for utils (tools) - use static list
+    // Special handling for utils (tools) - load AWML applications from System/Applications
     if (currentPath.value === 'utils') {
+      try {
+        const appsResponse = await fetch(`/api/files/list?path=${encodeURIComponent('dh0/System/Applications')}`);
+        if (appsResponse.ok) {
+          const appsData = await appsResponse.json();
+          const awmlApps = (appsData.items || [])
+            .filter((item: any) => item.name.endsWith('.awml'))
+            .map((item: any) => ({
+              id: `app_${item.name.replace('.awml', '')}`,
+              name: item.name.replace('.awml', ''),
+              type: 'awml-app',
+              size: item.size,
+              path: `dh0/System/Applications/${item.name}`,
+              created: item.created,
+              modified: item.modified
+            }));
+          
+          // Add system tools
+          const systemTools = [
+            { id: 'u_shell', name: 'Shell', type: 'tool' },
+            { id: 'u_awml_runner', name: 'AWML Runner', type: 'tool' },
+            { id: 'u_awml_wizard', name: 'AWML Wizard', type: 'tool' }
+          ];
+          
+          items.value = [...awmlApps, ...systemTools];
+          parentPath.value = null;
+          selectedItems.value = [];
+          isLoading.value = false;
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load applications:', error);
+      }
+      
+      // Fallback to hardcoded list if loading fails
       items.value = [
-        { id: 'u1', name: 'Clock', type: 'tool' },
-        { id: 'u2', name: 'Calculator', type: 'tool' },
-        { id: 'u3', name: 'MultiView', type: 'tool' },
-        { id: 'u4', name: 'NotePad', type: 'tool' },
+        { id: 'u1', name: 'Calculator', type: 'tool' },
+        { id: 'u2', name: 'Clock', type: 'tool' },
+        { id: 'u3', name: 'NotePad', type: 'tool' },
+        { id: 'u4', name: 'Paint', type: 'tool' },
         { id: 'u5', name: 'Shell', type: 'tool' },
-        { id: 'u6', name: 'More', type: 'folder' }
+        { id: 'u6', name: 'AWML Runner', type: 'tool' },
+        { id: 'u7', name: 'AWML Wizard', type: 'tool' }
       ];
       parentPath.value = null;
       selectedItems.value = [];
@@ -185,7 +230,11 @@ const selectItem = (item: FolderItem, event: MouseEvent) => {
 };
 
 const openItem = (item: FolderItem) => {
-  if (item.type === 'tool') {
+  if (item.type === 'awml-app') {
+    // AWML applications - emit as file with .awml extension
+    const filePath = item.path || `${currentPath.value}/${item.name}.awml`;
+    emit('openFile', filePath, { ...item, type: 'awml' });
+  } else if (item.type === 'tool') {
     // Emit tool opening event
     emit('openTool', item.name);
   } else if (item.type === 'file') {
