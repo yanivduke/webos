@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/amiga-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebOS - Amiga Workbench</title>
+    <meta name="description" content="A retro Amiga Workbench-style operating system interface built for the web" />
+    <style>
+      /* Prevent FOUC (Flash of Unstyled Content) */
+      body {
+        margin: 0;
+        background: #a0a0a0;
+        overflow: hidden;
+      }
+
+      #app {
+        width: 100%;
+        height: 100vh;
+      }
+
+      /* Loading screen */
+      .loading-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #a0a0a0;
+        font-family: 'Courier New', monospace;
+        color: #000;
+      }
+
+      .loading-screen h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 0 #ffffff;
+      }
+
+      .loading-bar {
+        width: 300px;
+        height: 20px;
+        border: 2px solid #000;
+        background: #fff;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .loading-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0;
+        background: #0055aa;
+        animation: loading 2s ease-in-out infinite;
+      }
+
+      @keyframes loading {
+        0% { width: 0; }
+        50% { width: 100%; }
+        100% { width: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="loading-screen">
+        <h1>Amiga Workbench 3.1</h1>
+        <div class="loading-bar"></div>
+        <p style="margin-top: 20px;">Loading system...</p>
+      </div>
+    </div>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
