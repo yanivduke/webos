@@ -391,4 +391,99 @@ router.get('/raw', async (req, res) => {
   }
 });
 
+// POST /api/files/copy - Copy a file or folder
+router.post('/copy', async (req, res) => {
+  try {
+    const { sourcePath, destinationPath, newName } = req.body;
+
+    if (!sourcePath || !destinationPath) {
+      return res.status(400).json({
+        error: 'Source path and destination path are required'
+      });
+    }
+
+    const safeSourcePath = sanitizePath(sourcePath);
+    const safeDestinationPath = sanitizePath(destinationPath);
+    const safeName = newName ? sanitizeName(newName) : path.basename(safeSourcePath);
+
+    if (!safeSourcePath || !safeDestinationPath || !safeName) {
+      return res.status(400).json({
+        error: 'Invalid paths provided'
+      });
+    }
+
+    const sourceFullPath = getFullPath(safeSourcePath);
+    const destinationFullPath = getFullPath(safeDestinationPath, safeName);
+
+    // Check if source exists
+    try {
+      await fs.access(sourceFullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'Source file or folder not found',
+        path: sourcePath
+      });
+    }
+
+    // Check if destination already exists
+    try {
+      await fs.access(destinationFullPath);
+      return res.status(409).json({
+        error: 'A file or folder with that name already exists at destination',
+        name: safeName
+      });
+    } catch {
+      // Doesn't exist, proceed with copy
+    }
+
+    // Check if source is a directory
+    const sourceStats = await fs.stat(sourceFullPath);
+    
+    if (sourceStats.isDirectory()) {
+      // Copy directory recursively
+      await copyDirectory(sourceFullPath, destinationFullPath);
+    } else {
+      // Copy file
+      await fs.copyFile(sourceFullPath, destinationFullPath);
+    }
+
+    const newStats = await getFileStats(destinationFullPath);
+
+    res.json({
+      message: `${sourceStats.isDirectory() ? 'Folder' : 'File'} copied successfully`,
+      item: {
+        id: `${sourceStats.isDirectory() ? 'd' : 'f'}_${safeName}`,
+        name: safeName,
+        type: sourceStats.isDirectory() ? 'folder' : 'file',
+        size: newStats ? newStats.size : null,
+        created: newStats ? newStats.created : null,
+        modified: newStats ? newStats.modified : null
+      }
+    });
+  } catch (error) {
+    console.error('Error copying file/folder:', error);
+    res.status(500).json({
+      error: 'Failed to copy file or folder',
+      message: error.message
+    });
+  }
+});
+
+// Helper function to copy directory recursively
+const copyDirectory = async (src, dest) => {
+  await fs.mkdir(dest, { recursive: true });
+  const entries = await fs.readdir(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyDirectory(srcPath, destPath);
+    } else {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+};
+
 module.exports = router;

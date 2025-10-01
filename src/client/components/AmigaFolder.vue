@@ -10,10 +10,19 @@
         v-for="(item, index) in items"
         :key="index"
         class="folder-item"
-        :class="{ selected: selectedItems.includes(item.id) }"
+        :class="{ 
+          selected: selectedItems.includes(item.id),
+          'drag-over': dragOverItem === item.id && item.type === 'folder'
+        }"
+        :draggable="true"
         @click="selectItem(item, $event)"
         @dblclick="openItem(item)"
         @contextmenu.prevent="showContextMenu(item, $event)"
+        @dragstart="handleDragStart(item, $event)"
+        @dragend="handleDragEnd"
+        @dragover="handleDragOver(item, $event)"
+        @dragleave="handleDragLeave(item, $event)"
+        @drop="handleDrop(item, $event)"
       >
         <div class="item-icon">
           <!-- Folder Icon -->
@@ -76,8 +85,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import clipboard, { type ClipboardItem } from './ClipboardManager';
 
 interface Props {
   data?: any;
@@ -109,15 +119,47 @@ const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
 
-const contextMenuItems = computed<ContextMenuItem[]>(() => [
-  { label: 'Open', action: 'open', icon: '▶' },
-  { label: '', action: '', separator: true },
-  { label: 'Copy', action: 'copy', icon: '📋' },
-  { label: 'Rename', action: 'rename', icon: '✏' },
-  { label: 'Delete', action: 'delete', icon: '🗑' },
-  { label: '', action: '', separator: true },
-  { label: 'Info', action: 'info', icon: 'ℹ' }
-]);
+// Drag and drop state
+const dragOverItem = ref<string | null>(null);
+const draggedItems = ref<FolderItem[]>([]);
+
+const contextMenuItems = computed<ContextMenuItem[]>(() => {
+  const hasClipboard = clipboard.hasItems();
+  const hasSelection = selectedItems.value.length > 0;
+  const isMultiSelection = selectedItems.value.length > 1;
+  
+  // Base menu items
+  const menuItems: ContextMenuItem[] = [];
+  
+  // If item-specific (right-clicked on item)
+  if (contextMenuItem.value) {
+    menuItems.push(
+      { label: 'Open', action: 'open', icon: '▶' },
+      { label: '', action: '', separator: true },
+      { label: 'Copy', action: 'copy', icon: '📋', disabled: isMultiSelection && !hasSelection },
+      { label: 'Cut', action: 'cut', icon: '✂', disabled: isMultiSelection && !hasSelection },
+      { label: 'Duplicate', action: 'duplicate', icon: '⧉' },
+      { label: '', action: '', separator: true },
+      { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
+      { label: 'Delete', action: 'delete', icon: '🗑' },
+      { label: '', action: '', separator: true },
+      { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
+    );
+  }
+  
+  // Universal menu items (always available)
+  if (hasClipboard) {
+    menuItems.push({ label: 'Paste', action: 'paste', icon: '📄', disabled: false });
+    menuItems.push({ label: '', action: '', separator: true });
+  }
+  
+  menuItems.push(
+    { label: 'New File', action: 'new-file', icon: '📄' },
+    { label: 'New Folder', action: 'new-folder', icon: '📁' }
+  );
+  
+  return menuItems;
+});
 
 const currentPath = ref<string>(props.data?.id || 'dh0');
 const parentPath = ref<string | null>(null);
@@ -172,9 +214,10 @@ const loadFiles = async () => {
         { id: 'u2', name: 'Clock', type: 'tool' },
         { id: 'u3', name: 'NotePad', type: 'tool' },
         { id: 'u4', name: 'Paint', type: 'tool' },
-        { id: 'u5', name: 'Shell', type: 'tool' },
-        { id: 'u6', name: 'AWML Runner', type: 'tool' },
-        { id: 'u7', name: 'AWML Wizard', type: 'tool' }
+        { id: 'u5', name: 'MultiView', type: 'tool' },
+        { id: 'u6', name: 'Shell', type: 'tool' },
+        { id: 'u7', name: 'AWML Runner', type: 'tool' },
+        { id: 'u8', name: 'AWML Wizard', type: 'tool' }
       ];
       parentPath.value = null;
       selectedItems.value = [];
@@ -256,7 +299,7 @@ const showContextMenu = (item: FolderItem, event: MouseEvent) => {
 };
 
 const handleContextAction = async (action: string) => {
-  if (!contextMenuItem.value) return;
+  if (!contextMenuItem.value && !['paste', 'new-file', 'new-folder'].includes(action)) return;
 
   const item = contextMenuItem.value;
 
@@ -270,13 +313,28 @@ const handleContextAction = async (action: string) => {
       }
       break;
     case 'copy':
-      await copyItem(item);
+      await copySelectedItems();
+      break;
+    case 'cut':
+      await cutSelectedItems();
+      break;
+    case 'paste':
+      await pasteItems();
       break;
     case 'rename':
       await renameItem(item);
       break;
     case 'info':
       showItemInfo(item);
+      break;
+    case 'new-file':
+      await createNewFile();
+      break;
+    case 'new-folder':
+      await createNewFolder();
+      break;
+    case 'duplicate':
+      await duplicateItem(item);
       break;
   }
 
@@ -375,16 +433,346 @@ Path: ${item.path || currentPath.value + '/' + item.name}`;
   alert(info);
 };
 
+// Enhanced clipboard operations
+const copySelectedItems = () => {
+  const selected = getSelectedItems();
+  if (selected.length === 0) return;
+
+  const clipboardItems: ClipboardItem[] = selected.map(item => ({
+    id: item.id,
+    name: item.name,
+    type: item.type as 'file' | 'folder',
+    path: item.path || `${currentPath.value}/${item.name}`,
+    operation: 'copy',
+    size: item.size,
+    created: item.created,
+    modified: item.modified
+  }));
+
+  clipboard.copy(clipboardItems);
+  console.log(`Copied ${selected.length} item(s) to clipboard`);
+};
+
+const cutSelectedItems = () => {
+  const selected = getSelectedItems();
+  if (selected.length === 0) return;
+
+  const clipboardItems: ClipboardItem[] = selected.map(item => ({
+    id: item.id,
+    name: item.name,
+    type: item.type as 'file' | 'folder',
+    path: item.path || `${currentPath.value}/${item.name}`,
+    operation: 'cut',
+    size: item.size,
+    created: item.created,
+    modified: item.modified
+  }));
+
+  clipboard.cut(clipboardItems);
+  console.log(`Cut ${selected.length} item(s) to clipboard`);
+};
+
+const pasteItems = async () => {
+  try {
+    await clipboard.paste(currentPath.value);
+    console.log('Items pasted successfully');
+    await loadFiles(); // Refresh the view
+  } catch (error) {
+    console.error('Paste operation failed:', error);
+    alert(`Paste failed: ${error.message}`);
+  }
+};
+
+const getSelectedItems = (): FolderItem[] => {
+  return items.value.filter(item => selectedItems.value.includes(item.id));
+};
+
+const createNewFile = async () => {
+  const fileName = prompt('Enter file name:');
+  if (!fileName) return;
+
+  try {
+    const response = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: currentPath.value,
+        name: fileName,
+        type: 'file',
+        content: ''
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create file');
+    }
+
+    console.log(`File "${fileName}" created successfully`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error creating file:', error);
+    alert(`Failed to create file: ${error.message}`);
+  }
+};
+
+const createNewFolder = async () => {
+  const folderName = prompt('Enter folder name:');
+  if (!folderName) return;
+
+  try {
+    const response = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: currentPath.value,
+        name: folderName,
+        type: 'folder'
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create folder');
+    }
+
+    console.log(`Folder "${folderName}" created successfully`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    alert(`Failed to create folder: ${error.message}`);
+  }
+};
+
+const duplicateItem = async (item: FolderItem) => {
+  const baseName = item.name;
+  const extension = item.type === 'file' ? (baseName.includes('.') ? baseName.split('.').pop() : '') : '';
+  const nameWithoutExt = extension ? baseName.replace(`.${extension}`, '') : baseName;
+  const newName = `${nameWithoutExt} copy${extension ? `.${extension}` : ''}`;
+
+  try {
+    const sourcePath = item.path || `${currentPath.value}/${item.name}`;
+    
+    const response = await fetch('/api/files/copy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sourcePath: sourcePath,
+        destinationPath: currentPath.value,
+        newName: newName
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to duplicate item');
+    }
+
+    console.log(`Item "${item.name}" duplicated as "${newName}"`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error duplicating item:', error);
+    alert(`Failed to duplicate item: ${error.message}`);
+  }
+};
+
 const navigateTo = async (nextPath: string) => {
   if (!nextPath || nextPath === currentPath.value) return;
   currentPath.value = nextPath;
   await loadFiles();
 };
 
+// Drag and drop handlers
+const handleDragStart = (item: FolderItem, event: DragEvent) => {
+  // Include all selected items if the dragged item is selected
+  if (selectedItems.value.includes(item.id)) {
+    draggedItems.value = getSelectedItems();
+  } else {
+    draggedItems.value = [item];
+    selectedItems.value = [item.id];
+  }
+
+  // Set drag effect and data
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'copyMove';
+    event.dataTransfer.setData('text/plain', JSON.stringify({
+      items: draggedItems.value.map(i => ({ id: i.id, name: i.name, path: i.path || `${currentPath.value}/${i.name}` }))
+    }));
+  }
+
+  console.log(`Started dragging ${draggedItems.value.length} item(s)`);
+};
+
+const handleDragEnd = () => {
+  dragOverItem.value = null;
+  draggedItems.value = [];
+};
+
+const handleDragOver = (item: FolderItem, event: DragEvent) => {
+  // Only allow drop on folders
+  if (item.type !== 'folder') return;
+
+  event.preventDefault();
+  
+  if (event.dataTransfer) {
+    // Determine drop effect based on key modifiers
+    if (event.ctrlKey || event.metaKey) {
+      event.dataTransfer.dropEffect = 'copy';
+    } else {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  dragOverItem.value = item.id;
+};
+
+const handleDragLeave = (item: FolderItem, event: DragEvent) => {
+  // Only clear if we're actually leaving the element (not entering a child)
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const x = event.clientX;
+  const y = event.clientY;
+  
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    if (dragOverItem.value === item.id) {
+      dragOverItem.value = null;
+    }
+  }
+};
+
+const handleDrop = async (targetItem: FolderItem, event: DragEvent) => {
+  event.preventDefault();
+  dragOverItem.value = null;
+
+  if (targetItem.type !== 'folder') return;
+  if (!event.dataTransfer) return;
+
+  try {
+    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+    const itemsToMove = data.items as { id: string; name: string; path: string; }[];
+    
+    if (!itemsToMove || itemsToMove.length === 0) return;
+
+    const isCopyOperation = event.ctrlKey || event.metaKey;
+    const targetPath = targetItem.path || `${currentPath.value}/${targetItem.name}`;
+
+    console.log(`${isCopyOperation ? 'Copying' : 'Moving'} ${itemsToMove.length} item(s) to ${targetPath}`);
+
+    // Perform the operation for each item
+    for (const item of itemsToMove) {
+      try {
+        if (isCopyOperation) {
+          // Copy operation
+          await fetch('/api/files/copy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sourcePath: item.path,
+              destinationPath: targetPath,
+              newName: item.name
+            })
+          });
+        } else {
+          // Move operation (rename to new path)
+          const newPath = `${targetPath}/${item.name}`;
+          await fetch('/api/files/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              path: item.path,
+              newName: newPath
+            })
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to ${isCopyOperation ? 'copy' : 'move'} ${item.name}:`, error);
+      }
+    }
+
+    // Refresh the view and clear selection
+    await loadFiles();
+    selectedItems.value = [];
+    
+    console.log(`Successfully ${isCopyOperation ? 'copied' : 'moved'} ${itemsToMove.length} item(s)`);
+    
+  } catch (error) {
+    console.error('Drop operation failed:', error);
+    alert('Drop operation failed');
+  } finally {
+    draggedItems.value = [];
+  }
+};
+
+// Keyboard shortcuts
+const handleKeyDown = async (event: KeyboardEvent) => {
+  // Don't interfere with input elements
+  if (event.target instanceof HTMLInputElement) return;
+
+  const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+  
+  if (isCtrlOrCmd) {
+    switch (event.key.toLowerCase()) {
+      case 'c':
+        event.preventDefault();
+        if (selectedItems.value.length > 0) {
+          copySelectedItems();
+        }
+        break;
+      case 'x':
+        event.preventDefault();
+        if (selectedItems.value.length > 0) {
+          cutSelectedItems();
+        }
+        break;
+      case 'v':
+        event.preventDefault();
+        if (clipboard.hasItems()) {
+          pasteItems();
+        }
+        break;
+      case 'a':
+        event.preventDefault();
+        // Select all items
+        selectedItems.value = items.value.map(item => item.id);
+        break;
+    }
+  } else {
+    switch (event.key) {
+      case 'Delete':
+      case 'Backspace':
+        if (selectedItems.value.length > 0) {
+          const selected = getSelectedItems();
+          if (confirm(`Delete ${selected.length} item(s)?`)) {
+            for (const item of selected) {
+              await deleteItem(item);
+            }
+          }
+        }
+        break;
+      case 'F2':
+        if (selectedItems.value.length === 1) {
+          const item = items.value.find(i => i.id === selectedItems.value[0]);
+          if (item) {
+            await renameItem(item);
+          }
+        }
+        break;
+    }
+  }
+};
+
 const navigateUp = async () => {
   if (!parentPath.value) return;
   await navigateTo(parentPath.value);
 };
+
+// Lifecycle hooks
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <style scoped>
@@ -445,6 +833,12 @@ const navigateUp = async () => {
 .folder-item.selected {
   background: #0055aa;
   border-color: #0055aa;
+}
+
+.folder-item.drag-over {
+  background: rgba(255, 170, 0, 0.3);
+  border-color: #ffaa00;
+  border-style: dashed;
 }
 
 .folder-item.selected .item-label {

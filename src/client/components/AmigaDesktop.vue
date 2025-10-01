@@ -143,6 +143,7 @@ import AmigaPaint from './apps/AmigaPaint.vue';
 import AmigaCalculator from './apps/AmigaCalculator.vue';
 import AmigaShell from './apps/AmigaShell.vue';
 import AmigaClock from './apps/AmigaClock.vue';
+import AmigaMultiView from './apps/AmigaMultiView.vue';
 import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
@@ -175,7 +176,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -533,13 +534,12 @@ const toolConfigs = {
     awmlPath: 'dh0/System/Applications/Paint.awml'
   },
   'MultiView': { 
-    title: 'Paint', 
-    width: 700, 
-    height: 550, 
-    component: AmigaAwmlRunner, 
+    title: 'MultiView', 
+    width: 600, 
+    height: 450, 
+    component: AmigaMultiView, 
     baseX: 160, 
-    baseY: 90,
-    awmlPath: 'dh0/System/Applications/Paint.awml'
+    baseY: 90
   },
   'AWML Runner': { 
     title: 'AWML Runner', 

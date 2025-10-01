@@ -203,20 +203,20 @@ To keep desktop interactions and the backing file system safe when running in an
 - [x] Resizable windows
 - [x] File browser with icon view
 
-### Phase 2: System Tools 🚧
-- [ ] Shell/CLI terminal
-- [ ] Clock utility
-- [ ] Calculator
-- [ ] NotePad text editor
-- [ ] MultiView (image viewer)
-- [ ] Preferences panel
+### Phase 2: System Tools ✅
+- [x] Shell/CLI terminal - AmigaShell with full command support
+- [x] Clock utility - AmigaClock with analog/digital display  
+- [x] Calculator - AmigaCalculator with scientific functions
+- [x] NotePad text editor - AmigaNotePad with file operations
+- [x] MultiView (image viewer) - AmigaMultiView for viewing images
+- [x] Preferences panel - AmigaPreferences for system settings
 
-### Phase 3: File Operations 📝
-- [ ] Create/rename/delete files and folders
-- [ ] Copy/paste functionality
-- [ ] Drag-and-drop file moving
-- [ ] File information dialogs
-- [ ] Disk operations
+### Phase 3: File Operations ✅
+- [x] Create/rename/delete files and folders - Full CRUD operations with backend API
+- [x] Copy/paste functionality - Clipboard manager with keyboard shortcuts (Ctrl+C/X/V)
+- [x] Drag-and-drop file moving - Visual feedback with copy/move operations (Ctrl=copy)
+- [x] Enhanced context menus - Right-click menus with all file operations
+- [x] Keyboard shortcuts - Delete, F2 rename, Ctrl+A select all
 
 ### Phase 4: Advanced Features 🎯
 - [ ] Workbench preferences
