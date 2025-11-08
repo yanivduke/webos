@@ -10,6 +10,7 @@ const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
+const widgetsRoutes = require('./routes/widgets.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -35,6 +36,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/widgets', widgetsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -59,14 +61,16 @@ app.get('/', (req, res) => {
       files: '/api/files',
       settings: '/api/settings',
       appState: '/api/app-state',
-      shell: '/api/shell'
+      shell: '/api/shell',
+      widgets: '/api/widgets'
     },
     features: [
       'Real file system with persistence',
       'Application state management',
       'Shell command execution',
       'System settings persistence',
-      '5 working applications'
+      '5 working applications',
+      'Cloud services widgets (Weather, News, Clock)'
     ]
   });
 });
@@ -82,7 +86,8 @@ app.use((req, res) => {
       '/api/files',
       '/api/settings',
       '/api/app-state',
-      '/api/shell'
+      '/api/shell',
+      '/api/widgets'
     ]
   });
 });
@@ -124,6 +129,7 @@ server.listen(PORT, () => {
   console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
+  console.log('  🌤️  Widgets (Weather/News): /api/widgets');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });

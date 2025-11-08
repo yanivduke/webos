@@ -161,6 +161,82 @@
           </select>
         </div>
       </div>
+
+      <!-- Widgets Settings -->
+      <div v-if="activeTab === 'widgets'" class="prefs-panel">
+        <h3>Cloud Services & Widgets</h3>
+        <p class="widget-intro">Enable modern cloud services to display on your desktop</p>
+
+        <!-- Clock Widget -->
+        <div class="widget-section">
+          <h4>Clock Widget</h4>
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.widgets.clock.enabled" class="amiga-checkbox" />
+              Enable Clock Widget
+            </label>
+          </div>
+          <div class="pref-group" v-if="settings.widgets.clock.enabled">
+            <label>
+              <input type="checkbox" v-model="settings.widgets.clock.showDate" class="amiga-checkbox" />
+              Show Date
+            </label>
+          </div>
+          <div class="pref-group" v-if="settings.widgets.clock.enabled">
+            <label>
+              <input type="checkbox" v-model="settings.widgets.clock.showSeconds" class="amiga-checkbox" />
+              Show Seconds
+            </label>
+          </div>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="widget-section">
+          <h4>Weather Service</h4>
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.widgets.weather.enabled" class="amiga-checkbox" />
+              Enable Weather Widget
+            </label>
+          </div>
+          <div class="pref-group" v-if="settings.widgets.weather.enabled">
+            <label>Location:</label>
+            <input type="text" v-model="settings.widgets.weather.location" class="amiga-input" placeholder="City name" />
+          </div>
+          <div class="pref-group" v-if="settings.widgets.weather.enabled">
+            <label>Units:</label>
+            <select v-model="settings.widgets.weather.units" class="amiga-select">
+              <option value="metric">Celsius</option>
+              <option value="imperial">Fahrenheit</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- News Widget -->
+        <div class="widget-section">
+          <h4>News Service</h4>
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.widgets.news.enabled" class="amiga-checkbox" />
+              Enable News Widget
+            </label>
+          </div>
+          <div class="pref-group" v-if="settings.widgets.news.enabled">
+            <label>Category:</label>
+            <select v-model="settings.widgets.news.category" class="amiga-select">
+              <option value="general">General</option>
+              <option value="technology">Technology</option>
+              <option value="business">Business</option>
+              <option value="science">Science</option>
+              <option value="entertainment">Entertainment</option>
+            </select>
+          </div>
+          <div class="pref-group" v-if="settings.widgets.news.enabled">
+            <label>Max Items:</label>
+            <input type="number" v-model.number="settings.widgets.news.maxItems" class="amiga-input" min="3" max="10" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="prefs-footer">
@@ -184,7 +260,8 @@ const tabs = [
   { id: 'display', name: 'Display' },
   { id: 'sound', name: 'Sound' },
   { id: 'workbench', name: 'Workbench' },
-  { id: 'system', name: 'System' }
+  { id: 'system', name: 'System' },
+  { id: 'widgets', name: 'Widgets' }
 ];
 
 const settings = ref({
@@ -212,6 +289,23 @@ const settings = ref({
     dateFormat: 'MM/DD/YYYY',
     autoSave: true,
     memoryDisplay: 'authentic'
+  },
+  widgets: {
+    clock: {
+      enabled: true,
+      showDate: true,
+      showSeconds: true
+    },
+    weather: {
+      enabled: false,
+      location: 'New York',
+      units: 'metric'
+    },
+    news: {
+      enabled: false,
+      category: 'technology',
+      maxItems: 5
+    }
   }
 });
 
@@ -276,6 +370,23 @@ const resetToDefaults = () => {
         dateFormat: 'MM/DD/YYYY',
         autoSave: true,
         memoryDisplay: 'authentic'
+      },
+      widgets: {
+        clock: {
+          enabled: true,
+          showDate: true,
+          showSeconds: true
+        },
+        weather: {
+          enabled: false,
+          location: 'New York',
+          units: 'metric'
+        },
+        news: {
+          enabled: false,
+          category: 'technology',
+          maxItems: 5
+        }
       }
     };
   }
@@ -407,5 +518,43 @@ onMounted(() => {
 .amiga-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   background: #888888;
+}
+
+.widget-intro {
+  font-size: 8px;
+  color: #666666;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.widget-section {
+  background: #f0f0f0;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.widget-section h4 {
+  font-size: 10px;
+  color: #0055aa;
+  margin: 0 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #cccccc;
+}
+
+.amiga-input {
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px 8px;
+  font-size: 9px;
+  font-family: 'Press Start 2P', monospace;
+  color: #000000;
+  width: 100%;
+}
+
+.amiga-input:focus {
+  outline: 1px solid #0055aa;
 }
 </style>

@@ -28,6 +28,23 @@ let settings = {
     timeFormat: '24h',
     startupSound: true,
     confirmDelete: true
+  },
+  widgets: {
+    clock: {
+      enabled: true,
+      showDate: true,
+      showSeconds: true
+    },
+    weather: {
+      enabled: false,
+      location: 'New York',
+      units: 'metric'
+    },
+    news: {
+      enabled: false,
+      category: 'technology',
+      maxItems: 5
+    }
   }
 };
 
@@ -106,6 +123,23 @@ router.post('/reset', (req, res) => {
       timeFormat: '24h',
       startupSound: true,
       confirmDelete: true
+    },
+    widgets: {
+      clock: {
+        enabled: true,
+        showDate: true,
+        showSeconds: true
+      },
+      weather: {
+        enabled: false,
+        location: 'New York',
+        units: 'metric'
+      },
+      news: {
+        enabled: false,
+        category: 'technology',
+        maxItems: 5
+      }
     }
   };
 

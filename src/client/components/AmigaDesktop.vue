@@ -36,7 +36,7 @@
 
     <!-- Desktop Background (Authentic Amiga gray) -->
     <div class="desktop-background">
-      <!-- Disk Icons on Desktop -->
+      <!-- Disk Icons on Desktop (Left Side) -->
       <div class="desktop-icons">
         <div class="disk-icon" v-for="disk in disks" :key="disk.id" @dblclick="openDisk(disk)">
           <div class="icon-image">
@@ -119,6 +119,25 @@
           />
         </AmigaWindow>
       </div>
+
+      <!-- Widgets Panel (Right Side) -->
+      <div class="widgets-panel">
+        <ClockWidget
+          v-if="widgetSettings.clock.enabled"
+          :showDate="widgetSettings.clock.showDate"
+          :showSeconds="widgetSettings.clock.showSeconds"
+        />
+        <WeatherWidget
+          v-if="widgetSettings.weather.enabled"
+          :location="widgetSettings.weather.location"
+          :units="widgetSettings.weather.units"
+        />
+        <NewsWidget
+          v-if="widgetSettings.news.enabled"
+          :category="widgetSettings.news.category"
+          :maxItems="widgetSettings.news.maxItems"
+        />
+      </div>
     </div>
 
     <!-- Amiga Workbench Footer Bar -->
@@ -148,6 +167,9 @@ import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
+import ClockWidget from './widgets/ClockWidget.vue';
+import WeatherWidget from './widgets/WeatherWidget.vue';
+import NewsWidget from './widgets/NewsWidget.vue';
 
 interface Disk {
   id: string;
@@ -200,13 +222,47 @@ const openWindows = ref<Window[]>([]);
 const activeMenu = ref<string | null>(null);
 const menuHoverTimeout = ref<number | null>(null);
 
+// Widget settings
+const widgetSettings = ref({
+  clock: {
+    enabled: true,
+    showDate: true,
+    showSeconds: true
+  },
+  weather: {
+    enabled: false,
+    location: 'New York',
+    units: 'metric' as 'metric' | 'imperial'
+  },
+  news: {
+    enabled: false,
+    category: 'technology',
+    maxItems: 5
+  }
+});
+
 // Time update
 let timeInterval: number | undefined;
+
+const loadWidgetSettings = async () => {
+  try {
+    const response = await fetch('/api/settings/widgets');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.settings) {
+        widgetSettings.value = { ...widgetSettings.value, ...data.settings };
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load widget settings:', error);
+  }
+};
 
 onMounted(() => {
   updateTime();
   timeInterval = window.setInterval(updateTime, 1000);
-  
+  loadWidgetSettings();
+
   // Close menu when clicking outside
   document.addEventListener('click', closeMenuOnClickOutside);
 });
@@ -902,13 +958,43 @@ const closeWindow = (windowId: string) => {
   position: absolute;
   top: 20px;
   left: 120px;
-  right: 20px;
+  right: 220px;
   bottom: 20px;
   pointer-events: none;
 }
 
 .windows-container > * {
   pointer-events: all;
+}
+
+/* Widgets Panel */
+.widgets-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 200px;
+  max-height: calc(100% - 40px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbar for widgets panel */
+.widgets-panel::-webkit-scrollbar {
+  width: 12px;
+}
+
+.widgets-panel::-webkit-scrollbar-track {
+  background: #888888;
+}
+
+.widgets-panel::-webkit-scrollbar-thumb {
+  background: #a0a0a0;
+  border: 1px solid #000000;
+}
+
+.widgets-panel::-webkit-scrollbar-thumb:hover {
+  background: #b0b0b0;
 }
 
 /* Workbench Footer Bar */
