@@ -56,9 +56,8 @@
           @click="handleIconClick(disk.id, $event)"
           @dblclick="openDisk(disk)"
           @mouseenter="handleIconHover(disk.id, true)"
-          @mouseleave="handleIconHover(disk.id, false)"
+          @mouseleave="handleIconMouseLeave(disk.id)"
           @mouseover="showTooltip(disk.id, $event)"
-          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu(disk, $event)"
         >
           <div class="icon-image">
@@ -92,7 +91,6 @@
           @mouseenter="handleIconHover('ram', true)"
           @mouseleave="handleIconHover('ram', false)"
           @mouseover="showTooltip('ram', $event)"
-          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'ram', name: 'RAM Disk', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -127,7 +125,6 @@
           @mouseenter="handleIconHover('utils', true)"
           @mouseleave="handleIconHover('utils', false)"
           @mouseover="showTooltip('utils', $event)"
-          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'utils', name: 'Utilities', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -177,7 +174,6 @@
           @mouseenter="handleIconHover('trash', true)"
           @mouseleave="handleIconHover('trash', false)"
           @mouseover="showTooltip('trash', $event)"
-          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'trash', name: 'Trash', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -473,6 +469,7 @@ const handleIconClick = (iconId: string, event: MouseEvent) => {
 };
 
 const handleIconHover = (iconId: string, isHovered: boolean) => {
+  if (!isHovered) hideTooltip();
   setHovered(iconId, isHovered);
 };
 
@@ -660,17 +657,6 @@ const handleToolsAction = (action: string) => {
   handleOpenTool(action);
 };
 
-const handleHelpAction = (action: string) => {
-  switch (action) {
-    case 'Keyboard Shortcuts':
-      toggleKeyboardShortcutsWidget();
-      break;
-    case 'About':
-      showAboutDialog();
-      break;
-  }
-};
-
 const showAboutDialog = () => {
   const aboutText = `WebOS v2.0.0
 Amiga Workbench Style Interface
@@ -769,32 +755,6 @@ const openTrash = () => {
     x: 160,
     y: 140,
     width: 450,
-const handleQuickView = (item: any, allItems: any[]) => {
-  // Convert item to QuickViewItem format
-  const quickViewItem: QuickViewItem = {
-    id: item.id,
-    name: item.name,
-    type: item.type,
-    path: item.path || `${item.name}`,
-    size: item.size,
-    created: item.created,
-    modified: item.modified
-  };
-
-  // Convert all items
-  const quickViewItems: QuickViewItem[] = allItems.map(i => ({
-    id: i.id,
-    name: i.name,
-    type: i.type,
-    path: i.path || `${i.name}`,
-    size: i.size,
-    created: i.created,
-    modified: i.modified
-  }));
-
-  openQuickView(quickViewItem, quickViewItems);
-};
-
     height: 300,
     component: AmigaFolder,
     data: { id: 'trash', name: 'Trash', type: 'trash' },
@@ -1126,8 +1086,10 @@ const handleWidgetsAction = (action: string) => {
     case 'Theme Selector':
       toggleThemeWidget();
       break;
+    case 'Hide All Widgets':
     case 'Keyboard Shortcuts':
       toggleKeyboardShortcutsWidget();
+      break;
     case 'Clock':
       toggleClockWidget();
       break;
@@ -1140,8 +1102,6 @@ const handleWidgetsAction = (action: string) => {
     case 'Network Status':
       toggleNetworkStatusWidget();
       break;
-      break;
-    case 'Hide All Widgets':
       widgets.value = [];
       break;
   }
@@ -1163,24 +1123,6 @@ const toggleThemeWidget = () => {
     widgets.value.push(newWidget);
   }
 };
-
-const toggleKeyboardShortcutsWidget = () => {
-  const existingWidget = widgets.value.find(w => w.type === 'keyboard-shortcuts');
-  if (existingWidget) {
-    closeWidget(existingWidget.id);
-  } else {
-    const newWidget: Widget = {
-      id: `widget-${Date.now()}`,
-      type: 'keyboard-shortcuts',
-      title: 'Keyboard Shortcuts',
-      x: window.innerWidth - 420,
-      y: 80,
-      component: KeyboardShortcutsWidget
-    };
-    widgets.value.push(newWidget);
-  }
-};
-
 
 const closeWidget = (widgetId: string) => {
   const index = widgets.value.findIndex(w => w.id === widgetId);
