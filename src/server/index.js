@@ -12,6 +12,7 @@ const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
 const downloadsRoutes = require('./routes/downloads.route');
 const exportRoutes = require('./routes/export.route');
+const devtoolsRoutes = require('./routes/devtools.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -39,6 +40,7 @@ app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/downloads', downloadsRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/devtools', devtoolsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

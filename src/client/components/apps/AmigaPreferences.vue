@@ -161,6 +161,96 @@
           </select>
         </div>
       </div>
+
+      <!-- Dev Tools Settings -->
+      <div v-if="activeTab === 'devtools'" class="prefs-panel">
+        <h3>Developer Tools Settings</h3>
+
+        <div class="pref-group">
+          <label>
+            <input type="checkbox" v-model="settings.devtools.enabled" class="amiga-checkbox" />
+            Enable Developer Tools
+          </label>
+        </div>
+
+        <div class="devtools-list">
+          <h4>Available Tools (7/11):</h4>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.regexTester" class="amiga-checkbox" />
+              Regex Tester - Test regular expressions
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.gitClient" class="amiga-checkbox" />
+              Git Client - Manage Git repositories
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.dockerManager" class="amiga-checkbox" />
+              Docker Manager - Manage Docker containers
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.npmManager" class="amiga-checkbox" />
+              NPM Manager - Manage Node packages
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.environmentEditor" class="amiga-checkbox" />
+              Environment Editor - Edit .env files
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.logViewer" class="amiga-checkbox" />
+              Log Viewer - View real-time logs
+            </label>
+          </div>
+
+          <div class="pref-group">
+            <label>
+              <input type="checkbox" v-model="settings.devtools.codeSnippetsManager" class="amiga-checkbox" />
+              Code Snippets Manager - Store code snippets
+            </label>
+          </div>
+        </div>
+
+        <div class="devtools-config">
+          <h4>Configuration:</h4>
+
+          <div class="pref-group">
+            <label>GitHub Access Token:</label>
+            <input
+              v-model="settings.devtools.githubToken"
+              type="password"
+              class="amiga-input"
+              placeholder="ghp_xxxxxxxxxxxx"
+            />
+            <span class="help-text">Required for GitHub Code Editor</span>
+          </div>
+
+          <div class="pref-group">
+            <label>Default Database Type:</label>
+            <select v-model="settings.devtools.defaultDatabase" class="amiga-select">
+              <option value="postgresql">PostgreSQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="mongodb">MongoDB</option>
+              <option value="sqlite">SQLite</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="prefs-footer">
@@ -184,7 +274,8 @@ const tabs = [
   { id: 'display', name: 'Display' },
   { id: 'sound', name: 'Sound' },
   { id: 'workbench', name: 'Workbench' },
-  { id: 'system', name: 'System' }
+  { id: 'system', name: 'System' },
+  { id: 'devtools', name: 'Dev Tools' }
 ];
 
 const settings = ref({
@@ -212,6 +303,18 @@ const settings = ref({
     dateFormat: 'MM/DD/YYYY',
     autoSave: true,
     memoryDisplay: 'authentic'
+  },
+  devtools: {
+    enabled: true,
+    regexTester: true,
+    gitClient: true,
+    dockerManager: true,
+    npmManager: true,
+    environmentEditor: true,
+    logViewer: true,
+    codeSnippetsManager: true,
+    githubToken: '',
+    defaultDatabase: 'postgresql'
   }
 });
 
@@ -276,6 +379,18 @@ const resetToDefaults = () => {
         dateFormat: 'MM/DD/YYYY',
         autoSave: true,
         memoryDisplay: 'authentic'
+      },
+      devtools: {
+        enabled: true,
+        regexTester: true,
+        gitClient: true,
+        dockerManager: true,
+        npmManager: true,
+        environmentEditor: true,
+        logViewer: true,
+        codeSnippetsManager: true,
+        githubToken: '',
+        defaultDatabase: 'postgresql'
       }
     };
   }
@@ -407,5 +522,41 @@ onMounted(() => {
 .amiga-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   background: #888888;
+}
+
+.amiga-input {
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px 8px;
+  font-size: 9px;
+  font-family: 'Press Start 2P', monospace;
+  color: #000000;
+  width: 100%;
+}
+
+.devtools-list,
+.devtools-config {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f0f0f0;
+  border: 2px solid #888888;
+}
+
+.devtools-list h4,
+.devtools-config h4 {
+  font-size: 9px;
+  color: #0055aa;
+  margin: 0 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #888888;
+}
+
+.help-text {
+  display: block;
+  font-size: 7px;
+  color: #666666;
+  margin-top: 4px;
+  font-style: italic;
 }
 </style>

@@ -155,6 +155,13 @@ import AmigaPreferences from './apps/AmigaPreferences.vue';
 import LinuxTerminal from './apps/LinuxTerminal.vue';
 import C64Terminal from './apps/C64Terminal.vue';
 import DOSTerminal from './apps/DOSTerminal.vue';
+import RegexTester from './devtools/RegexTester.vue';
+import GitClient from './devtools/GitClient.vue';
+import DockerManager from './devtools/DockerManager.vue';
+import NPMManager from './devtools/NPMManager.vue';
+import EnvironmentEditor from './devtools/EnvironmentEditor.vue';
+import LogViewer from './devtools/LogViewer.vue';
+import CodeSnippetsManager from './devtools/CodeSnippetsManager.vue';
 
 interface Disk {
   id: string;
@@ -183,7 +190,8 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
 
 // System info
@@ -268,7 +276,7 @@ const isMenuItemDisabled = (menuName: string, item: string) => {
 const handleMenuAction = (menuName: string, item: string) => {
   console.log(`Menu action: ${menuName} -> ${item}`);
   activeMenu.value = null; // Close menu after action
-  
+
   switch (menuName) {
     case 'Workbench':
       handleWorkbenchAction(item);
@@ -281,6 +289,9 @@ const handleMenuAction = (menuName: string, item: string) => {
       break;
     case 'Tools':
       handleToolsAction(item);
+      break;
+    case 'Dev Tools':
+      handleDevToolsAction(item);
       break;
   }
 };
@@ -361,6 +372,10 @@ const handleIconsAction = (action: string) => {
 };
 
 const handleToolsAction = (action: string) => {
+  handleOpenTool(action);
+};
+
+const handleDevToolsAction = (action: string) => {
   handleOpenTool(action);
 };
 
@@ -587,6 +602,62 @@ const toolConfigs = {
     component: DOSTerminal,
     baseX: 160,
     baseY: 90
+  },
+  'Regex Tester': {
+    title: 'Regex Tester',
+    width: 700,
+    height: 550,
+    component: RegexTester,
+    baseX: 150,
+    baseY: 100
+  },
+  'Git Client': {
+    title: 'Git Client',
+    width: 800,
+    height: 600,
+    component: GitClient,
+    baseX: 140,
+    baseY: 90
+  },
+  'Docker Manager': {
+    title: 'Docker Manager',
+    width: 850,
+    height: 600,
+    component: DockerManager,
+    baseX: 130,
+    baseY: 80
+  },
+  'NPM Manager': {
+    title: 'NPM Manager',
+    width: 800,
+    height: 600,
+    component: NPMManager,
+    baseX: 145,
+    baseY: 95
+  },
+  'Environment Editor': {
+    title: 'Environment Editor',
+    width: 750,
+    height: 550,
+    component: EnvironmentEditor,
+    baseX: 155,
+    baseY: 105
+  },
+  'Log Viewer': {
+    title: 'Log Viewer',
+    width: 850,
+    height: 600,
+    component: LogViewer,
+    baseX: 135,
+    baseY: 85
+  },
+  'Code Snippets Manager': {
+    title: 'Code Snippets Manager',
+    width: 900,
+    height: 650,
+    component: CodeSnippetsManager,
+    baseX: 125,
+    baseY: 75
   }
 };
 
