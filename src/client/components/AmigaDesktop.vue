@@ -57,6 +57,8 @@
           @dblclick="openDisk(disk)"
           @mouseenter="handleIconHover(disk.id, true)"
           @mouseleave="handleIconHover(disk.id, false)"
+          @mouseover="showTooltip(disk.id, $event)"
+          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu(disk, $event)"
         >
           <div class="icon-image">
@@ -89,6 +91,8 @@
           @dblclick="openRAM"
           @mouseenter="handleIconHover('ram', true)"
           @mouseleave="handleIconHover('ram', false)"
+          @mouseover="showTooltip('ram', $event)"
+          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'ram', name: 'RAM Disk', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -122,6 +126,8 @@
           @dblclick="openUtilities"
           @mouseenter="handleIconHover('utils', true)"
           @mouseleave="handleIconHover('utils', false)"
+          @mouseover="showTooltip('utils', $event)"
+          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'utils', name: 'Utilities', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -170,6 +176,8 @@
           @dblclick="openTrash"
           @mouseenter="handleIconHover('trash', true)"
           @mouseleave="handleIconHover('trash', false)"
+          @mouseover="showTooltip('trash', $event)"
+          @mouseleave="hideTooltip"
           @contextmenu="showDesktopIconContextMenu({ id: 'trash', name: 'Trash', type: 'ram' }, $event)"
         >
           <div class="icon-image">
@@ -240,6 +248,13 @@
       </div>
     </div>
 
+    <!-- Tooltip -->
+    <AmigaTooltip
+      :visible="tooltipVisible"
+      :position="tooltipPosition"
+      :metadata="tooltipMetadata"
+    />
+
     <!-- Context Menu -->
     <AmigaContextMenu
       v-if="contextMenuVisible"
@@ -269,10 +284,15 @@ import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
 import AmigaWidget from './widgets/AmigaWidget.vue';
 import ThemeWidget from './widgets/ThemeWidget.vue';
+import KeyboardShortcutsWidget from './widgets/KeyboardShortcutsWidget.vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaTooltip from './AmigaTooltip.vue';
 import { useTheme } from '../composables/useTheme';
 import { useIconStates } from '../composables/useIconStates';
 import { useWindowSnapshots } from '../composables/useWindowSnapshots';
+import { useTooltip, type FileMetadata, type TooltipPosition } from '../composables/useTooltip';
+import { useGlobalKeyboardShortcuts, formatShortcut } from '../composables/useKeyboardShortcuts';
+import { useSoundEffects } from '../composables/useSoundEffects';
 
 interface Disk {
   id: string;
@@ -322,6 +342,19 @@ const {
   isIconActive,
   selectedIcons
 } = useIconStates();
+
+// Initialize tooltip
+const { calculatePosition, formatDate, fetchMetadata } = useTooltip();
+
+// Initialize sound effects
+const { playSound } = useSoundEffects();
+
+// Tooltip state
+const tooltipVisible = ref(false);
+const tooltipPosition = ref<TooltipPosition>({ x: 0, y: 0 });
+const tooltipMetadata = ref<FileMetadata | null>(null);
+const tooltipHoverTimer = ref<number | null>(null);
+const tooltipHoverItem = ref<string | null>(null);
 
 // Track trash items
 const trashItemCount = ref(0);
@@ -385,6 +418,7 @@ onUnmounted(() => {
     clearInterval(timeInterval);
   }
   document.removeEventListener('click', closeMenuOnClickOutside);
+  hideTooltip();
 });
 
 const updateTime = () => {
@@ -418,14 +452,62 @@ const handleIconClick = (iconId: string, event: MouseEvent) => {
   event.stopPropagation();
   const multiSelect = event.ctrlKey || event.metaKey;
   selectIcon(iconId, multiSelect);
+  playSound('click');
 };
 
 const handleIconHover = (iconId: string, isHovered: boolean) => {
   setHovered(iconId, isHovered);
 };
 
+// Tooltip handlers
+const showTooltip = async (iconId: string, event: MouseEvent) => {
+  tooltipHoverItem.value = iconId;
+
+  // Clear any existing timer
+  if (tooltipHoverTimer.value) {
+    clearTimeout(tooltipHoverTimer.value);
+  }
+
+  // Set timer for tooltip display (500ms delay)
+  tooltipHoverTimer.value = window.setTimeout(async () => {
+    // Fetch metadata
+    const metadata = await fetchMetadata(iconId);
+    if (metadata && tooltipHoverItem.value === iconId) {
+      tooltipMetadata.value = metadata;
+
+      // Calculate position - estimate tooltip size
+      const estimatedWidth = 280;
+      const estimatedHeight = 200;
+      tooltipPosition.value = calculatePosition(
+        event.clientX,
+        event.clientY,
+        estimatedWidth,
+        estimatedHeight,
+        { x: 15, y: 15 }
+      );
+
+      tooltipVisible.value = true;
+    }
+  }, 500);
+};
+
+const hideTooltip = () => {
+  tooltipVisible.value = false;
+  tooltipMetadata.value = null;
+  tooltipHoverItem.value = null;
+
+  if (tooltipHoverTimer.value) {
+    clearTimeout(tooltipHoverTimer.value);
+    tooltipHoverTimer.value = null;
+  }
+};
+
 const toggleMenu = (menuName: string) => {
+  const willOpen = activeMenu.value !== menuName;
   activeMenu.value = activeMenu.value === menuName ? null : menuName;
+  if (willOpen) {
+    playSound('menuOpen');
+  }
 };
 
 const hoverMenu = (menuName: string) => {
@@ -586,6 +668,7 @@ const updateSystemInfo = async () => {
 const openDisk = (disk: Disk) => {
   // Set active state for animation
   setActive(disk.id, true);
+  playSound('open');
 
   const newWindow: Window = {
     id: `window-${Date.now()}`,

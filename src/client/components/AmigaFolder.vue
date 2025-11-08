@@ -10,7 +10,7 @@
         v-for="(item, index) in items"
         :key="index"
         class="folder-item"
-        :class="{ 
+        :class="{
           selected: selectedItems.includes(item.id),
           'drag-over': dragOverItem === item.id && item.type === 'folder'
         }"
@@ -23,6 +23,8 @@
         @dragover="handleDragOver(item, $event)"
         @dragleave="handleDragLeave(item, $event)"
         @drop="handleDrop(item, $event)"
+        @mouseover="showTooltip(item, $event)"
+        @mouseleave="hideTooltip"
       >
         <div class="item-icon">
           <!-- Folder Icon -->
@@ -71,6 +73,13 @@
       </div>
     </div>
 
+    <!-- Tooltip -->
+    <AmigaTooltip
+      :visible="tooltipVisible"
+      :position="tooltipPosition"
+      :metadata="tooltipMetadata"
+    />
+
     <!-- Context Menu -->
     <AmigaContextMenu
       v-if="contextMenuVisible"
@@ -87,7 +96,9 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaTooltip from './AmigaTooltip.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
+import { useTooltip, type FileMetadata, type TooltipPosition } from '../composables/useTooltip';
 
 interface Props {
   data?: any;
@@ -109,6 +120,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   openFile: [path: string, item: FolderItem];
   openTool: [toolName: string];
+  quickView: [item: FolderItem, allItems: FolderItem[]];
 }>();
 
 const items = ref<FolderItem[]>([]);
@@ -118,6 +130,14 @@ const contextMenuVisible = ref(false);
 const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
+
+// Tooltip state
+const { calculatePosition, fetchMetadata } = useTooltip();
+const tooltipVisible = ref(false);
+const tooltipPosition = ref<TooltipPosition>({ x: 0, y: 0 });
+const tooltipMetadata = ref<FileMetadata | null>(null);
+const tooltipHoverTimer = ref<number | null>(null);
+const tooltipHoverItem = ref<string | null>(null);
 
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
@@ -296,6 +316,52 @@ const showContextMenu = (item: FolderItem, event: MouseEvent) => {
   contextMenuX.value = event.clientX;
   contextMenuY.value = event.clientY;
   contextMenuVisible.value = true;
+};
+
+// Tooltip handlers
+const showTooltip = async (item: FolderItem, event: MouseEvent) => {
+  tooltipHoverItem.value = item.id;
+
+  // Clear any existing timer
+  if (tooltipHoverTimer.value) {
+    clearTimeout(tooltipHoverTimer.value);
+  }
+
+  // Set timer for tooltip display (500ms delay)
+  tooltipHoverTimer.value = window.setTimeout(async () => {
+    // Build the file path
+    const filePath = item.path || `${currentPath.value}/${item.name}`;
+
+    // Fetch metadata
+    const metadata = await fetchMetadata(filePath);
+    if (metadata && tooltipHoverItem.value === item.id) {
+      tooltipMetadata.value = metadata;
+
+      // Calculate position - estimate tooltip size
+      const estimatedWidth = 280;
+      const estimatedHeight = 220;
+      tooltipPosition.value = calculatePosition(
+        event.clientX,
+        event.clientY,
+        estimatedWidth,
+        estimatedHeight,
+        { x: 15, y: 15 }
+      );
+
+      tooltipVisible.value = true;
+    }
+  }, 500);
+};
+
+const hideTooltip = () => {
+  tooltipVisible.value = false;
+  tooltipMetadata.value = null;
+  tooltipHoverItem.value = null;
+
+  if (tooltipHoverTimer.value) {
+    clearTimeout(tooltipHoverTimer.value);
+    tooltipHoverTimer.value = null;
+  }
 };
 
 const handleContextAction = async (action: string) => {
@@ -756,6 +822,15 @@ const handleKeyDown = async (event: KeyboardEvent) => {
           }
         }
         break;
+      case ' ':
+        event.preventDefault();
+        if (selectedItems.value.length > 0) {
+          const selected = getSelectedItems();
+          if (selected.length > 0) {
+            emit('quickView', selected[0], selected);
+          }
+        }
+        break;
     }
   }
 };
@@ -772,6 +847,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
+  hideTooltip();
 });
 </script>
 

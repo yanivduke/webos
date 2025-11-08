@@ -486,4 +486,86 @@ const copyDirectory = async (src, dest) => {
   }
 };
 
+// GET /api/files/info - Get file/folder metadata and information
+router.get('/info', async (req, res) => {
+  try {
+    const { path: diskPath } = req.query;
+
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const safeDiskPath = sanitizePath(diskPath);
+    const fullPath = getFullPath(safeDiskPath);
+
+    // Check if path exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File or folder not found',
+        path: diskPath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+    const fileName = path.basename(fullPath);
+
+    // Get extension
+    const ext = path.extname(fileName).toLowerCase().substring(1) || 'none';
+
+    let info = {
+      name: fileName,
+      path: safeDiskPath,
+      type: stats.isDirectory() ? 'folder' : 'file',
+      extension: ext,
+      modified: stats.mtime,
+      created: stats.birthtime,
+      size: formatFileSize(stats.size),
+      sizeBytes: stats.size
+    };
+
+    // If it's a folder, count items
+    if (stats.isDirectory()) {
+      try {
+        const entries = await fs.readdir(fullPath);
+        let totalSize = 0;
+        let fileCount = 0;
+        let folderCount = 0;
+
+        // Calculate total size and counts
+        for (const entry of entries) {
+          const entryPath = path.join(fullPath, entry);
+          const entryStat = await fs.stat(entryPath);
+
+          if (entryStat.isDirectory()) {
+            folderCount++;
+          } else {
+            fileCount++;
+            totalSize += entryStat.size;
+          }
+        }
+
+        info.itemCount = fileCount + folderCount;
+        info.fileCount = fileCount;
+        info.folderCount = folderCount;
+        info.totalSize = formatFileSize(totalSize);
+        info.totalSizeBytes = totalSize;
+      } catch (error) {
+        console.error('Error calculating folder info:', error);
+      }
+    }
+
+    res.json(info);
+  } catch (error) {
+    console.error('Error getting file info:', error);
+    res.status(500).json({
+      error: 'Failed to get file information',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
