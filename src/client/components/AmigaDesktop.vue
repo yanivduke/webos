@@ -315,6 +315,10 @@
       <div class="footer-right">
         <span class="drive-activity" :class="{ active: driveActivity }">●</span>
         <span>{{ selectedCount }} items selected</span>
+        <span class="footer-separator">|</span>
+        <a href="https://buymeacoffee.com/YOUR_USERNAME" target="_blank" class="support-link" title="Support WebOS Development">
+          ☕ Support
+        </a>
       </div>
     </div>
   </div>
@@ -375,6 +379,27 @@ import { getAllSmartFolders, refreshSmartFolder, subscribe as subscribeToSmartFo
 import { getSessionManager } from '../utils/session-manager';
 import { getWorkspaceSwitcher } from '../utils/workspace-switcher';
 import { getWindowHistory } from '../utils/window-history';
+import AmigaNotePad from './apps/AmigaNotePad.vue';
+import AmigaPaint from './apps/AmigaPaint.vue';
+import AmigaCalculator from './apps/AmigaCalculator.vue';
+import AmigaShell from './apps/AmigaShell.vue';
+import AmigaClock from './apps/AmigaClock.vue';
+import AmigaMultiView from './apps/AmigaMultiView.vue';
+import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
+import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
+import AmigaFileInfo from './apps/AmigaFileInfo.vue';
+import AmigaPreferences from './apps/AmigaPreferences.vue';
+import LinuxTerminal from './apps/LinuxTerminal.vue';
+import C64Terminal from './apps/C64Terminal.vue';
+import DOSTerminal from './apps/DOSTerminal.vue';
+import RegexTester from './devtools/RegexTester.vue';
+import GitClient from './devtools/GitClient.vue';
+import DockerManager from './devtools/DockerManager.vue';
+import NPMManager from './devtools/NPMManager.vue';
+import EnvironmentEditor from './devtools/EnvironmentEditor.vue';
+import LogViewer from './devtools/LogViewer.vue';
+import CodeSnippetsManager from './devtools/CodeSnippetsManager.vue';
+
 interface Disk {
   id: string;
   name: string;
@@ -403,6 +428,8 @@ const menus = ref<Menu[]>([
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
   { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
 
 // System info
@@ -625,6 +652,9 @@ const handleMenuAction = (menuName: string, item: string) => {
     case 'Tools':
       handleToolsAction(item);
       break;
+    case 'Dev Tools':
+      handleDevToolsAction(item);
+      break;
   }
 };
 
@@ -747,6 +777,8 @@ const handleGlobalKeyDown = async (event: KeyboardEvent) => {
     event.preventDefault();
     await quickScreenshot('area');
   }
+const handleDevToolsAction = (action: string) => {
+  handleOpenTool(action);
 };
 
 const showAboutDialog = () => {
@@ -1125,6 +1157,85 @@ const toolConfigs = {
     component: AmigaVideoPlayer,
     baseX: 100,
     baseY: 60
+  'Linux Terminal': {
+    title: 'Linux Terminal',
+    width: 700,
+    height: 500,
+    component: LinuxTerminal,
+    baseX: 180,
+    baseY: 100
+  },
+  'C64 Terminal': {
+    title: 'Commodore 64',
+    width: 680,
+    height: 480,
+    component: C64Terminal,
+    baseX: 200,
+    baseY: 110
+  },
+  'DOS Terminal': {
+    title: 'MS-DOS',
+    width: 720,
+    height: 520,
+    component: DOSTerminal,
+    baseX: 160,
+    baseY: 90
+  },
+  'Regex Tester': {
+    title: 'Regex Tester',
+    width: 700,
+    height: 550,
+    component: RegexTester,
+    baseX: 150,
+    baseY: 100
+  },
+  'Git Client': {
+    title: 'Git Client',
+    width: 800,
+    height: 600,
+    component: GitClient,
+    baseX: 140,
+    baseY: 90
+  },
+  'Docker Manager': {
+    title: 'Docker Manager',
+    width: 850,
+    height: 600,
+    component: DockerManager,
+    baseX: 130,
+    baseY: 80
+  },
+  'NPM Manager': {
+    title: 'NPM Manager',
+    width: 800,
+    height: 600,
+    component: NPMManager,
+    baseX: 145,
+    baseY: 95
+  },
+  'Environment Editor': {
+    title: 'Environment Editor',
+    width: 750,
+    height: 550,
+    component: EnvironmentEditor,
+    baseX: 155,
+    baseY: 105
+  },
+  'Log Viewer': {
+    title: 'Log Viewer',
+    width: 850,
+    height: 600,
+    component: LogViewer,
+    baseX: 135,
+    baseY: 85
+  },
+  'Code Snippets Manager': {
+    title: 'Code Snippets Manager',
+    width: 900,
+    height: 650,
+    component: CodeSnippetsManager,
+    baseX: 125,
+    baseY: 75
   }
 };
 
@@ -1927,6 +2038,23 @@ const initializeCommandPalette = () => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+.footer-separator {
+  color: #808080;
+  margin: 0 4px;
+}
+
+.support-link {
+  color: #0055aa;
+  text-decoration: none;
+  font-size: 9px;
+  transition: color 0.1s;
+}
+
+.support-link:hover {
+  color: #ffaa00;
+  text-decoration: underline;
 }
 
 /* Retro scanline effect (optional) */

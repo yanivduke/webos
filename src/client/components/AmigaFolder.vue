@@ -105,6 +105,13 @@
       @close="quickLookVisible = false"
       @openFile="handleQuickLookOpen"
       @extract="handleQuickLookExtract"
+    <!-- Export Dialog -->
+    <AmigaExportDialog
+      :visible="showExportDialog"
+      :fileName="exportFileName"
+      :path="exportFilePath"
+      @close="closeExportDialog"
+      @exported="handleExported"
     />
   </div>
 </template>
@@ -113,6 +120,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 import AmigaQuickLook from './AmigaQuickLook.vue';
+import AmigaExportDialog from './AmigaExportDialog.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
 import { filePreview } from '../utils/file-preview';
 import dragDropManager from '../utils/drag-drop-manager';
@@ -146,6 +154,9 @@ const contextMenuVisible = ref(false);
 const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
+const showExportDialog = ref(false);
+const exportFileName = ref('');
+const exportFilePath = ref('');
 
 // Quick Look state
 const quickLookVisible = ref(false);
@@ -212,6 +223,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
       { label: 'Delete', action: 'delete', icon: '🗑' },
       { label: '', action: '', separator: true },
+      { label: 'Export', action: 'export', icon: '📤', disabled: isMultiSelection || contextMenuItem.value.type !== 'file' },
       { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
     );
   }
@@ -419,6 +431,9 @@ const handleContextAction = async (action: string) => {
       break;
     case 'compress-to-zip':
       await compressToZip();
+      break;
+    case 'export':
+      openExportDialog(item);
       break;
   }
 
@@ -1027,6 +1042,18 @@ const handleFolderDrop = async (event: DragEvent) => {
     console.error('Failed to add files to upload queue:', error);
     alert('Failed to start upload');
   }
+const openExportDialog = (item: FolderItem) => {
+  exportFileName.value = item.name;
+  exportFilePath.value = item.path || `${currentPath.value}/${item.name}`;
+  showExportDialog.value = true;
+};
+
+const closeExportDialog = () => {
+  showExportDialog.value = false;
+};
+
+const handleExported = (format: string) => {
+  console.log(`File exported to ${format.toUpperCase()}`);
 };
 
 // Lifecycle hooks

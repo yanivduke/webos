@@ -18,6 +18,9 @@ const systemMonitorRoutes = require('./routes/system-monitor.route');
 const calendarRoutes = require('./routes/calendar.route');
 const emailRoutes = require('./routes/email.route');
 const mediaRoutes = require('./routes/media.route');
+const downloadsRoutes = require('./routes/downloads.route');
+const exportRoutes = require('./routes/export.route');
+const devtoolsRoutes = require('./routes/devtools.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -51,6 +54,9 @@ app.use('/api/monitor', systemMonitorRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/downloads', downloadsRoutes);
+app.use('/api/export', exportRoutes);
+app.use('/api/devtools', devtoolsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -84,6 +90,7 @@ app.get('/', (req, res) => {
       calendar: '/api/calendar',
       email: '/api/email',
       media: '/api/media'
+      export: '/api/export'
     },
     features: [
       'Real file system with persistence',
@@ -115,6 +122,7 @@ app.use((req, res) => {
       '/api/calendar',
       '/api/email',
       '/api/media'
+      '/api/export'
     ]
   });
 });
@@ -163,6 +171,7 @@ server.listen(PORT, () => {
   console.log('  📊 Resource Monitor: /api/monitor');
   console.log('  📅 Calendar & Events: /api/calendar');
   console.log('  🎵 Media Player: /api/media');
+  console.log('  📤 Export Files: /api/export');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });
