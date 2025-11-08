@@ -206,6 +206,26 @@
           </div>
           <div class="icon-label">Plugins</div>
         </div>
+        <!-- Debug Console -->
+        <div class="disk-icon debug" @dblclick="handleOpenTool('Debug Console')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="debug-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#333" stroke="#000" stroke-width="2"/>
+              <rect x="12" y="16" width="40" height="32" fill="#000" stroke="#00ff00" stroke-width="1"/>
+              <!-- Terminal text lines -->
+              <line x1="16" y1="20" x2="32" y2="20" stroke="#00ff00" stroke-width="1.5"/>
+              <line x1="16" y1="24" x2="28" y2="24" stroke="#ffaa00" stroke-width="1.5"/>
+              <line x1="16" y1="28" x2="36" y2="28" stroke="#00ff00" stroke-width="1.5"/>
+              <line x1="16" y1="32" x2="24" y2="32" stroke="#ff0000" stroke-width="1.5"/>
+              <line x1="16" y1="36" x2="30" y2="36" stroke="#00ff00" stroke-width="1.5"/>
+              <line x1="16" y1="40" x2="26" y2="40" stroke="#0055aa" stroke-width="1.5"/>
+              <!-- Cursor -->
+              <rect x="16" y="44" width="2" height="2" fill="#00ff00"/>
+              <text x="32" y="60" text-anchor="middle" fill="#00ff00" font-size="6" font-family="monospace">DBG</text>
+            </svg>
+          </div>
+          <div class="icon-label">Debug</div>
+        </div>
         </div>
         </div>
       </div>
@@ -246,6 +266,12 @@
       @cancel="handleDuplicateCancel"
     />
 
+    <!-- Command Palette -->
+    <AmigaCommandPalette
+      v-model:visible="commandPaletteVisible"
+      @close="commandPaletteVisible = false"
+    />
+
     <!-- Amiga Workbench Footer Bar -->
     <div class="workbench-footer">
       <div class="footer-left">
@@ -281,10 +307,18 @@ import AmigaScreenCapture from './apps/AmigaScreenCapture.vue';
 import AmigaUploadProgress from './AmigaUploadProgress.vue';
 import AmigaDuplicateDialog from './AmigaDuplicateDialog.vue';
 import AmigaPluginManager from './apps/AmigaPluginManager.vue';
+import AmigaDebugConsole from './apps/AmigaDebugConsole.vue';
+import AmigaBatchManager from './apps/AmigaBatchManager.vue';
+import AmigaThemeEditor from './apps/AmigaThemeEditor.vue';
+import AmigaCommandPalette from './AmigaCommandPalette.vue';
+import AmigaShortcutsEditor from './apps/AmigaShortcutsEditor.vue';
 import advancedClipboard from '../utils/clipboard-manager';
 import workspaceManager from '../utils/workspace-manager';
 import { screenCapture } from '../utils/screen-capture';
 import dragDropManager from '../utils/drag-drop-manager';
+import { systemLogger } from '../utils/system-logger';
+import keyboardManager from '../utils/keyboard-manager';
+import commandPalette from '../utils/command-palette';
 interface Disk {
   id: string;
   name: string;
@@ -312,7 +346,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Workspace Manager', 'Plugin Manager', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
 ]);
 
 // System info
@@ -332,6 +366,9 @@ const duplicateDialogVisible = ref(false);
 const duplicateFileName = ref('');
 let duplicateResolve: ((action: 'overwrite' | 'keep-both' | 'skip') => void) | null = null;
 
+// Command palette state
+const commandPaletteVisible = ref(false);
+
 // Disks
 const disks = ref<Disk[]>([
   { id: 'df0', name: 'Workbench3.1', type: 'floppy' },
@@ -349,6 +386,12 @@ const activeMenu = ref<string | null>(null);
 let timeInterval: number | undefined;
 
 onMounted(() => {
+  // Log system startup
+  systemLogger.info('System', 'WebOS Desktop started', {
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent
+  });
+
   updateTime();
   timeInterval = window.setInterval(updateTime, 1000);
 
@@ -391,14 +434,24 @@ onMounted(() => {
   setInterval(() => {
     workspaceManager.setCurrentWindows(openWindows.value);
   }, 5000);
+
+  // Initialize keyboard manager and command palette
+  initializeKeyboardShortcuts();
+  initializeCommandPalette();
 });
 
 onUnmounted(() => {
+  // Log system shutdown
+  systemLogger.info('System', 'WebOS Desktop stopped');
+
   if (timeInterval) {
     clearInterval(timeInterval);
   }
   document.removeEventListener('click', closeMenuOnClickOutside);
   document.removeEventListener('keydown', handleGlobalKeyDown);
+
+  // Cleanup keyboard manager
+  keyboardManager.destroy();
 });
 
 const updateTime = () => {
@@ -442,9 +495,12 @@ const isMenuItemDisabled = (menuName: string, item: string) => {
 };
 
 const handleMenuAction = (menuName: string, item: string) => {
-  console.log(`Menu action: ${menuName} -> ${item}`);
+  systemLogger.debug('Menu', `Menu action: ${menuName} -> ${item}`, {
+    menu: menuName,
+    action: item
+  });
   activeMenu.value = null; // Close menu after action
-  
+
   switch (menuName) {
     case 'Workbench':
       handleWorkbenchAction(item);
@@ -863,6 +919,38 @@ const toolConfigs = {
     component: AmigaScreenCapture,
     baseX: 150,
     baseY: 80
+  },
+  'Debug Console': {
+    title: 'Debug Console',
+    width: 900,
+    height: 700,
+    component: AmigaDebugConsole,
+    baseX: 100,
+    baseY: 60
+  },
+  'Theme Editor': {
+    title: 'Theme Editor',
+    width: 800,
+    height: 600,
+    component: AmigaThemeEditor,
+    baseX: 120,
+    baseY: 70
+  },
+  'Batch Manager': {
+    title: 'Batch Operations Manager',
+    width: 900,
+    height: 650,
+    component: AmigaBatchManager,
+    baseX: 120,
+    baseY: 70
+  },
+  'Keyboard Shortcuts': {
+    title: 'Keyboard Shortcuts',
+    width: 800,
+    height: 600,
+    component: AmigaShortcutsEditor,
+    baseX: 140,
+    baseY: 80
   }
 };
 
@@ -1043,11 +1131,26 @@ const deleteSelectedIcons = async () => {
 const addWindow = (window: Window) => {
   openWindows.value.push(window);
   workspaceManager.setCurrentWindows(openWindows.value);
+
+  // Log window opening
+  systemLogger.debug('Window', `Window opened: ${window.title}`, {
+    id: window.id,
+    component: window.component?.name || 'Unknown',
+    position: { x: window.x, y: window.y },
+    size: { width: window.width, height: window.height }
+  });
 };
 
 const closeWindow = (windowId: string) => {
   const index = openWindows.value.findIndex(w => w.id === windowId);
   if (index !== -1) {
+    const window = openWindows.value[index];
+
+    // Log window closing
+    systemLogger.debug('Window', `Window closed: ${window.title}`, {
+      id: windowId
+    });
+
     openWindows.value.splice(index, 1);
     // Update workspace manager
     workspaceManager.setCurrentWindows(openWindows.value);
@@ -1223,12 +1326,19 @@ const handleDesktopDrop = async (event: DragEvent) => {
   // Upload to default location (dh0)
   const defaultPath = 'dh0';
 
-  console.log(`Uploading ${files.length} file(s) to ${defaultPath}`);
+  systemLogger.info('File Upload', `Starting upload of ${files.length} file(s) to ${defaultPath}`, {
+    fileCount: files.length,
+    fileNames: files.map(f => f.name),
+    totalSize: files.reduce((sum, f) => sum + f.size, 0)
+  });
 
   try {
     await dragDropManager.addFiles(files, defaultPath);
   } catch (error) {
-    console.error('Failed to add files to upload queue:', error);
+    systemLogger.error('File Upload', 'Failed to add files to upload queue', {
+      error: error instanceof Error ? error.message : String(error),
+      fileCount: files.length
+    });
     alert('Failed to start upload');
   }
 };
@@ -1255,6 +1365,83 @@ const handleDuplicateCancel = () => {
 
   duplicateDialogVisible.value = false;
   dragDropManager.cancelAll();
+};
+
+// Initialize keyboard shortcuts
+const initializeKeyboardShortcuts = () => {
+  keyboardManager.initialize();
+
+  keyboardManager.registerShortcut({
+    id: 'command-palette',
+    key: 'k',
+    modifiers: { ctrl: true },
+    description: 'Open Command Palette',
+    category: 'tools',
+    action: () => { commandPaletteVisible.value = !commandPaletteVisible.value; }
+  });
+
+  keyboardManager.registerShortcut({
+    id: 'close-window',
+    key: 'w',
+    modifiers: { ctrl: true },
+    description: 'Close Active Window',
+    category: 'window',
+    action: () => {
+      if (openWindows.value.length > 0) {
+        closeWindow(openWindows.value[openWindows.value.length - 1].id);
+      }
+    }
+  });
+
+  keyboardManager.registerShortcut({
+    id: 'escape',
+    key: 'Escape',
+    modifiers: {},
+    description: 'Close Dialogs',
+    category: 'view',
+    action: () => {
+      if (commandPaletteVisible.value) commandPaletteVisible.value = false;
+      else if (activeMenu.value) activeMenu.value = null;
+    }
+  });
+
+  keyboardManager.registerShortcut({
+    id: 'preferences',
+    key: ',',
+    modifiers: { ctrl: true },
+    description: 'Open Preferences',
+    category: 'tools',
+    action: () => handleOpenTool('Preferences')
+  });
+
+  keyboardManager.registerShortcut({
+    id: 'keyboard-shortcuts',
+    key: '/',
+    modifiers: { ctrl: true },
+    description: 'Keyboard Shortcuts',
+    category: 'tools',
+    action: () => handleOpenTool('Keyboard Shortcuts')
+  });
+
+  keyboardManager.applyStoredProfile();
+};
+
+// Initialize command palette
+const initializeCommandPalette = () => {
+  commandPalette.registerCommands([
+    { id: 'open-preferences', label: 'Open Preferences', description: 'Configure system settings', category: 'tools', keywords: ['settings'], action: () => handleOpenTool('Preferences') },
+    { id: 'open-shortcuts', label: 'Keyboard Shortcuts', description: 'View and edit shortcuts', category: 'tools', keywords: ['hotkeys'], action: () => handleOpenTool('Keyboard Shortcuts') },
+    { id: 'open-search', label: 'Search Files', description: 'Search for files', category: 'file', keywords: ['find'], action: () => openSearch() },
+    { id: 'open-clipboard', label: 'Clipboard Manager', description: 'View clipboard history', category: 'edit', keywords: ['copy'], action: () => handleOpenTool('Clipboard') },
+    { id: 'open-task-manager', label: 'Task Manager', description: 'Manage tasks', category: 'tools', keywords: ['processes'], action: () => handleOpenTool('Task Manager') },
+    { id: 'open-workspace', label: 'Workspace Manager', description: 'Manage workspaces', category: 'window', keywords: ['desktop'], action: () => handleOpenTool('Workspace Manager') },
+    { id: 'open-capture', label: 'Screen Capture', description: 'Take screenshots', category: 'tools', keywords: ['screenshot'], action: () => openScreenCapture() },
+    { id: 'open-archiver', label: 'Archiver', description: 'Create archives', category: 'file', keywords: ['zip'], action: () => openArchiver() },
+    { id: 'open-ram', label: 'Open RAM Disk', description: 'Open RAM disk', category: 'file', keywords: ['memory'], action: () => openRAM() },
+    { id: 'open-utilities', label: 'Open Utilities', description: 'Open utilities', category: 'file', keywords: ['tools'], action: () => openUtilities() },
+    { id: 'close-all', label: 'Close All Windows', description: 'Close all windows', category: 'window', keywords: ['quit'], action: () => { openWindows.value = []; } },
+    { id: 'refresh', label: 'Refresh Desktop', description: 'Refresh desktop', category: 'view', keywords: ['reload'], action: () => location.reload() }
+  ]);
 };
 
 </script>

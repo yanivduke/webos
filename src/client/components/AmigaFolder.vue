@@ -742,9 +742,9 @@ const showQuickLook = (item: FolderItem) => {
   quickLookVisible.value = true;
 };
 
-const handleQuickLookOpen = (filePath: string, item: FolderItem) => {
+const handleQuickLookOpen = (filePath: string, item: any) => {
   quickLookVisible.value = false;
-  emit('openFile', filePath, item);
+  emit('openFile', filePath, item as FolderItem);
 };
 
 const handleQuickLookExtract = async (archivePath: string) => {

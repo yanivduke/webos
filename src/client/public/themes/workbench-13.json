@@ -1,0 +1,59 @@
+{
+  "id": "workbench-13",
+  "name": "Workbench 1.3",
+  "description": "Original Amiga Workbench 1.3 with blue, white, and orange palette",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#0055aa",
+    "background": "#5555aa",
+    "text": "#ffffff",
+    "textInverse": "#000000",
+    "border": "#000000",
+    "borderLight": "#ffffff",
+    "borderDark": "#000000",
+    "windowChrome": "#5555aa",
+    "windowTitle": "#ffffff",
+    "windowTitleText": "#000000",
+    "highlight": "#ff8800",
+    "highlightText": "#000000",
+    "shadow": "#000055",
+    "accent": "#ff8800",
+    "success": "#00ff00",
+    "warning": "#ffff00",
+    "error": "#ff0000",
+    "disabled": "#666699",
+    "inputBg": "#ffffff",
+    "inputText": "#000000",
+    "inputBorder": "#000000",
+    "scrollbarTrack": "#5555aa",
+    "scrollbarThumb": "#888888",
+    "menuBg": "#5555aa",
+    "menuText": "#ffffff",
+    "menuHighlight": "#ff8800",
+    "menuHighlightText": "#000000"
+  },
+  "fonts": {
+    "primary": "'Press Start 2P', monospace",
+    "secondary": "monospace",
+    "size": {
+      "small": "8px",
+      "medium": "10px",
+      "large": "12px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "2px",
+    "borderRadius": "0px",
+    "shadow": "none",
+    "titleBarHeight": "18px"
+  },
+  "spacing": {
+    "small": "3px",
+    "medium": "6px",
+    "large": "9px"
+  },
+  "animation": {
+    "duration": "0.05s",
+    "easing": "linear"
+  }
+}

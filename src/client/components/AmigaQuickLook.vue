@@ -10,7 +10,7 @@
         </div>
         <div class="window-title">{{ currentFile?.name || 'Quick Look' }}</div>
         <div class="title-bar-right">
-          <div class="file-info-compact">{{ formatFileSize(currentFile?.size || 0) }}</div>
+          <div class="file-info-compact">{{ formatFileSize(typeof currentFile?.size === 'number' ? currentFile.size : (typeof currentFile?.size === 'string' ? parseInt(currentFile.size) : 0)) }}</div>
         </div>
       </div>
 
@@ -209,9 +209,10 @@ const loadFile = async (file: FileItem) => {
   }
 
   // Extract metadata
+  const fileSize = typeof file.size === 'number' ? file.size : (typeof file.size === 'string' ? parseInt(file.size) : 0);
   currentMetadata.value = {
     name: file.name,
-    size: file.size || 0,
+    size: fileSize,
     type: category,
     extension: filePreview.getExtension(file.name),
     mimeType: filePreview.getMimeType(file.name),

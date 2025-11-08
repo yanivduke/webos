@@ -1,0 +1,327 @@
+/**
+ * WebOS Theme Variables
+ * Dynamic CSS custom properties for theming
+ * These are set by the theme-manager.ts and can be overridden by themes
+ */
+
+:root {
+  /* === COLOR VARIABLES === */
+
+  /* Primary colors */
+  --theme-primary: var(--amiga-blue, #0055aa);
+  --theme-background: var(--amiga-gray, #a0a0a0);
+  --theme-text: #000000;
+  --theme-text-inverse: #ffffff;
+
+  /* Borders */
+  --theme-border: #000000;
+  --theme-border-light: #ffffff;
+  --theme-border-dark: #000000;
+
+  /* Window chrome */
+  --theme-window-chrome: var(--amiga-gray, #a0a0a0);
+  --theme-window-title: var(--amiga-blue, #0055aa);
+  --theme-window-title-text: #ffffff;
+
+  /* Highlight */
+  --theme-highlight: var(--amiga-blue, #0055aa);
+  --theme-highlight-text: #ffffff;
+
+  /* Shadows and effects */
+  --theme-shadow: var(--amiga-dark-gray, #707070);
+  --theme-accent: var(--amiga-orange, #ffaa00);
+
+  /* Status colors */
+  --theme-success: var(--amiga-green, #00ff00);
+  --theme-warning: var(--amiga-yellow, #ffff00);
+  --theme-error: var(--amiga-red, #ff0000);
+  --theme-disabled: #888888;
+
+  /* Input fields */
+  --theme-input-bg: #ffffff;
+  --theme-input-text: #000000;
+  --theme-input-border: #000000;
+
+  /* Scrollbars */
+  --theme-scrollbar-track: var(--amiga-gray, #a0a0a0);
+  --theme-scrollbar-thumb: var(--amiga-dark-gray, #707070);
+
+  /* Menus */
+  --theme-menu-bg: var(--amiga-gray, #a0a0a0);
+  --theme-menu-text: #000000;
+  --theme-menu-highlight: var(--amiga-blue, #0055aa);
+  --theme-menu-highlight-text: #ffffff;
+
+  /* === FONT VARIABLES === */
+  --theme-font-primary: 'Press Start 2P', monospace;
+  --theme-font-secondary: monospace;
+  --theme-font-size-small: 8px;
+  --theme-font-size-medium: 10px;
+  --theme-font-size-large: 12px;
+
+  /* === WINDOW CHROME VARIABLES === */
+  --theme-border-width: 2px;
+  --theme-border-radius: 0px;
+  --theme-shadow: none;
+  --theme-title-bar-height: 20px;
+
+  /* === SPACING VARIABLES === */
+  --theme-spacing-small: 4px;
+  --theme-spacing-medium: 8px;
+  --theme-spacing-large: 12px;
+
+  /* === ANIMATION VARIABLES === */
+  --theme-animation-duration: 0.1s;
+  --theme-animation-easing: linear;
+}
+
+/* === THEME-AWARE UTILITY CLASSES === */
+
+/* Backgrounds */
+.theme-bg {
+  background: var(--theme-background);
+}
+
+.theme-bg-window {
+  background: var(--theme-window-chrome);
+}
+
+.theme-bg-title {
+  background: var(--theme-window-title);
+}
+
+.theme-bg-primary {
+  background: var(--theme-primary);
+}
+
+.theme-bg-highlight {
+  background: var(--theme-highlight);
+}
+
+/* Text colors */
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-text-inverse {
+  color: var(--theme-text-inverse);
+}
+
+.theme-text-primary {
+  color: var(--theme-primary);
+}
+
+.theme-text-highlight {
+  color: var(--theme-highlight-text);
+}
+
+/* Borders with theme-aware bevel effect */
+.theme-bevel-out {
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-light) var(--theme-border-dark) var(--theme-border-dark) var(--theme-border-light);
+  border-radius: var(--theme-border-radius);
+}
+
+.theme-bevel-in {
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-dark) var(--theme-border-light) var(--theme-border-light) var(--theme-border-dark);
+  border-radius: var(--theme-border-radius);
+}
+
+/* Buttons */
+.theme-button {
+  background: var(--theme-window-chrome);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-light) var(--theme-border-dark) var(--theme-border-dark) var(--theme-border-light);
+  border-radius: var(--theme-border-radius);
+  color: var(--theme-text);
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-medium);
+  padding: var(--theme-spacing-small) var(--theme-spacing-medium);
+  cursor: pointer;
+  user-select: none;
+  transition: none;
+}
+
+.theme-button:hover {
+  filter: brightness(1.1);
+}
+
+.theme-button:active,
+.theme-button.active {
+  border-color: var(--theme-border-dark) var(--theme-border-light) var(--theme-border-light) var(--theme-border-dark);
+  background: var(--theme-shadow);
+}
+
+.theme-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.theme-button-primary {
+  background: var(--theme-primary);
+  color: var(--theme-highlight-text);
+}
+
+/* Inputs */
+.theme-input {
+  background: var(--theme-input-bg);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-dark) var(--theme-border-light) var(--theme-border-light) var(--theme-border-dark);
+  border-radius: var(--theme-border-radius);
+  color: var(--theme-input-text);
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-medium);
+  padding: var(--theme-spacing-small);
+  outline: none;
+}
+
+.theme-input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 1px var(--theme-primary);
+}
+
+/* Panels */
+.theme-panel {
+  background: var(--theme-window-chrome);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-dark) var(--theme-border-light) var(--theme-border-light) var(--theme-border-dark);
+  border-radius: var(--theme-border-radius);
+  padding: var(--theme-spacing-medium);
+}
+
+/* Windows */
+.theme-window {
+  background: var(--theme-window-chrome);
+  border: var(--theme-border-width) solid var(--theme-border);
+  border-radius: var(--theme-border-radius);
+  box-shadow: var(--theme-shadow);
+}
+
+.theme-window-title {
+  background: var(--theme-window-title);
+  color: var(--theme-window-title-text);
+  height: var(--theme-title-bar-height);
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-medium);
+  padding: 0 var(--theme-spacing-small);
+  display: flex;
+  align-items: center;
+  border-radius: var(--theme-border-radius) var(--theme-border-radius) 0 0;
+}
+
+/* Lists */
+.theme-list-item {
+  padding: var(--theme-spacing-small);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-medium);
+}
+
+.theme-list-item:hover {
+  background: var(--theme-shadow);
+}
+
+.theme-list-item.selected {
+  background: var(--theme-highlight);
+  color: var(--theme-highlight-text);
+}
+
+/* Menus */
+.theme-menu {
+  background: var(--theme-menu-bg);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-light) var(--theme-border-dark) var(--theme-border-dark) var(--theme-border-light);
+  border-radius: var(--theme-border-radius);
+}
+
+.theme-menu-item {
+  padding: var(--theme-spacing-small) var(--theme-spacing-medium);
+  color: var(--theme-menu-text);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-medium);
+}
+
+.theme-menu-item:hover {
+  background: var(--theme-menu-highlight);
+  color: var(--theme-menu-highlight-text);
+}
+
+/* Scrollbars */
+.theme-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-scrollbar-thumb) var(--theme-scrollbar-track);
+}
+
+.theme-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-scrollbar::-webkit-scrollbar-track {
+  background: var(--theme-scrollbar-track);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-dark) var(--theme-border-light) var(--theme-border-light) var(--theme-border-dark);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--theme-scrollbar-thumb);
+  border: var(--theme-border-width) solid;
+  border-color: var(--theme-border-light) var(--theme-border-dark) var(--theme-border-dark) var(--theme-border-light);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.1);
+}
+
+/* Spacing utilities */
+.theme-p-small { padding: var(--theme-spacing-small); }
+.theme-p-medium { padding: var(--theme-spacing-medium); }
+.theme-p-large { padding: var(--theme-spacing-large); }
+
+.theme-m-small { margin: var(--theme-spacing-small); }
+.theme-m-medium { margin: var(--theme-spacing-medium); }
+.theme-m-large { margin: var(--theme-spacing-large); }
+
+.theme-gap-small { gap: var(--theme-spacing-small); }
+.theme-gap-medium { gap: var(--theme-spacing-medium); }
+.theme-gap-large { gap: var(--theme-spacing-large); }
+
+/* Font utilities */
+.theme-font-primary {
+  font-family: var(--theme-font-primary);
+}
+
+.theme-font-secondary {
+  font-family: var(--theme-font-secondary);
+}
+
+.theme-font-small { font-size: var(--theme-font-size-small); }
+.theme-font-medium { font-size: var(--theme-font-size-medium); }
+.theme-font-large { font-size: var(--theme-font-size-large); }
+
+/* Animation utilities */
+.theme-transition {
+  transition: all var(--theme-animation-duration) var(--theme-animation-easing);
+}
+
+/* Status colors */
+.theme-success {
+  color: var(--theme-success);
+}
+
+.theme-warning {
+  color: var(--theme-warning);
+}
+
+.theme-error {
+  color: var(--theme-error);
+}
+
+.theme-disabled {
+  color: var(--theme-disabled);
+  opacity: 0.5;
+}

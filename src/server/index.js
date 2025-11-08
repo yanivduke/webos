@@ -12,6 +12,7 @@ const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
 const pluginsRoutes = require('./routes/plugins.route');
 const networkRoutes = require('./routes/network.route');
+const batchOperationsRoutes = require('./routes/batch-operations.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -39,6 +40,7 @@ app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/plugins', pluginsRoutes);
 app.use('/api/network', networkRoutes);
+app.use('/api/batch', batchOperationsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -65,7 +67,8 @@ app.get('/', (req, res) => {
       appState: '/api/app-state',
       shell: '/api/shell',
       plugins: '/api/plugins',
-      network: '/api/network'
+      network: '/api/network',
+      batch: '/api/batch'
     },
     features: [
       'Real file system with persistence',
@@ -90,7 +93,8 @@ app.use((req, res) => {
       '/api/app-state',
       '/api/shell',
       '/api/plugins',
-      '/api/network'
+      '/api/network',
+      '/api/batch'
     ]
   });
 });
@@ -134,6 +138,7 @@ server.listen(PORT, () => {
   console.log('  📊 System Info: /api/system');
   console.log('  🧩 Plugins: /api/plugins');
   console.log('  🌐 Network Browser: /api/network');
+  console.log('  📦 Batch Operations: /api/batch');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });
