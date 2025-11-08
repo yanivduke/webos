@@ -31,6 +31,7 @@
       <div class="menu-right">
         <div class="system-time">{{ currentTime }}</div>
         <div class="memory-indicator">Chip: {{ chipMem }} | Fast: {{ fastMem }}</div>
+        <NotificationWidget @toggle="toggleNotificationCenter" />
       </div>
     </div>
 
@@ -303,6 +304,32 @@
       @minimize-window="handleDockMinimizeWindow"
       @close-window="handleDockCloseWindow"
     />
+    <!-- Global Search Bar -->
+    <AmigaSearchBar
+      :visible="searchBarVisible"
+      @close="handleCloseSearch"
+      @openFile="handleSearchOpenFile"
+      @openFolder="handleSearchOpenFolder"
+      @openApp="handleSearchOpenApp"
+      @openWidget="handleSearchOpenWidget"
+      @executeAction="handleSearchExecuteAction"
+    />
+
+    <!-- Notification Center -->
+    <AmigaNotificationCenter
+      :is-open="isNotificationCenterOpen"
+      @close="isNotificationCenterOpen = false"
+    />
+
+    <!-- Toast Notifications -->
+    <div class="notifications-toast-container">
+      <AmigaNotification
+        v-for="notification in activeNotifications"
+        :key="notification.id"
+        :notification="notification"
+        @dismiss="() => {}"
+      />
+    </div>
   </div>
 </template>
 
@@ -333,6 +360,7 @@ import AmigaQuickView from './AmigaQuickView.vue';
 import AmigaTooltip from './AmigaTooltip.vue';
 import AmigaDock from './AmigaDock.vue';
 import AmigaTabBar from './AmigaTabBar.vue';
+import AmigaSearchBar from './AmigaSearchBar.vue';
 import { useTheme } from '../composables/useTheme';
 import { useIconStates } from '../composables/useIconStates';
 import { useWindowSnapshots } from '../composables/useWindowSnapshots';
@@ -342,6 +370,13 @@ import { useGlobalKeyboardShortcuts, formatShortcut } from '../composables/useKe
 import { useSoundEffects } from '../composables/useSoundEffects';
 import { useDock } from '../composables/useDock';
 import { useWindowTabs } from '../composables/useWindowTabs';
+import { useVirtualDesktops } from '../composables/useVirtualDesktops';
+import { useIconPositions } from '../composables/useIconPositions';
+import { useBackdrop } from '../composables/useBackdrop';
+import { useNotifications } from '../composables/useNotifications';
+import AmigaNotification from './AmigaNotification.vue';
+import AmigaNotificationCenter from './AmigaNotificationCenter.vue';
+import NotificationWidget from './widgets/NotificationWidget.vue';
 
 interface Disk {
   id: string;
@@ -434,12 +469,43 @@ const {
   cleanupWindow
 } = useWindowTabs();
 
+// Initialize Virtual Desktops
+const {
+  workspaceState,
+  getCurrentDesktop,
+  switchToDesktop,
+  updateWindows,
+  updateIconPositions,
+  updateBackdrop,
+  addWindow: addWindowToDesktop,
+  removeWindow: removeWindowFromDesktop
+} = useVirtualDesktops();
+
+// Initialize Icon Positions
+const { getPosition, setPosition } = useIconPositions();
+
+// Initialize Backdrop
+const { setSettings: setBackdropSettings } = useBackdrop();
+
+// Initialize Notifications
+const { notify, activeNotifications } = useNotifications();
+
+// Notification center state
+const isNotificationCenterOpen = ref(false);
+
+const toggleNotificationCenter = () => {
+  isNotificationCenterOpen.value = !isNotificationCenterOpen.value;
+};
+
 // Tooltip state
 const tooltipVisible = ref(false);
 const tooltipPosition = ref<TooltipPosition>({ x: 0, y: 0 });
 const tooltipMetadata = ref<FileMetadata | null>(null);
 const tooltipHoverTimer = ref<number | null>(null);
 const tooltipHoverItem = ref<string | null>(null);
+// Search bar state
+const searchBarVisible = ref(false);
+
 
 // Track trash items
 const trashItemCount = ref(0);
@@ -468,8 +534,11 @@ const disks = ref<Disk[]>([
   { id: 'dh1', name: 'Work', type: 'hard' }
 ]);
 
-// Windows
-const openWindows = ref<Window[]>([]);
+// Windows - Get windows from current desktop
+const openWindows = computed({
+  get: () => getCurrentDesktop().windows,
+  set: (windows: Window[]) => updateWindows(windows)
+});
 
 // Widgets
 const widgets = ref<Widget[]>([]);
@@ -497,6 +566,123 @@ onMounted(() => {
 
   // Fetch trash item count
   fetchTrashItemCount();
+
+  // Register keyboard shortcuts for workspace switching
+  registerShortcut({
+    key: '1',
+    ctrl: true,
+    description: 'Switch to Desktop 1',
+    category: 'navigation',
+    action: () => handleWorkspaceSwitch(1),
+    global: true
+  });
+
+  registerShortcut({
+    key: '2',
+    ctrl: true,
+    description: 'Switch to Desktop 2',
+    category: 'navigation',
+    action: () => handleWorkspaceSwitch(2),
+    global: true
+  });
+
+  // Register global search shortcut (Ctrl+Space)
+  registerShortcut({
+    key: ' ',
+    ctrl: true,
+    description: 'Open Global Search',
+    category: 'navigation',
+    action: () => { searchBarVisible.value = true; },
+    global: true,
+    preventDefault: true
+  });
+
+  registerShortcut({
+    key: '3',
+    ctrl: true,
+    description: 'Switch to Desktop 3',
+    category: 'navigation',
+    action: () => handleWorkspaceSwitch(3),
+    global: true
+  });
+
+  registerShortcut({
+    key: '4',
+    ctrl: true,
+    description: 'Switch to Desktop 4',
+    category: 'navigation',
+    action: () => handleWorkspaceSwitch(4),
+    global: true
+  });
+
+  // Register tab keyboard shortcuts
+  registerShortcut({
+    key: 't',
+    ctrl: true,
+    description: 'New Tab in Active Window',
+    category: 'tabs',
+    action: () => {
+      const activeWindow = openWindows.value[openWindows.value.length - 1];
+      if (activeWindow) {
+        handleNewTab(activeWindow.id);
+      }
+    },
+    preventDefault: true
+  });
+
+  registerShortcut({
+    key: 'w',
+    ctrl: true,
+    description: 'Close Active Tab',
+    category: 'tabs',
+    action: () => {
+      const activeWindow = openWindows.value[openWindows.value.length - 1];
+      if (activeWindow && activeWindow.tabs && activeWindow.tabs.length > 0) {
+        const activeTab = getActiveTab(activeWindow.id);
+        if (activeTab) {
+          handleTabClose(activeWindow.id, activeTab);
+        }
+      }
+    },
+    preventDefault: true
+  });
+
+  registerShortcut({
+    key: 'Tab',
+    ctrl: true,
+    description: 'Next Tab',
+    category: 'tabs',
+    action: () => {
+      const activeWindow = openWindows.value[openWindows.value.length - 1];
+      if (activeWindow && activeWindow.tabs && activeWindow.tabs.length > 1) {
+        navigateTab(activeWindow.id, 'next');
+        const newActiveTab = getActiveTab(activeWindow.id);
+        if (newActiveTab) {
+          activeWindow.activeTabId = newActiveTab.id;
+        }
+      }
+    },
+    preventDefault: true
+  });
+
+  registerShortcut({
+    key: 'Tab',
+    ctrl: true,
+    shift: true,
+    description: 'Previous Tab',
+    category: 'tabs',
+    action: () => {
+      const activeWindow = openWindows.value[openWindows.value.length - 1];
+      if (activeWindow && activeWindow.tabs && activeWindow.tabs.length > 1) {
+        navigateTab(activeWindow.id, 'prev');
+        const newActiveTab = getActiveTab(activeWindow.id);
+        if (newActiveTab) {
+          activeWindow.activeTabId = newActiveTab.id;
+        }
+      }
+    },
+    preventDefault: true
+  });
 });
 
 onUnmounted(() => {
@@ -1151,6 +1337,9 @@ const closeWindow = (windowId: string) => {
 
     // Remove from dock if it was there
     removeRunningWindow(windowId, window.typeId || 'unknown');
+    
+    // Clean up tab state
+    cleanupWindow(windowId);
 
     openWindows.value.splice(index, 1);
   }
@@ -1241,11 +1430,27 @@ const handleDockCloseWindow = (windowId: string) => {
   closeWindow(windowId);
 };
 
+// Workspace switching handler
+const handleWorkspaceSwitch = (desktopId: number) => {
+  const success = switchToDesktop(desktopId);
+  if (success) {
+    playSound('click');
+    // Update backdrop when switching desktops
+    const desktop = getCurrentDesktop();
+    if (desktop) {
+      setBackdropSettings(desktop.backdrop);
+    }
+  }
+};
+
 // Widget management functions
 const handleWidgetsAction = (action: string) => {
   switch (action) {
     case 'Theme Selector':
       toggleThemeWidget();
+      break;
+    case 'Workspace Switcher':
+      toggleWorkspaceSwitcherWidget();
       break;
     case 'Hide All Widgets':
     case 'Keyboard Shortcuts':
@@ -1516,6 +1721,242 @@ const deleteDisk = async (disk: Disk) => {
       alert(`"${disk.name}" moved to trash`);
     }
   }
+};
+// Tab management handlers
+const handleTabClick = (windowId: string, tab: Tab) => {
+  const window = openWindows.value.find(w => w.id === windowId);
+  if (!window) return;
+
+  setActiveTab(windowId, tab.id);
+  window.activeTabId = tab.id;
+};
+
+const handleTabClose = (windowId: string, tab: Tab) => {
+  const shouldCloseWindow = removeTab(windowId, tab.id);
+
+  if (shouldCloseWindow) {
+    closeWindow(windowId);
+  } else {
+    const window = openWindows.value.find(w => w.id === windowId);
+    if (window) {
+      const activeTab = getActiveTab(windowId);
+      if (activeTab) {
+        window.activeTabId = activeTab.id;
+        window.title = activeTab.title;
+      }
+    }
+  }
+};
+
+const handleTabReorder = (windowId: string, fromIndex: number, toIndex: number) => {
+  reorderTabs(windowId, fromIndex, toIndex);
+};
+
+const handleTabTearOff = (windowId: string, tab: Tab, mouseX: number, mouseY: number) => {
+  // Remove tab from current window
+  const shouldCloseWindow = removeTab(windowId, tab.id);
+
+  // Create new window with this tab
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: tab.title,
+    x: mouseX - 100,
+    y: mouseY - 20,
+    width: 500,
+    height: 350,
+    component: tab.component,
+    data: tab.data
+  };
+
+  openWindows.value.push(newWindow);
+  playSound('open');
+
+  // Close original window if no tabs left
+  if (shouldCloseWindow) {
+    closeWindow(windowId);
+  }
+};
+
+const handleNewTab = (windowId: string) => {
+  const window = openWindows.value.find(w => w.id === windowId);
+  if (!window) return;
+
+  // Create a new folder tab in the same window
+  const newTab: Tab = {
+    id: `tab-${Date.now()}`,
+    title: 'System',
+    component: AmigaFolder,
+    data: { id: 'dh0', name: 'System', type: 'hard' },
+    icon: '📁',
+    path: 'dh0'
+  };
+
+  // Initialize window tabs if this is the first time
+  if (!window.tabs || window.tabs.length === 0) {
+    // Convert existing window to tabbed window
+    const initialTab: Tab = {
+      id: `tab-${Date.now() - 1}`,
+      title: window.title,
+      component: window.component,
+      data: window.data,
+      icon: '📁',
+      path: window.data?.id
+    };
+
+    initializeWindow(windowId, initialTab);
+    window.tabs = [initialTab];
+    window.activeTabId = initialTab.id;
+  }
+
+  // Add the new tab
+  addTab(windowId, newTab, true);
+  window.tabs!.push(newTab);
+  window.activeTabId = newTab.id;
+
+  playSound('click');
+};
+
+const handleCloseOtherTabs = (windowId: string, tab: Tab) => {
+  closeOtherTabs(windowId, tab.id);
+
+  const window = openWindows.value.find(w => w.id === windowId);
+  if (window && window.tabs) {
+    window.tabs = window.tabs.filter(t => t.id === tab.id);
+    window.activeTabId = tab.id;
+  }
+};
+
+const handleCloseTabsToRight = (windowId: string, tab: Tab) => {
+  const window = openWindows.value.find(w => w.id === windowId);
+  if (!window || !window.tabs) return;
+
+  const tabIndex = window.tabs.findIndex(t => t.id === tab.id);
+  if (tabIndex === -1) return;
+
+  closeTabsToRight(windowId, tab.id);
+  window.tabs = window.tabs.slice(0, tabIndex + 1);
+
+  // Ensure active tab is still valid
+  if (window.activeTabId && !window.tabs.find(t => t.id === window.activeTabId)) {
+    window.activeTabId = tab.id;
+  }
+};
+
+const handleOpenFileInTab = (windowId: string, filePath: string, fileMeta: any) => {
+  const window = openWindows.value.find(w => w.id === windowId);
+  if (!window) {
+    // If no window, open in new window instead
+    handleOpenFile(filePath, fileMeta);
+    return;
+  }
+
+  const fileName = fileMeta?.name || filePath.split('/').pop() || 'Unknown';
+  const lowerName = fileName.toLowerCase();
+
+  // Determine component and icon based on file type
+  let component = AmigaFileInfo;
+  let icon = '📄';
+
+  if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
+    component = AmigaNotePad;
+    icon = '📝';
+  } else if (lowerName.endsWith('.awml')) {
+    component = AmigaAwmlRunner;
+    icon = '⚙';
+  }
+
+  // Create new tab
+  const newTab: Tab = {
+    id: `tab-${Date.now()}`,
+    title: fileName,
+    component: component,
+    data: { filePath, fileName, meta: fileMeta },
+    icon: icon,
+    path: filePath
+  };
+
+  // Initialize window tabs if this is the first time
+  if (!window.tabs || window.tabs.length === 0) {
+    // Convert existing window to tabbed window
+    const initialTab: Tab = {
+      id: `tab-${Date.now() - 1}`,
+      title: window.title,
+      component: window.component,
+      data: window.data,
+      icon: '📁',
+      path: window.data?.id
+    };
+
+    initializeWindow(windowId, initialTab);
+    window.tabs = [initialTab];
+    window.activeTabId = initialTab.id;
+  }
+
+  // Check if tab with same path already exists
+  const existingTab = window.tabs.find(t => t.path === filePath);
+  if (existingTab) {
+    // Just activate the existing tab
+    setActiveTab(windowId, existingTab.id);
+    window.activeTabId = existingTab.id;
+    return;
+  }
+
+  // Add new tab
+  addTab(windowId, newTab, true);
+  window.tabs.push(newTab);
+  window.activeTabId = newTab.id;
+
+  playSound('click');
+};
+
+// Search bar handlers
+const handleCloseSearch = () => {
+  searchBarVisible.value = false;
+};
+
+const handleSearchOpenFile = (path: string, meta: any) => {
+  handleOpenFile(path, meta);
+  searchBarVisible.value = false;
+};
+
+const handleSearchOpenFolder = (path: string) => {
+  // Parse the path to determine which disk/folder to open
+  const parts = path.split('/');
+  const diskId = parts[0];
+  
+  if (diskId === 'ram') {
+    openRAM();
+  } else if (diskId === 'trash') {
+    openTrash();
+  } else if (diskId === 'utils') {
+    openUtilities();
+  } else {
+    // Find disk and open it
+    const disk = disks.value.find(d => d.id === diskId);
+    if (disk) {
+      openDisk(disk);
+    }
+  }
+  
+  searchBarVisible.value = false;
+};
+
+const handleSearchOpenApp = (appName: string) => {
+  handleOpenTool(appName);
+  searchBarVisible.value = false;
+};
+
+const handleSearchOpenWidget = (widgetName: string) => {
+  handleWidgetsAction(widgetName);
+  searchBarVisible.value = false;
+};
+
+const handleSearchExecuteAction = (actionName: string, menuName?: string) => {
+  // Execute menu actions based on which menu they belong to
+  if (menuName) {
+    handleMenuAction(menuName, actionName);
+  }
+  searchBarVisible.value = false;
 };
 </script>
 
@@ -1846,6 +2287,22 @@ const deleteDisk = async (disk: Disk) => {
 }
 
 .widgets-container > * {
+  pointer-events: all;
+}
+
+/* Notifications Toast Container */
+.notifications-toast-container {
+  position: fixed;
+  top: 40px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.notifications-toast-container > * {
   pointer-events: all;
 }
 </style>

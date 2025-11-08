@@ -100,6 +100,7 @@ import AmigaTooltip from './AmigaTooltip.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
 import { useTooltip, type FileMetadata, type TooltipPosition } from '../composables/useTooltip';
 import { useSoundEffects } from '../composables/useSoundEffects';
+import { useNotifications } from '../composables/useNotifications';
 
 interface Props {
   data?: any;
@@ -142,6 +143,9 @@ const tooltipHoverItem = ref<string | null>(null);
 
 // Sound effects
 const { playSound } = useSoundEffects();
+
+// Notifications
+const { notify } = useNotifications();
 
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
@@ -427,9 +431,22 @@ const deleteItem = async (item: FolderItem) => {
 
     // Reload the file list
     await loadFiles();
+
+    // Show success notification
+    notify({
+      type: 'success',
+      title: 'File Deleted',
+      message: `"${item.name}" moved to trash`
+    });
   } catch (error) {
     console.error('Error deleting item:', error);
-    alert('Error deleting item');
+
+    // Show error notification
+    notify({
+      type: 'error',
+      title: 'Delete Failed',
+      message: `Failed to delete "${item.name}"`
+    });
   }
 };
 
@@ -462,11 +479,23 @@ const copyItem = async (item: FolderItem) => {
 
     if (!writeResponse.ok) throw new Error('Failed to create copy');
 
-    alert(`"${item.name}" copied to "${newName}"`);
     await loadFiles();
+
+    // Show success notification
+    notify({
+      type: 'success',
+      title: 'File Copied',
+      message: `"${item.name}" copied to "${newName}"`
+    });
   } catch (error) {
     console.error('Error copying item:', error);
-    alert('Failed to copy item');
+
+    // Show error notification
+    notify({
+      type: 'error',
+      title: 'Copy Failed',
+      message: `Failed to copy "${item.name}"`
+    });
   }
 };
 
@@ -486,11 +515,23 @@ const renameItem = async (item: FolderItem) => {
 
     if (!response.ok) throw new Error('Failed to rename item');
 
-    alert(`"${item.name}" renamed to "${newName}"`);
     await loadFiles();
+
+    // Show success notification
+    notify({
+      type: 'success',
+      title: 'File Renamed',
+      message: `"${item.name}" renamed to "${newName}"`
+    });
   } catch (error) {
     console.error('Error renaming item:', error);
-    alert('Failed to rename item');
+
+    // Show error notification
+    notify({
+      type: 'error',
+      title: 'Rename Failed',
+      message: `Failed to rename "${item.name}"`
+    });
   }
 };
 
