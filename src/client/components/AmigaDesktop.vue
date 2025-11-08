@@ -154,12 +154,18 @@
         <!-- Trash Can -->
         <div
           class="disk-icon trash"
+          :style="{
+            left: `${getPosition('trash').x}px`,
+            top: `${getPosition('trash').y}px`
+          }"
           :class="{
             selected: isIconSelected('trash'),
             hovered: isIconHovered('trash'),
             full: trashItemCount > 0,
-            active: isIconActive('trash')
+            active: isIconActive('trash'),
+            dragging: draggingIconId === 'trash'
           }"
+          @mousedown="startIconDrag('trash', $event)"
           @click="handleIconClick('trash', $event)"
           @dblclick="openTrash"
           @mouseenter="handleIconHover('trash', true)"
