@@ -13,9 +13,11 @@
   "dependencies": {
     "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
+    "prismjs": "^1.30.0",
     "vue": "^3.4.0"
   },
   "devDependencies": {
+    "@types/prismjs": "^1.26.5",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/tsconfig": "^0.5.0",
     "typescript": "^5.3.3",

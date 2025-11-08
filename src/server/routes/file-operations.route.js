@@ -3,9 +3,51 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const { sanitizePath, sanitizeName, resolveStoragePath } = require('../utils/path-utils');
+const multer = require('multer');
 
 // Storage base path
 const STORAGE_BASE = path.join(__dirname, '../storage/workbench');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    try {
+      const uploadPath = req.body.path || 'dh0';
+      const safePath = sanitizePath(uploadPath);
+      const fullPath = resolveStoragePath(STORAGE_BASE, safePath);
+
+      // Ensure directory exists
+      await fs.mkdir(fullPath, { recursive: true });
+
+      cb(null, fullPath);
+    } catch (error) {
+      cb(error, null);
+    }
+  },
+  filename: function (req, file, cb) {
+    // Sanitize filename
+    const safeName = sanitizeName(file.originalname);
+    cb(null, safeName);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB max file size
+  },
+  fileFilter: function (req, file, cb) {
+    // Block dangerous file extensions
+    const blockedExtensions = ['.exe', '.bat', '.cmd', '.scr', '.com', '.pif', '.msi', '.vbs', '.js'];
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (blockedExtensions.includes(ext)) {
+      return cb(new Error(`File type ${ext} is not allowed for security reasons`));
+    }
+
+    cb(null, true);
+  }
+});
 
 const MIME_TYPES = {
   '.awml': 'application/xml',
@@ -826,6 +868,75 @@ router.post('/archive-remove', async (req, res) => {
   }
 });
 
+// POST /api/files/upload - Upload files via drag-and-drop
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded'
+      });
+    }
+
+    const uploadPath = req.body.path || 'dh0';
+    const overwrite = req.body.overwrite === 'true';
+    const safePath = sanitizePath(uploadPath);
+    const filePath = path.join(resolveStoragePath(STORAGE_BASE, safePath), req.file.filename);
+
+    // Check if file already exists
+    if (!overwrite) {
+      try {
+        await fs.access(filePath);
+        // File exists, generate unique name
+        const ext = path.extname(req.file.filename);
+        const baseName = path.basename(req.file.filename, ext);
+        const timestamp = Date.now();
+        const newName = `${baseName}_${timestamp}${ext}`;
+        const newPath = path.join(path.dirname(filePath), newName);
+
+        await fs.rename(filePath, newPath);
+
+        const stats = await getFileStats(newPath);
+
+        return res.status(201).json({
+          message: 'File uploaded successfully',
+          item: {
+            id: `f_${newName}`,
+            name: newName,
+            type: 'file',
+            size: stats ? stats.size : null,
+            created: stats ? stats.created : null,
+            modified: stats ? stats.modified : null,
+            path: `${safePath}/${newName}`
+          }
+        });
+      } catch {
+        // File doesn't exist, proceed
+      }
+    }
+
+    const stats = await getFileStats(filePath);
+
+    res.status(201).json({
+      message: 'File uploaded successfully',
+      item: {
+        id: `f_${req.file.filename}`,
+        name: req.file.filename,
+        type: 'file',
+        size: stats ? stats.size : null,
+        created: stats ? stats.created : null,
+        modified: stats ? stats.modified : null,
+        path: `${safePath}/${req.file.filename}`
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({
+      error: 'Failed to upload file',
+      message: error.message
+    });
+  }
+});
+
 // POST /api/files/capture - Save a screenshot or recording
 router.post('/capture', async (req, res) => {
   try {
@@ -876,6 +987,216 @@ router.post('/capture', async (req, res) => {
     console.error('Error saving capture:', error);
     res.status(500).json({
       error: 'Failed to save capture',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/content - Get file content for preview
+router.get('/content', async (req, res) => {
+  try {
+    const { path: diskPath } = req.query;
+
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(diskPath));
+    const fullPath = getFullPath(safePath);
+
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File not found',
+        path: diskPath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+    if (stats.isDirectory()) {
+      return res.status(400).json({
+        error: 'Cannot preview directory'
+      });
+    }
+
+    const ext = path.extname(fullPath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.sendFile(fullPath);
+  } catch (error) {
+    console.error('Error getting file content:', error);
+    res.status(500).json({
+      error: 'Failed to read file',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/metadata - Get file metadata
+router.get('/metadata', async (req, res) => {
+  try {
+    const { path: diskPath } = req.query;
+
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(diskPath));
+    const fullPath = getFullPath(safePath);
+
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File not found',
+        path: diskPath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+    const fileName = path.basename(fullPath);
+    const ext = path.extname(fileName);
+
+    const metadata = {
+      name: fileName,
+      size: stats.size,
+      sizeFormatted: formatFileSize(stats.size),
+      extension: ext,
+      mimeType: MIME_TYPES[ext.toLowerCase()] || 'application/octet-stream',
+      created: stats.birthtime,
+      modified: stats.mtime,
+      accessed: stats.atime,
+      isDirectory: stats.isDirectory(),
+      isFile: stats.isFile(),
+      permissions: stats.mode,
+    };
+
+    res.json(metadata);
+  } catch (error) {
+    console.error('Error getting file metadata:', error);
+    res.status(500).json({
+      error: 'Failed to get metadata',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/thumbnail - Generate thumbnail for images
+router.get('/thumbnail', async (req, res) => {
+  try {
+    const { path: diskPath, size = '256' } = req.query;
+
+    if (!diskPath) {
+      return res.status(400).json({
+        error: 'Path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(diskPath));
+    const fullPath = getFullPath(safePath);
+
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'File not found',
+        path: diskPath
+      });
+    }
+
+    const ext = path.extname(fullPath).toLowerCase();
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+
+    if (!imageExtensions.includes(ext)) {
+      return res.status(400).json({
+        error: 'Thumbnail generation only supported for images'
+      });
+    }
+
+    // For now, just return the image as-is
+    // In production, you'd use sharp or similar to generate thumbnails
+    const contentType = MIME_TYPES[ext] || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.sendFile(fullPath);
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    res.status(500).json({
+      error: 'Failed to generate thumbnail',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/archive/list - List contents of archive
+router.get('/archive/list', async (req, res) => {
+  try {
+    const { path: archivePath } = req.query;
+
+    if (!archivePath) {
+      return res.status(400).json({
+        error: 'Archive path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(archivePath));
+    const fullPath = getFullPath(safePath);
+
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'Archive not found',
+        path: archivePath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+    const ext = path.extname(fullPath).toLowerCase();
+
+    if (!['.zip', '.tar', '.gz', '.7z', '.rar'].includes(ext)) {
+      return res.status(400).json({
+        error: 'File is not a supported archive format'
+      });
+    }
+
+    // Note: Actual archive parsing would require additional dependencies (e.g., adm-zip)
+    // For now, return mock data
+    res.json({
+      path: safePath,
+      name: path.basename(fullPath),
+      size: stats.size,
+      modified: stats.mtime,
+      fileCount: 3,
+      files: [
+        {
+          name: 'README.md',
+          size: 2048,
+          modified: stats.mtime,
+          isDirectory: false
+        },
+        {
+          name: 'src/',
+          size: 0,
+          modified: stats.mtime,
+          isDirectory: true
+        },
+        {
+          name: 'package.json',
+          size: 1024,
+          modified: stats.mtime,
+          isDirectory: false
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Error listing archive contents:', error);
+    res.status(500).json({
+      error: 'Failed to list archive contents',
       message: error.message
     });
   }

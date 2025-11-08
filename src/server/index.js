@@ -10,6 +10,8 @@ const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
+const pluginsRoutes = require('./routes/plugins.route');
+const networkRoutes = require('./routes/network.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -35,6 +37,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/plugins', pluginsRoutes);
+app.use('/api/network', networkRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -59,7 +63,9 @@ app.get('/', (req, res) => {
       files: '/api/files',
       settings: '/api/settings',
       appState: '/api/app-state',
-      shell: '/api/shell'
+      shell: '/api/shell',
+      plugins: '/api/plugins',
+      network: '/api/network'
     },
     features: [
       'Real file system with persistence',
@@ -82,7 +88,9 @@ app.use((req, res) => {
       '/api/files',
       '/api/settings',
       '/api/app-state',
-      '/api/shell'
+      '/api/shell',
+      '/api/plugins',
+      '/api/network'
     ]
   });
 });
@@ -124,6 +132,8 @@ server.listen(PORT, () => {
   console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
+  console.log('  🧩 Plugins: /api/plugins');
+  console.log('  🌐 Network Browser: /api/network');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });

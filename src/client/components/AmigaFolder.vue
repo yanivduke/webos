@@ -5,7 +5,21 @@
       <div class="path-display">{{ displayPath }}</div>
     </div>
 
-    <div class="folder-content">
+    <div
+      class="folder-content"
+      :class="{ 'drag-over-folder': isDraggingFilesOver }"
+      @dragover="handleFolderDragOver"
+      @dragleave="handleFolderDragLeave"
+      @drop="handleFolderDrop"
+    >
+      <!-- Drop zone overlay -->
+      <div v-if="isDraggingFilesOver" class="folder-drop-overlay">
+        <div class="folder-drop-message">
+          <div class="folder-drop-icon">📁</div>
+          <div class="folder-drop-text">Drop files here to upload</div>
+          <div class="folder-drop-path">Destination: {{ currentPath }}</div>
+        </div>
+      </div>
       <div
         v-for="(item, index) in items"
         :key="index"
@@ -81,13 +95,27 @@
       @close="contextMenuVisible = false"
       @action="handleContextAction"
     />
+
+    <!-- Quick Look Preview -->
+    <AmigaQuickLook
+      :visible="quickLookVisible"
+      :file="quickLookFile"
+      :files="items"
+      :currentPath="currentPath"
+      @close="quickLookVisible = false"
+      @openFile="handleQuickLookOpen"
+      @extract="handleQuickLookExtract"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaQuickLook from './AmigaQuickLook.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
+import { filePreview } from '../utils/file-preview';
+import dragDropManager from '../utils/drag-drop-manager';
 
 interface Props {
   data?: any;
@@ -119,9 +147,17 @@ const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
 
+// Quick Look state
+const quickLookVisible = ref(false);
+const quickLookFile = ref<FolderItem | null>(null);
+
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
 const draggedItems = ref<FolderItem[]>([]);
+
+// File upload drag state
+const isDraggingFilesOver = ref(false);
+let folderDragLeaveTimeout: number | null = null;
 
 const contextMenuItems = computed<ContextMenuItem[]>(() => {
   const hasClipboard = clipboard.hasItems();
@@ -134,10 +170,22 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
   // If item-specific (right-clicked on item)
   if (contextMenuItem.value) {
     const isZipFile = contextMenuItem.value.name.toLowerCase().endsWith('.zip');
+    const isPreviewable = contextMenuItem.value.type === 'file' &&
+                          filePreview.isPreviewable(contextMenuItem.value.name);
 
     menuItems.push(
       { label: 'Open', action: 'open', icon: '▶' },
-      { label: '', action: '', separator: true },
+      { label: '', action: '', separator: true }
+    );
+
+    // Add Quick Look option for previewable files
+    if (isPreviewable) {
+      menuItems.push(
+        { label: 'Quick Look', action: 'quick-look', icon: '👁', disabled: isMultiSelection }
+      );
+    }
+
+    menuItems.push(
       { label: 'Copy', action: 'copy', icon: '📋', disabled: isMultiSelection && !hasSelection },
       { label: 'Cut', action: 'cut', icon: '✂', disabled: isMultiSelection && !hasSelection },
       { label: 'Duplicate', action: 'duplicate', icon: '⧉' },
@@ -327,6 +375,9 @@ const handleContextAction = async (action: string) => {
   switch (action) {
     case 'open':
       if (item) openItem(item);
+      break;
+    case 'quick-look':
+      if (item) showQuickLook(item);
       break;
     case 'delete':
       if (item && confirm(`Delete "${item.name}"?`)) {
@@ -682,6 +733,47 @@ const navigateTo = async (nextPath: string) => {
   await loadFiles();
 };
 
+// Quick Look functions
+const showQuickLook = (item: FolderItem) => {
+  if (item.type !== 'file') return;
+  if (!filePreview.isPreviewable(item.name)) return;
+
+  quickLookFile.value = item;
+  quickLookVisible.value = true;
+};
+
+const handleQuickLookOpen = (filePath: string, item: FolderItem) => {
+  quickLookVisible.value = false;
+  emit('openFile', filePath, item);
+};
+
+const handleQuickLookExtract = async (archivePath: string) => {
+  quickLookVisible.value = false;
+
+  // Extract archive to current directory
+  try {
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: currentPath.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive');
+  }
+};
+
 // Drag and drop handlers
 const handleDragStart = (item: FolderItem, event: DragEvent) => {
   // Include all selected items if the dragged item is selected
@@ -837,6 +929,16 @@ const handleKeyDown = async (event: KeyboardEvent) => {
     }
   } else {
     switch (event.key) {
+      case ' ':
+        // Spacebar - Quick Look
+        event.preventDefault();
+        if (selectedItems.value.length === 1) {
+          const item = items.value.find(i => i.id === selectedItems.value[0]);
+          if (item && item.type === 'file' && filePreview.isPreviewable(item.name)) {
+            showQuickLook(item);
+          }
+        }
+        break;
       case 'Delete':
       case 'Backspace':
         if (selectedItems.value.length > 0) {
@@ -863,6 +965,68 @@ const handleKeyDown = async (event: KeyboardEvent) => {
 const navigateUp = async () => {
   if (!parentPath.value) return;
   await navigateTo(parentPath.value);
+};
+
+// File upload drag-and-drop handlers
+const handleFolderDragOver = (event: DragEvent) => {
+  // Only handle file drops from outside, not internal drag operations
+  if (event.dataTransfer?.types.includes('Files')) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (folderDragLeaveTimeout) {
+      clearTimeout(folderDragLeaveTimeout);
+      folderDragLeaveTimeout = null;
+    }
+
+    isDraggingFilesOver.value = true;
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+};
+
+const handleFolderDragLeave = (_event: DragEvent) => {
+  // Use timeout to prevent flickering
+  if (folderDragLeaveTimeout) {
+    clearTimeout(folderDragLeaveTimeout);
+  }
+
+  folderDragLeaveTimeout = window.setTimeout(() => {
+    isDraggingFilesOver.value = false;
+  }, 100);
+};
+
+const handleFolderDrop = async (event: DragEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (folderDragLeaveTimeout) {
+    clearTimeout(folderDragLeaveTimeout);
+    folderDragLeaveTimeout = null;
+  }
+
+  isDraggingFilesOver.value = false;
+
+  if (!event.dataTransfer?.files) return;
+
+  const files = Array.from(event.dataTransfer.files);
+  if (files.length === 0) return;
+
+  console.log(`Uploading ${files.length} file(s) to ${currentPath.value}`);
+
+  try {
+    await dragDropManager.addFiles(files, currentPath.value);
+
+    // Set up callback to refresh folder after upload completes
+    dragDropManager.onComplete(() => {
+      loadFiles();
+    });
+  } catch (error) {
+    console.error('Failed to add files to upload queue:', error);
+    alert('Failed to start upload');
+  }
 };
 
 // Lifecycle hooks
@@ -975,5 +1139,74 @@ onUnmounted(() => {
   font-size: 7px;
   color: #666666;
   margin-top: 2px;
+}
+
+/* File upload drop zone styling */
+.folder-content.drag-over-folder {
+  position: relative;
+  border: 3px dashed #0055aa;
+  background: rgba(0, 85, 170, 0.05);
+}
+
+.folder-drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 85, 170, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInOverlay 0.2s ease;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.folder-drop-message {
+  text-align: center;
+  color: #ffffff;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 3px dashed #ffffff;
+  border-radius: 6px;
+}
+
+.folder-drop-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  animation: bounceIcon 1s ease-in-out infinite;
+}
+
+@keyframes bounceIcon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.folder-drop-text {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.folder-drop-path {
+  font-size: 8px;
+  opacity: 0.9;
+  font-family: 'Press Start 2P', monospace;
+  color: #ffaa00;
 }
 </style>

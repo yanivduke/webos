@@ -39,7 +39,21 @@
     </div>
 
     <!-- Desktop Background (Authentic Amiga gray) -->
-    <div class="desktop-background">
+    <div
+      class="desktop-background"
+      @dragover="handleDesktopDragOver"
+      @dragleave="handleDesktopDragLeave"
+      @drop="handleDesktopDrop"
+    >
+      <!-- Drop Overlay -->
+      <div v-if="isDraggingFiles" class="drop-overlay">
+        <div class="drop-message">
+          <div class="drop-icon">📁</div>
+          <div class="drop-text">Drop files here to upload</div>
+          <div class="drop-subtext">Files will be uploaded to default location</div>
+        </div>
+      </div>
+
       <!-- Disk Icons on Desktop -->
       <div class="desktop-icons">
         <div class="disk-icon" v-for="disk in disks" :key="disk.id" @dblclick="openDisk(disk)">
@@ -176,6 +190,22 @@
           </div>
           <div class="icon-label">Archiver</div>
         </div>
+        <!-- Plugin Manager -->
+        <div class="disk-icon plugins" @dblclick="handleOpenTool('Plugin Manager')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="plugins-svg">
+              <!-- Puzzle piece -->
+              <path d="M 18 18 L 18 28 L 14 28 L 14 36 L 18 36 L 18 46 L 28 46 L 28 50 L 36 50 L 36 46 L 46 46 L 46 36 L 50 36 L 50 28 L 46 28 L 46 18 Z" fill="#8b5cf6" stroke="#000" stroke-width="2"/>
+              <circle cx="16" cy="32" r="3" fill="#6b48c6"/>
+              <circle cx="32" cy="48" r="3" fill="#6b48c6"/>
+              <circle cx="48" cy="32" r="3" fill="#6b48c6"/>
+              <!-- Inner detail -->
+              <rect x="24" y="24" width="16" height="16" fill="#a78bfa" stroke="#000" stroke-width="1" opacity="0.6"/>
+              <text x="32" y="60" text-anchor="middle" fill="#000" font-size="6" font-family="monospace">PLG</text>
+            </svg>
+          </div>
+          <div class="icon-label">Plugins</div>
+        </div>
         </div>
         </div>
       </div>
@@ -205,6 +235,17 @@
       </div>
     </div>
 
+    <!-- Upload Progress Widget -->
+    <AmigaUploadProgress />
+    
+    <!-- Duplicate File Dialog -->
+    <AmigaDuplicateDialog
+      :visible="duplicateDialogVisible"
+      :fileName="duplicateFileName"
+      @select="handleDuplicateSelect"
+      @cancel="handleDuplicateCancel"
+    />
+
     <!-- Amiga Workbench Footer Bar -->
     <div class="workbench-footer">
       <div class="footer-left">
@@ -223,6 +264,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AmigaWindow from './AmigaWindow.vue';
 import AmigaFolder from './AmigaFolder.vue';
 import AmigaNotePad from './apps/AmigaNotePad.vue';
+import AmigaCodeEditor from './apps/AmigaCodeEditor.vue';
 import AmigaMultiView from './apps/AmigaMultiView.vue';
 import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
@@ -236,9 +278,13 @@ import AmigaTaskManager from './apps/AmigaTaskManager.vue';
 import AmigaWorkspaceSwitcher from './AmigaWorkspaceSwitcher.vue';
 import AmigaWorkspaceManager from './apps/AmigaWorkspaceManager.vue';
 import AmigaScreenCapture from './apps/AmigaScreenCapture.vue';
+import AmigaUploadProgress from './AmigaUploadProgress.vue';
+import AmigaDuplicateDialog from './AmigaDuplicateDialog.vue';
+import AmigaPluginManager from './apps/AmigaPluginManager.vue';
 import advancedClipboard from '../utils/clipboard-manager';
 import workspaceManager from '../utils/workspace-manager';
 import { screenCapture } from '../utils/screen-capture';
+import dragDropManager from '../utils/drag-drop-manager';
 interface Disk {
   id: string;
   name: string;
@@ -266,7 +312,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Workspace Manager', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Workspace Manager', 'Plugin Manager', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -276,6 +322,15 @@ const fastMem = ref('512K');
 const driveActivity = ref(false);
 const selectedCount = ref(0);
 const hasClipboardItems = ref(false);
+
+// Drag-and-drop state
+const isDraggingFiles = ref(false);
+let dragLeaveTimeout: number | null = null;
+
+// Duplicate dialog state
+const duplicateDialogVisible = ref(false);
+const duplicateFileName = ref('');
+let duplicateResolve: ((action: 'overwrite' | 'keep-both' | 'skip') => void) | null = null;
 
 // Disks
 const disks = ref<Disk[]>([
@@ -302,6 +357,15 @@ onMounted(() => {
 
   // Add global keyboard shortcuts
   document.addEventListener('keydown', handleGlobalKeyDown);
+
+  // Set up drag-drop manager duplicate callback
+  dragDropManager.onDuplicateDetected(async (_item, existingFile) => {
+    return new Promise((resolve) => {
+      duplicateFileName.value = existingFile;
+      duplicateDialogVisible.value = true;
+      duplicateResolve = resolve;
+    });
+  });
 
   // Subscribe to clipboard changes
   advancedClipboard.subscribe(() => {
@@ -609,7 +673,25 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
   let config;
   let data;
 
-  if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
+  // Code file extensions that should open in Code Editor
+  const codeExtensions = ['.js', '.ts', '.jsx', '.tsx', '.html', '.htm', '.css', '.scss', '.sass', '.less',
+                          '.json', '.md', '.markdown', '.py', '.java', '.cpp', '.c', '.h', '.hpp',
+                          '.xml', '.yaml', '.yml', '.sh', '.bash', '.sql', '.php', '.rb', '.go', '.rs'];
+
+  const isCodeFile = codeExtensions.some(ext => lowerName.endsWith(ext));
+
+  if (isCodeFile) {
+    // Open code files in Code Editor
+    config = {
+      title: `Code Editor - ${fileName}`,
+      width: 900,
+      height: 650,
+      component: AmigaCodeEditor,
+      baseX: 120,
+      baseY: 80
+    };
+    data = { filePath, fileName };
+  } else if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
     // Open text files directly in NotePad legacy component (not AWML app)
     config = {
       title: `NotePad - ${fileName}`,
@@ -649,14 +731,22 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
 
 // Tool configurations for window creation - Updated to use AWML platform
 const toolConfigs = {
-  'NotePad': { 
-    title: 'NotePad', 
-    width: 600, 
-    height: 450, 
-    component: AmigaAwmlRunner, 
-    baseX: 150, 
+  'NotePad': {
+    title: 'NotePad',
+    width: 600,
+    height: 450,
+    component: AmigaAwmlRunner,
+    baseX: 150,
     baseY: 100,
     awmlPath: 'dh0/System/Applications/NotePad.awml'
+  },
+  'Code Editor': {
+    title: 'Code Editor',
+    width: 900,
+    height: 650,
+    component: AmigaCodeEditor,
+    baseX: 120,
+    baseY: 80
   },
   'Calculator': { 
     title: 'Calculator', 
@@ -757,6 +847,14 @@ const toolConfigs = {
     component: AmigaWorkspaceManager,
     baseX: 150,
     baseY: 70
+  },
+  'Plugin Manager': {
+    title: 'Plugin Manager',
+    width: 800,
+    height: 650,
+    component: AmigaPluginManager,
+    baseX: 130,
+    baseY: 60
   },
   'Screen Capture': {
     title: 'Screen Capture',
@@ -1075,6 +1173,90 @@ const openArchiver = () => {
   addWindow(newWindow);
 };
 
+// Drag-and-drop file upload handlers
+const handleDesktopDragOver = (event: DragEvent) => {
+  // Only handle file drops, not internal drag operations
+  if (event.dataTransfer?.types.includes('Files')) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (dragLeaveTimeout) {
+      clearTimeout(dragLeaveTimeout);
+      dragLeaveTimeout = null;
+    }
+
+    isDraggingFiles.value = true;
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+};
+
+const handleDesktopDragLeave = (_event: DragEvent) => {
+  // Use timeout to prevent flickering when dragging over child elements
+  if (dragLeaveTimeout) {
+    clearTimeout(dragLeaveTimeout);
+  }
+
+  dragLeaveTimeout = window.setTimeout(() => {
+    isDraggingFiles.value = false;
+  }, 100);
+};
+
+const handleDesktopDrop = async (event: DragEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (dragLeaveTimeout) {
+    clearTimeout(dragLeaveTimeout);
+    dragLeaveTimeout = null;
+  }
+
+  isDraggingFiles.value = false;
+
+  if (!event.dataTransfer?.files) return;
+
+  const files = Array.from(event.dataTransfer.files);
+  if (files.length === 0) return;
+
+  // Upload to default location (dh0)
+  const defaultPath = 'dh0';
+
+  console.log(`Uploading ${files.length} file(s) to ${defaultPath}`);
+
+  try {
+    await dragDropManager.addFiles(files, defaultPath);
+  } catch (error) {
+    console.error('Failed to add files to upload queue:', error);
+    alert('Failed to start upload');
+  }
+};
+
+// Duplicate dialog handlers
+const handleDuplicateSelect = (action: 'overwrite' | 'keep-both' | 'skip', remember: boolean) => {
+  if (remember) {
+    dragDropManager.setDuplicatePreference(action, true);
+  }
+
+  if (duplicateResolve) {
+    duplicateResolve(action);
+    duplicateResolve = null;
+  }
+
+  duplicateDialogVisible.value = false;
+};
+
+const handleDuplicateCancel = () => {
+  if (duplicateResolve) {
+    duplicateResolve('skip');
+    duplicateResolve = null;
+  }
+
+  duplicateDialogVisible.value = false;
+  dragDropManager.cancelAll();
+};
+
 </script>
 
 <style scoped>
@@ -1342,5 +1524,67 @@ const openArchiver = () => {
 .amiga-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   background: #888888;
+}
+
+/* Drop overlay for file uploads */
+.drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 85, 170, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drop-message {
+  text-align: center;
+  color: #ffffff;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 4px dashed #ffffff;
+  border-radius: 8px;
+}
+
+.drop-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.drop-text {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.drop-subtext {
+  font-size: 10px;
+  opacity: 0.9;
+  font-family: 'Press Start 2P', monospace;
 }
 </style>
