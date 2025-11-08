@@ -1241,25 +1241,25 @@ const deleteDisk = async (disk: Disk) => {
 
 /* Desktop Icons */
 .desktop-icons {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100px;
 }
 
 .disk-icon {
-  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: move;
+  cursor: pointer;
   user-select: none;
   padding: 8px;
-  transition: opacity 0.1s;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
 .disk-icon:hover {
-  background: var(--theme-highlight);
-  opacity: 0.9;
+  background: rgba(0, 85, 170, 0.1);
 }
 
 .disk-icon.selected {

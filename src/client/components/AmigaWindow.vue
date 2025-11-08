@@ -9,6 +9,7 @@
       class="window-titlebar"
       @mousedown="startDrag"
       @dblclick="toggleMaximize"
+      @contextmenu="showTitleBarContextMenu"
     >
       <div class="title-bar-left">
         <div class="title-bar-button close-button" @click.stop="close">
@@ -36,11 +37,23 @@
       class="resize-handle"
       @mousedown.stop="startResize"
     ></div>
+
+    <!-- Context Menu -->
+    <AmigaContextMenu
+      v-if="contextMenuVisible"
+      :visible="contextMenuVisible"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :items="contextMenuItems"
+      @close="contextMenuVisible = false"
+      @action="handleContextAction"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 
 interface Props {
   title?: string;
@@ -62,6 +75,8 @@ const emit = defineEmits<{
   close: [];
   minimize: [];
   maximize: [];
+  updatePosition: [x: number, y: number];
+  updateSize: [width: number, height: number];
 }>();
 
 // Window state
@@ -73,6 +88,11 @@ const isMaximized = ref(false);
 const isDragging = ref(false);
 const isResizing = ref(false);
 const zIndex = ref(1);
+
+// Context menu state
+const contextMenuVisible = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
 
 // Drag state
 let dragStartX = 0;
@@ -129,6 +149,9 @@ const stopDrag = () => {
   isDragging.value = false;
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
+
+  // Emit position change after drag completes
+  emit('updatePosition', windowX.value, windowY.value);
 };
 
 // Resize functions
@@ -158,6 +181,9 @@ const stopResize = () => {
   isResizing.value = false;
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
+
+  // Emit size change after resize completes
+  emit('updateSize', windowWidth.value, windowHeight.value);
 };
 
 // Window actions
@@ -194,6 +220,48 @@ const bringToFront = () => {
 
 const sendToBack = () => {
   zIndex.value = 1;
+};
+
+// Context menu
+const contextMenuItems = computed<ContextMenuItem[]>(() => [
+  { label: 'Close', action: 'close', icon: '✕' },
+  { label: '', action: '', separator: true },
+  { label: 'Minimize', action: 'minimize', icon: '▼' },
+  { label: 'Maximize', action: 'maximize', icon: isMaximized.value ? '🗗' : '🗖' },
+  { label: '', action: '', separator: true },
+  { label: 'Send to Back', action: 'send-to-back', icon: '⬇' },
+  { label: '', action: '', separator: true },
+  { label: 'Snapshot Window', action: 'snapshot', icon: '📌' }
+]);
+
+const showTitleBarContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+  contextMenuX.value = event.clientX;
+  contextMenuY.value = event.clientY;
+  contextMenuVisible.value = true;
+};
+
+const handleContextAction = (action: string) => {
+  contextMenuVisible.value = false;
+
+  switch (action) {
+    case 'close':
+      close();
+      break;
+    case 'minimize':
+      emit('minimize');
+      break;
+    case 'maximize':
+      toggleMaximize();
+      break;
+    case 'send-to-back':
+      sendToBack();
+      break;
+    case 'snapshot':
+      alert(`Snapshot window position - Feature coming soon!`);
+      break;
+  }
 };
 
 // Cleanup
