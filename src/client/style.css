@@ -16,6 +16,11 @@
   --theme-shadow: rgba(0, 0, 0, 0.4);
   --theme-diskIcon: #666666;
   --theme-folderColor: #ffaa00;
+
+  /* Backdrop variables */
+  --backdrop-background: #a0a0a0;
+  --backdrop-opacity: 1;
+  --backdrop-grid-size: auto;
 }
 
 * {

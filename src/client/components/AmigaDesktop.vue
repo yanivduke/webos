@@ -3,21 +3,21 @@
     <!-- Amiga Workbench Menu Bar -->
     <div class="workbench-menu">
       <div class="menu-left">
-        <div 
-          class="menu-item" 
-          v-for="menu in menus" 
-          :key="menu.name" 
+        <div
+          class="menu-item"
+          v-for="menu in menus"
+          :key="menu.name"
           :class="{ active: activeMenu === menu.name }"
           @click="toggleMenu(menu.name)"
           @mouseenter="hoverMenu(menu.name)"
           @mouseleave="clearHover"
         >
           {{ menu.name }}
-          
+
           <!-- Dropdown Menu -->
           <div v-if="activeMenu === menu.name" class="menu-dropdown" @click.stop>
-            <div 
-              v-for="item in menu.items" 
+            <div
+              v-for="item in menu.items"
               :key="item"
               class="menu-dropdown-item"
               @click="handleMenuAction(menu.name, item)"
@@ -35,12 +35,26 @@
     </div>
 
     <!-- Desktop Background (Authentic Amiga gray) -->
-    <div class="desktop-background">
+    <div class="desktop-background" @click="handleDesktopClick" @contextmenu="showDesktopBackgroundContextMenu">
       <!-- Disk Icons on Desktop -->
       <div class="desktop-icons">
-        <div class="disk-icon" v-for="disk in disks" :key="disk.id" @dblclick="openDisk(disk)">
+        <div
+          class="disk-icon"
+          v-for="disk in disks"
+          :key="disk.id"
+          :class="{
+            selected: isIconSelected(disk.id),
+            hovered: isIconHovered(disk.id),
+            active: isIconActive(disk.id)
+          }"
+          @click="handleIconClick(disk.id, $event)"
+          @dblclick="openDisk(disk)"
+          @mouseenter="handleIconHover(disk.id, true)"
+          @mouseleave="handleIconHover(disk.id, false)"
+          @contextmenu="showDesktopIconContextMenu(disk, $event)"
+        >
           <div class="icon-image">
-            <svg viewBox="0 0 64 64" class="disk-svg">
+            <svg viewBox="0 0 64 64" class="disk-svg" :class="{ active: isIconActive(disk.id) }">
               <rect x="8" y="12" width="48" height="40" fill="#666" stroke="#000" stroke-width="2"/>
               <rect x="12" y="16" width="40" height="8" fill="#333"/>
               <circle cx="32" cy="36" r="8" fill="#888"/>
@@ -52,13 +66,25 @@
         </div>
 
         <!-- RAM Disk -->
-        <div class="disk-icon" @dblclick="openRAM">
+        <div
+          class="disk-icon"
+          :class="{
+            selected: isIconSelected('ram'),
+            hovered: isIconHovered('ram'),
+            active: isIconActive('ram')
+          }"
+          @click="handleIconClick('ram', $event)"
+          @dblclick="openRAM"
+          @mouseenter="handleIconHover('ram', true)"
+          @mouseleave="handleIconHover('ram', false)"
+          @contextmenu="showDesktopIconContextMenu({ id: 'ram', name: 'RAM Disk', type: 'ram' }, $event)"
+        >
           <div class="icon-image">
-            <svg viewBox="0 0 64 64" class="ram-svg">
+            <svg viewBox="0 0 64 64" class="ram-svg" :class="{ active: isIconActive('ram') }">
               <rect x="12" y="20" width="40" height="24" fill="#555" stroke="#000" stroke-width="2"/>
-              <rect x="16" y="24" width="8" height="4" fill="#0f0"/>
-              <rect x="26" y="24" width="8" height="4" fill="#0f0"/>
-              <rect x="36" y="24" width="8" height="4" fill="#0f0"/>
+              <rect x="16" y="24" width="8" height="4" :fill="isIconActive('ram') ? '#0ff' : '#0f0'"/>
+              <rect x="26" y="24" width="8" height="4" :fill="isIconActive('ram') ? '#0ff' : '#0f0'"/>
+              <rect x="36" y="24" width="8" height="4" :fill="isIconActive('ram') ? '#0ff' : '#0f0'"/>
               <text x="32" y="38" text-anchor="middle" fill="#fff" font-size="8" font-family="Topaz">RAM</text>
             </svg>
           </div>
@@ -66,34 +92,76 @@
         </div>
 
         <!-- Utilities Drawer -->
-        <div class="disk-icon" @dblclick="openUtilities">
+        <div
+          class="disk-icon"
+          :class="{
+            selected: isIconSelected('utils'),
+            hovered: isIconHovered('utils'),
+            open: isIconOpen('utils'),
+            active: isIconActive('utils')
+          }"
+          @click="handleIconClick('utils', $event)"
+          @dblclick="openUtilities"
+          @mouseenter="handleIconHover('utils', true)"
+          @mouseleave="handleIconHover('utils', false)"
+          @contextmenu="showDesktopIconContextMenu({ id: 'utils', name: 'Utilities', type: 'ram' }, $event)"
+        >
           <div class="icon-image">
-            <svg viewBox="0 0 64 64" class="drawer-svg">
-              <rect x="8" y="16" width="48" height="32" fill="#888" stroke="#000" stroke-width="2"/>
-              <rect x="12" y="20" width="40" height="6" fill="#666"/>
-              <rect x="12" y="28" width="40" height="6" fill="#666"/>
-              <rect x="12" y="36" width="40" height="6" fill="#666"/>
-              <rect x="44" y="22" width="4" height="2" fill="#333"/>
-              <rect x="44" y="30" width="4" height="2" fill="#333"/>
-              <rect x="44" y="38" width="4" height="2" fill="#333"/>
+            <svg viewBox="0 0 64 64" class="drawer-svg" :class="{ open: isIconOpen('utils'), active: isIconActive('utils') }">
+              <!-- Closed drawer -->
+              <g v-if="!isIconOpen('utils')">
+                <rect x="8" y="16" width="48" height="32" fill="#888" stroke="#000" stroke-width="2"/>
+                <rect x="12" y="20" width="40" height="6" fill="#666"/>
+                <rect x="12" y="28" width="40" height="6" fill="#666"/>
+                <rect x="12" y="36" width="40" height="6" fill="#666"/>
+                <rect x="44" y="22" width="4" height="2" fill="#333"/>
+                <rect x="44" y="30" width="4" height="2" fill="#333"/>
+                <rect x="44" y="38" width="4" height="2" fill="#333"/>
+              </g>
+              <!-- Open drawer -->
+              <g v-else>
+                <rect x="8" y="16" width="48" height="32" fill="#888" stroke="#000" stroke-width="2"/>
+                <rect x="12" y="20" width="40" height="6" fill="#666" transform="translate(5, 2)"/>
+                <rect x="12" y="28" width="40" height="6" fill="#666"/>
+                <rect x="12" y="36" width="40" height="6" fill="#666"/>
+                <rect x="49" y="22" width="4" height="2" fill="#333"/>
+                <rect x="44" y="30" width="4" height="2" fill="#333"/>
+                <rect x="44" y="38" width="4" height="2" fill="#333"/>
+              </g>
             </svg>
           </div>
           <div class="icon-label">Utilities</div>
         </div>
 
         <!-- Trash Can -->
-        <div class="disk-icon trash" @dblclick="openTrash">
+        <div
+          class="disk-icon trash"
+          :class="{
+            selected: isIconSelected('trash'),
+            hovered: isIconHovered('trash'),
+            full: trashItemCount > 0,
+            active: isIconActive('trash')
+          }"
+          @click="handleIconClick('trash', $event)"
+          @dblclick="openTrash"
+          @mouseenter="handleIconHover('trash', true)"
+          @mouseleave="handleIconHover('trash', false)"
+          @contextmenu="showDesktopIconContextMenu({ id: 'trash', name: 'Trash', type: 'ram' }, $event)"
+        >
           <div class="icon-image">
-            <svg viewBox="0 0 64 64" class="trash-svg">
-              <rect x="18" y="28" width="28" height="24" fill="#666" stroke="#000" stroke-width="2"/>
+            <svg viewBox="0 0 64 64" class="trash-svg" :class="{ full: trashItemCount > 0, active: isIconActive('trash') }">
+              <rect x="18" y="28" width="28" height="24" :fill="trashItemCount > 0 ? '#777' : '#666'" stroke="#000" stroke-width="2"/>
               <rect x="16" y="24" width="32" height="4" fill="#888" stroke="#000" stroke-width="2"/>
               <path d="M 24 18 L 24 24 M 32 18 L 32 24 M 40 18 L 40 24" stroke="#000" stroke-width="2" fill="none"/>
-              <rect x="22" y="32" width="3" height="16" fill="#444"/>
-              <rect x="30" y="32" width="3" height="16" fill="#444"/>
-              <rect x="38" y="32" width="3" height="16" fill="#444"/>
+              <rect v-if="trashItemCount > 0" x="22" y="32" width="3" height="16" fill="#555"/>
+              <rect v-if="trashItemCount > 0" x="30" y="32" width="3" height="16" fill="#555"/>
+              <rect v-if="trashItemCount > 0" x="38" y="32" width="3" height="16" fill="#555"/>
+              <rect v-if="trashItemCount === 0" x="22" y="32" width="3" height="16" fill="#444"/>
+              <rect v-if="trashItemCount === 0" x="30" y="32" width="3" height="16" fill="#444"/>
+              <rect v-if="trashItemCount === 0" x="38" y="32" width="3" height="16" fill="#444"/>
             </svg>
           </div>
-          <div class="icon-label">Trash</div>
+          <div class="icon-label">Trash{{ trashItemCount > 0 ? ` (${trashItemCount})` : '' }}</div>
         </div>
       </div>
 
@@ -147,11 +215,22 @@
         <span>{{ selectedCount }} items selected</span>
       </div>
     </div>
+
+    <!-- Context Menu -->
+    <AmigaContextMenu
+      v-if="contextMenuVisible"
+      :visible="contextMenuVisible"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :items="contextMenuItems"
+      @close="contextMenuVisible = false"
+      @action="handleDesktopContextAction"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import AmigaWindow from './AmigaWindow.vue';
 import AmigaFolder from './AmigaFolder.vue';
 import AmigaNotePad from './apps/AmigaNotePad.vue';
@@ -166,7 +245,10 @@ import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
 import AmigaWidget from './widgets/AmigaWidget.vue';
 import ThemeWidget from './widgets/ThemeWidget.vue';
+import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 import { useTheme } from '../composables/useTheme';
+import { useIconStates } from '../composables/useIconStates';
+import { useWindowSnapshots } from '../composables/useWindowSnapshots';
 
 interface Disk {
   id: string;
@@ -183,6 +265,7 @@ interface Window {
   height: number;
   component: any;
   data?: any;
+  typeId?: string;
 }
 
 interface Menu {
@@ -202,6 +285,23 @@ interface Widget {
 // Initialize theme
 const { currentTheme } = useTheme();
 
+// Initialize icon states
+const {
+  selectIcon,
+  clearSelection,
+  setHovered,
+  setOpen,
+  setActive,
+  isIconSelected,
+  isIconHovered,
+  isIconOpen,
+  isIconActive,
+  selectedIcons
+} = useIconStates();
+
+// Track trash items
+const trashItemCount = ref(0);
+
 // Workbench Menu
 const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
@@ -216,7 +316,7 @@ const currentTime = ref('12:00:00');
 const chipMem = ref('512K');
 const fastMem = ref('512K');
 const driveActivity = ref(false);
-const selectedCount = ref(0);
+const selectedCount = computed(() => selectedIcons.value.length);
 
 // Disks
 const disks = ref<Disk[]>([
@@ -235,15 +335,25 @@ const widgets = ref<Widget[]>([]);
 const activeMenu = ref<string | null>(null);
 const menuHoverTimeout = ref<number | null>(null);
 
+// Context menu state
+const contextMenuVisible = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const contextMenuType = ref<'desktop' | 'icon' | null>(null);
+const contextMenuTarget = ref<Disk | null>(null);
+
 // Time update
 let timeInterval: number | undefined;
 
 onMounted(() => {
   updateTime();
   timeInterval = window.setInterval(updateTime, 1000);
-  
+
   // Close menu when clicking outside
   document.addEventListener('click', closeMenuOnClickOutside);
+
+  // Fetch trash item count
+  fetchTrashItemCount();
 });
 
 onUnmounted(() => {
@@ -259,6 +369,35 @@ const updateTime = () => {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   currentTime.value = `${hours}:${minutes}:${seconds}`;
+};
+
+const fetchTrashItemCount = async () => {
+  try {
+    const response = await fetch('/api/files/list?path=trash');
+    const data = await response.json();
+    trashItemCount.value = data.items?.length || 0;
+  } catch (error) {
+    console.error('Failed to fetch trash items:', error);
+    trashItemCount.value = 0;
+  }
+};
+
+// Icon state handlers
+const handleDesktopClick = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains('desktop-background')) {
+    clearSelection();
+  }
+};
+
+const handleIconClick = (iconId: string, event: MouseEvent) => {
+  event.stopPropagation();
+  const multiSelect = event.ctrlKey || event.metaKey;
+  selectIcon(iconId, multiSelect);
+};
+
+const handleIconHover = (iconId: string, isHovered: boolean) => {
+  setHovered(iconId, isHovered);
 };
 
 const toggleMenu = (menuName: string) => {
@@ -404,7 +543,7 @@ Server: Express.js with JSON persistence
 Features: 8 working applications
 
 © 2024 WebOS Project`;
-  
+
   alert(aboutText);
 };
 
@@ -421,6 +560,9 @@ const updateSystemInfo = async () => {
 };
 
 const openDisk = (disk: Disk) => {
+  // Set active state for animation
+  setActive(disk.id, true);
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: disk.name,
@@ -429,7 +571,8 @@ const openDisk = (disk: Disk) => {
     width: 500,
     height: 350,
     component: AmigaFolder,
-    data: disk
+    data: disk,
+    typeId: disk.id
   };
   openWindows.value.push(newWindow);
   driveActivity.value = true;
@@ -437,6 +580,9 @@ const openDisk = (disk: Disk) => {
 };
 
 const openRAM = () => {
+  // Set active state for animation
+  setActive('ram', true);
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'RAM Disk',
@@ -445,12 +591,16 @@ const openRAM = () => {
     width: 480,
     height: 320,
     component: AmigaFolder,
-    data: { id: 'ram', name: 'RAM Disk', type: 'ram' }
+    data: { id: 'ram', name: 'RAM Disk', type: 'ram' },
+    typeId: 'ram'
   };
   openWindows.value.push(newWindow);
 };
 
 const openUtilities = () => {
+  // Set active state for animation
+  setActive('utils', true);
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Utilities',
@@ -459,12 +609,19 @@ const openUtilities = () => {
     width: 520,
     height: 380,
     component: AmigaFolder,
-    data: { id: 'utils', name: 'Utilities', type: 'drawer' }
+    data: { id: 'utils', name: 'Utilities', type: 'drawer' },
+    typeId: 'utils'
   };
   openWindows.value.push(newWindow);
+
+  // Mark drawer as open
+  setOpen('utils', true);
 };
 
 const openTrash = () => {
+  // Set active state for animation
+  setActive('trash', true);
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Trash',
@@ -473,9 +630,13 @@ const openTrash = () => {
     width: 450,
     height: 300,
     component: AmigaFolder,
-    data: { id: 'trash', name: 'Trash', type: 'trash' }
+    data: { id: 'trash', name: 'Trash', type: 'trash' },
+    typeId: 'trash'
   };
   openWindows.value.push(newWindow);
+
+  // Mark trash as open
+  setOpen('trash', true);
 };
 
 const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: string]: any }) => {
@@ -526,21 +687,21 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
 
 // Tool configurations for window creation - Updated to use AWML platform
 const toolConfigs = {
-  'NotePad': { 
-    title: 'NotePad', 
-    width: 600, 
-    height: 450, 
-    component: AmigaAwmlRunner, 
-    baseX: 150, 
+  'NotePad': {
+    title: 'NotePad',
+    width: 600,
+    height: 450,
+    component: AmigaAwmlRunner,
+    baseX: 150,
     baseY: 100,
     awmlPath: 'dh0/System/Applications/NotePad.awml'
   },
-  'Calculator': { 
-    title: 'Calculator', 
-    width: 350, 
-    height: 420, 
-    component: AmigaAwmlRunner, 
-    baseX: 200, 
+  'Calculator': {
+    title: 'Calculator',
+    width: 350,
+    height: 420,
+    component: AmigaAwmlRunner,
+    baseX: 200,
     baseY: 120,
     awmlPath: 'dh0/System/Applications/Calculator.awml'
   },
@@ -553,67 +714,67 @@ const toolConfigs = {
     baseY: 110,
     awmlPath: 'dh0/System/Applications/Shell.awml'
   },
-  'Clock': { 
-    title: 'Clock', 
-    width: 400, 
-    height: 320, 
-    component: AmigaAwmlRunner, 
-    baseX: 220, 
+  'Clock': {
+    title: 'Clock',
+    width: 400,
+    height: 320,
+    component: AmigaAwmlRunner,
+    baseX: 220,
     baseY: 130,
     awmlPath: 'dh0/System/Applications/Clock.awml'
   },
-  'Paint': { 
-    title: 'Paint', 
-    width: 700, 
-    height: 550, 
-    component: AmigaAwmlRunner, 
-    baseX: 160, 
+  'Paint': {
+    title: 'Paint',
+    width: 700,
+    height: 550,
+    component: AmigaAwmlRunner,
+    baseX: 160,
     baseY: 90,
     awmlPath: 'dh0/System/Applications/Paint.awml'
   },
-  'MultiView': { 
-    title: 'MultiView', 
-    width: 600, 
-    height: 450, 
-    component: AmigaMultiView, 
-    baseX: 160, 
+  'MultiView': {
+    title: 'MultiView',
+    width: 600,
+    height: 450,
+    component: AmigaMultiView,
+    baseX: 160,
     baseY: 90
   },
-  'AWML Runner': { 
-    title: 'AWML Runner', 
-    width: 640, 
-    height: 480, 
-    component: AmigaAwmlRunner, 
-    baseX: 180, 
-    baseY: 110 
+  'AWML Runner': {
+    title: 'AWML Runner',
+    width: 640,
+    height: 480,
+    component: AmigaAwmlRunner,
+    baseX: 180,
+    baseY: 110
   },
-  'AWML Wizard': { 
-    title: 'AWML Wizard', 
-    width: 600, 
-    height: 500, 
-    component: AmigaAwmlWizard, 
-    baseX: 200, 
-    baseY: 130 
+  'AWML Wizard': {
+    title: 'AWML Wizard',
+    width: 600,
+    height: 500,
+    component: AmigaAwmlWizard,
+    baseX: 200,
+    baseY: 130
   }
 };
 
 const createWindow = (config: any, data = {}) => {
   const offset = openWindows.value.length * 20;
-  
+
   // If this is an AWML app, prepare AWML-specific data
   let windowData = data;
   if (config.awmlPath) {
     windowData = {
       ...data,
       filePath: config.awmlPath,
-      meta: { 
+      meta: {
         name: config.title,
         type: 'awml',
-        ...data.meta 
+        ...data.meta
       }
     };
   }
-  
+
   return {
     id: `window-${Date.now()}`,
     title: config.title,
@@ -766,13 +927,25 @@ const deleteSelectedIcons = async () => {
 
   if (confirm(`Delete ${selectedCount.value} icon(s)?`)) {
     alert(`${selectedCount.value} icon(s) would be moved to trash.`);
-    selectedCount.value = 0;
+    // Update selected count after deletion
+    clearSelection();
   }
 };
 
 const closeWindow = (windowId: string) => {
   const index = openWindows.value.findIndex(w => w.id === windowId);
   if (index !== -1) {
+    const window = openWindows.value[index];
+
+    // Mark drawers as closed when window closes
+    if (window.data?.id === 'utils') {
+      setOpen('utils', false);
+    } else if (window.data?.id === 'trash') {
+      setOpen('trash', false);
+      // Refresh trash count when closing trash window
+      fetchTrashItemCount();
+    }
+
     openWindows.value.splice(index, 1);
   }
 };
@@ -818,6 +991,139 @@ const updateWidgetPosition = (widgetId: string, x: number, y: number) => {
   if (widget) {
     widget.x = x;
     widget.y = y;
+  }
+};
+
+// Context menu functionality
+const contextMenuItems = computed<ContextMenuItem[]>(() => {
+  if (contextMenuType.value === 'icon' && contextMenuTarget.value) {
+    // Menu for desktop icons
+    return [
+      { label: 'Open', action: 'open', icon: '▶' },
+      { label: '', action: '', separator: true },
+      { label: 'Information', action: 'information', icon: 'ℹ' },
+      { label: '', action: '', separator: true },
+      { label: 'Copy', action: 'copy', icon: '📋' },
+      { label: 'Rename', action: 'rename', icon: '✏' },
+      { label: 'Delete', action: 'delete', icon: '🗑' },
+      { label: '', action: '', separator: true },
+      { label: 'Snapshot', action: 'snapshot', icon: '📌' }
+    ];
+  } else if (contextMenuType.value === 'desktop') {
+    // Menu for desktop background
+    return [
+      { label: 'New Drawer', action: 'new-drawer', icon: '📁' },
+      { label: '', action: '', separator: true },
+      { label: 'Clean Up', action: 'clean-up', icon: '🧹' },
+      { label: 'Refresh', action: 'refresh', icon: '🔄' },
+      { label: '', action: '', separator: true },
+      { label: 'Snapshot All Icons', action: 'snapshot-all', icon: '📌' }
+    ];
+  }
+  return [];
+});
+
+const showDesktopIconContextMenu = (disk: Disk, event: MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+  contextMenuType.value = 'icon';
+  contextMenuTarget.value = disk;
+  contextMenuX.value = event.clientX;
+  contextMenuY.value = event.clientY;
+  contextMenuVisible.value = true;
+};
+
+const showDesktopBackgroundContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
+  contextMenuType.value = 'desktop';
+  contextMenuTarget.value = null;
+  contextMenuX.value = event.clientX;
+  contextMenuY.value = event.clientY;
+  contextMenuVisible.value = true;
+};
+
+const handleDesktopContextAction = async (action: string) => {
+  contextMenuVisible.value = false;
+
+  if (contextMenuType.value === 'icon' && contextMenuTarget.value) {
+    const disk = contextMenuTarget.value;
+    switch (action) {
+      case 'open':
+        if (disk.id === 'ram') {
+          openRAM();
+        } else if (disk.id === 'utils') {
+          openUtilities();
+        } else if (disk.id === 'trash') {
+          openTrash();
+        } else {
+          openDisk(disk);
+        }
+        break;
+      case 'information':
+        showDiskInfo(disk);
+        break;
+      case 'copy':
+        alert(`Copy "${disk.name}" - Feature coming soon!`);
+        break;
+      case 'rename':
+        await renameDisk(disk);
+        break;
+      case 'delete':
+        await deleteDisk(disk);
+        break;
+      case 'snapshot':
+        alert(`Snapshot position of "${disk.name}" - Feature coming soon!`);
+        break;
+    }
+  } else if (contextMenuType.value === 'desktop') {
+    switch (action) {
+      case 'new-drawer':
+        createNewDrawer();
+        break;
+      case 'clean-up':
+        alert('Clean up icons - Feature coming soon!');
+        break;
+      case 'refresh':
+        location.reload();
+        break;
+      case 'snapshot-all':
+        alert('Snapshot all icon positions - Feature coming soon!');
+        break;
+    }
+  }
+
+  contextMenuType.value = null;
+  contextMenuTarget.value = null;
+};
+
+const showDiskInfo = (disk: Disk) => {
+  const info = `Name: ${disk.name}
+Type: ${disk.type === 'floppy' ? 'Floppy Disk' : disk.type === 'hard' ? 'Hard Drive' : 'RAM Disk'}
+ID: ${disk.id}
+Status: Mounted`;
+  alert(info);
+};
+
+const renameDisk = async (disk: Disk) => {
+  const newName = prompt(`Rename "${disk.name}" to:`, disk.name);
+  if (newName && newName !== disk.name) {
+    // Find and update the disk
+    const diskIndex = disks.value.findIndex(d => d.id === disk.id);
+    if (diskIndex !== -1) {
+      disks.value[diskIndex].name = newName;
+      alert(`Disk renamed to "${newName}"`);
+    }
+  }
+};
+
+const deleteDisk = async (disk: Disk) => {
+  if (confirm(`Delete "${disk.name}"? This will move it to the trash.`)) {
+    // Remove from disks array
+    const diskIndex = disks.value.findIndex(d => d.id === disk.id);
+    if (diskIndex !== -1) {
+      disks.value.splice(diskIndex, 1);
+      alert(`"${disk.name}" moved to trash`);
+    }
   }
 };
 </script>
@@ -935,31 +1241,66 @@ const updateWidgetPosition = (widgetId: string, x: number, y: number) => {
 
 /* Desktop Icons */
 .desktop-icons {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  width: 100px;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .disk-icon {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
+  cursor: move;
   user-select: none;
   padding: 8px;
-  transition: all 0.1s;
+  transition: opacity 0.1s;
 }
 
 .disk-icon:hover {
   background: var(--theme-highlight);
-  opacity: 0.2;
+  opacity: 0.9;
+}
+
+.disk-icon.selected {
+  background: var(--theme-highlight);
+  border: 2px solid var(--theme-highlightText);
+  box-shadow: 0 0 8px rgba(0, 85, 170, 0.5);
+}
+
+.disk-icon.active .icon-image {
+  animation: iconPulse 0.5s ease-in-out;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes drawerOpen {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .icon-image {
   width: 64px;
   height: 64px;
   margin-bottom: 4px;
+  transition: transform 0.15s ease;
+}
+
+.disk-icon.hovered .icon-image {
+  transform: scale(1.05);
 }
 
 .disk-svg,
@@ -969,6 +1310,14 @@ const updateWidgetPosition = (widgetId: string, x: number, y: number) => {
   width: 100%;
   height: 100%;
   filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.3));
+  transition: filter 0.15s ease;
+}
+
+.disk-svg.active,
+.ram-svg.active,
+.drawer-svg.active,
+.trash-svg.active {
+  filter: drop-shadow(0 0 8px #0ff) drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.3));
 }
 
 .icon-label {
@@ -982,6 +1331,16 @@ const updateWidgetPosition = (widgetId: string, x: number, y: number) => {
     1px 1px 0 var(--theme-borderLight);
   max-width: 80px;
   word-wrap: break-word;
+  transition: color 0.15s ease;
+}
+
+.disk-icon.selected .icon-label {
+  color: var(--theme-highlightText);
+  text-shadow:
+    -1px -1px 0 var(--theme-highlight),
+    1px -1px 0 var(--theme-highlight),
+    -1px 1px 0 var(--theme-highlight),
+    1px 1px 0 var(--theme-highlight);
 }
 
 /* Windows Container */
