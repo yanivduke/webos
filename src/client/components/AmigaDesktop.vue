@@ -1124,6 +1124,91 @@ const toggleThemeWidget = () => {
   }
 };
 
+const toggleKeyboardShortcutsWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'keyboard-shortcuts');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'keyboard-shortcuts',
+      title: 'Keyboard Shortcuts',
+      x: window.innerWidth - 420,
+      y: 80,
+      component: KeyboardShortcutsWidget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
+const toggleClockWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'clock');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'clock',
+      title: 'Clock',
+      x: window.innerWidth - 280,
+      y: 200,
+      component: ClockGadget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
+const toggleSystemMonitorWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'system-monitor');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'system-monitor',
+      title: 'System Monitor',
+      x: window.innerWidth - 280,
+      y: 320,
+      component: SystemMonitorGadget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
+const toggleDiskUsageWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'disk-usage');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'disk-usage',
+      title: 'Disk Usage',
+      x: 20,
+      y: 80,
+      component: DiskUsageGadget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
+const toggleNetworkStatusWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'network-status');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'network-status',
+      title: 'Network Status',
+      x: 20,
+      y: 400,
+      component: NetworkStatusGadget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
 const closeWidget = (widgetId: string) => {
   const index = widgets.value.findIndex(w => w.id === widgetId);
   if (index !== -1) {

@@ -47,4 +47,34 @@ router.get('/info', (req, res) => {
   });
 });
 
+// GET /api/system/monitor - Real-time system monitoring data
+router.get('/monitor', (req, res) => {
+  const cpuUsage = Math.random() * 100;
+  const chipUsed = 256 + Math.random() * 256; // 256-512K used
+  const fastUsed = 128 + Math.random() * 256; // 128-384K used
+
+  res.json({
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    cpuUsage: cpuUsage,
+    memory: {
+      chipMem: '512K',
+      fastMem: '512K',
+      chipUsed: Math.floor(chipUsed) + 'K',
+      fastUsed: Math.floor(fastUsed) + 'K',
+      chipUsagePercent: (chipUsed / 512) * 100,
+      fastUsagePercent: (fastUsed / 512) * 100,
+      total: process.memoryUsage().heapTotal,
+      used: process.memoryUsage().heapUsed,
+      free: process.memoryUsage().heapTotal - process.memoryUsage().heapUsed
+    },
+    cpu: {
+      model: 'Motorola 68040',
+      speed: '25 MHz',
+      usage: cpuUsage,
+      cores: 1
+    }
+  });
+});
+
 module.exports = router;
