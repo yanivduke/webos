@@ -1,18 +1,137 @@
-# WebOS - A Complete Operating System Interface
+# WebOS - Retro Operating Systems in Your Browser
 
-## Overview
-WebOS is a complete operating system interface designed to provide a modern, intuitive, and feature-rich web-based user experience. Built with a robust frontend using Vuetify 3 (with TypeScript support) and a scalable backend powered by Node.js Express in TypeScript with TypeORM 0.31, WebOS offers a seamless integration between user-facing components and data management.
+<div align="center">
 
-Core Features:
-- A responsive, customizable dashboard with real-time system monitoring
-- User authentication and role-based access control
-- File system navigation and management
-- Application launcher with drag-and-drop functionality
-- System settings and configuration panel
-- Real-time notifications and alerts
-- Integrated terminal emulator with command history
+**🎮 Bringing classic computing interfaces back to life 💾**
 
-WebOS is designed to serve as a comprehensive platform for developers and end-users alike, providing a familiar operating system experience through a web interface accessible from any modern browser.
+*Experience the nostalgia of Amiga Workbench, Windows 95, Mac OS System 7, and more—all in your browser with pixel-perfect authenticity.*
+
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+</div>
+
+---
+
+## 🌟 What is WebOS?
+
+WebOS is an **open-source platform for recreating beloved retro operating systems** as fully functional web applications. Each implementation is crafted with obsessive attention to authentic colors, fonts, window chrome, and UI behaviors—capturing not just the look, but the *soul* of classic computing.
+
+### Currently Available
+
+**🖥️ Amiga Workbench 3.1** - The iconic Commodore Amiga interface with authentic gray bevels, drag-and-drop icons, and retro applications:
+- Authentic color palette (#a0a0a0 gray, #0055aa blue, #ffaa00 orange)
+- Press Start 2P pixel font
+- Draggable/resizable windows with classic chrome
+- Working applications: NotePad, Paint, Calculator, Shell, Clock
+- Real file system with disk drives (DF0:, DH0:, RAM:)
+- WebAssembly SDK (AWML) for native app development
+
+## 🚀 We Need Your Help!
+
+**This is where YOU come in!** WebOS is designed as a community-driven platform for retro OS preservation. We're calling on developers, designers, and retro computing enthusiasts to help us bring more classic interfaces to life.
+
+### 🎨 Help Us Build These Retro OS Themes:
+
+- **Windows 3.1 / 95 / 98** - Gray interfaces, Start menu, iconic blue error screens
+- **Mac OS System 7 / 8 / 9** - Platinum appearance, Chicago font, happy Mac
+- **BeOS** - Yellow tab windows, futuristic design ahead of its time
+- **NeXTSTEP** - Dark dock, NeXT cube aesthetic, the birthplace of macOS
+- **OS/2 Warp** - IBM's alternative to Windows
+- **Classic Linux DEs** - FVWM, Window Maker, Enlightenment, early KDE/GNOME
+- **Atari TOS** - The Atari ST's GEM-based interface
+- **RISC OS** - Acorn's unique three-button mouse UI
+- **Your favorite retro OS!** - We're open to all classic interfaces
+
+### 💡 How You Can Contribute:
+
+1. **Implement a new OS theme** - Follow our [Retro OS Implementation Guide](RETRO_OS_GUIDE.md)
+2. **Enhance existing themes** - Add applications, improve authenticity, fix bugs
+3. **Research & documentation** - Share screenshots, design specs, authentic behaviors
+4. **Report issues** - Found a bug? Let us know!
+5. **Spread the word** - Star the repo, share with retro computing communities
+
+**No experience with Vue or TypeScript?** We welcome research, screenshots, testing, and documentation contributions too!
+
+👉 **[Read the Contributing Guide](CONTRIBUTING.md)** to get started
+
+👉 **[Propose a Retro OS Theme](../../issues/new?template=retro_os_proposal.md)**
+
+## 🤝 Join the Community
+
+We believe in the power of open collaboration to preserve computing history. Whether you're a seasoned developer or just passionate about retro computing:
+
+- **📝 [Contributing Guide](CONTRIBUTING.md)** - Learn how to contribute
+- **🐛 [Report a Bug](../../issues/new?template=bug_report.md)** - Found an issue?
+- **✨ [Request a Feature](../../issues/new?template=feature_request.md)** - Have an idea?
+- **🖥️ [Propose a Retro OS](../../issues/new?template=retro_os_proposal.md)** - Suggest a classic OS to implement
+- **💬 [GitHub Discussions](../../discussions)** - Ask questions, share ideas
+- **⭐ Star this repo** - Help us reach more retro computing enthusiasts!
+
+### Why Contribute?
+
+- **Preserve computing history** - Keep classic interfaces alive for future generations
+- **Learn retro design** - Study authentic UI/UX from computing's golden age
+- **Build your portfolio** - Showcase your work on a unique open-source project
+- **Connect with community** - Meet fellow retro computing enthusiasts
+- **Have fun!** - There's joy in recreating these beloved interfaces
+
+---
+
+## 📚 Documentation
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute code, documentation, and research
+- **[RETRO_OS_GUIDE.md](RETRO_OS_GUIDE.md)** - Complete guide to implementing a new OS theme
+- **[CLAUDE.md](CLAUDE.md)** - Detailed technical architecture documentation
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines and expectations
+
+---
+
+## Support This Project
+
+WebOS is a labor of love bringing authentic 1980s-90s Amiga computing nostalgia to the modern web. If you enjoy this project and want to help keep development going, consider supporting:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support%20WebOS-orange?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/YOUR_USERNAME)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20WebOS-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/YOUR_USERNAME)
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=for-the-badge&logo=github-sponsors)](https://github.com/sponsors/YOUR_USERNAME)
+[![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?style=for-the-badge&logo=patreon)](https://patreon.com/YOUR_USERNAME)
+
+**Your support helps:**
+- Keep servers running for live demos
+- Fund development of new features (AWML SDK expansion, more Amiga apps, multiplayer features)
+- Pay for retro computing research and testing on real Amiga hardware
+- Create tutorials and documentation for the community
+- Maintain and improve the codebase
+
+**Alternative ways to support:**
+- Star this repository
+- Share WebOS on social media and retro computing communities
+- Contribute code, bug reports, or documentation
+- Create AWML applications and share them with the community
+
+Every coffee fuels another pixel-perfect window border!
+
+## Live Demo
+
+🚀 **[Try WebOS Live](https://your-deployment-url.vercel.app)** (Deploy to get your URL!)
+
+Experience the authentic Amiga Workbench interface directly in your browser. No installation required!
+
+## Quick Deploy
+
+Deploy your own instance of WebOS for free:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yanivduke/webos)
+
+**One-click deployment to Vercel:**
+1. Click the button above
+2. Sign in to Vercel (free account)
+3. Click "Deploy"
+4. Wait 2-3 minutes
+5. Your WebOS is live!
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions, custom domain setup, and production configuration.
 
 ## Architecture
 

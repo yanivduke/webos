@@ -11,6 +11,7 @@ const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
 const downloadsRoutes = require('./routes/downloads.route');
+const exportRoutes = require('./routes/export.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -37,6 +38,7 @@ app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/downloads', downloadsRoutes);
+app.use('/api/export', exportRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -61,7 +63,8 @@ app.get('/', (req, res) => {
       files: '/api/files',
       settings: '/api/settings',
       appState: '/api/app-state',
-      shell: '/api/shell'
+      shell: '/api/shell',
+      export: '/api/export'
     },
     features: [
       'Real file system with persistence',
@@ -84,7 +87,8 @@ app.use((req, res) => {
       '/api/files',
       '/api/settings',
       '/api/app-state',
-      '/api/shell'
+      '/api/shell',
+      '/api/export'
     ]
   });
 });
@@ -126,6 +130,7 @@ server.listen(PORT, () => {
   console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
+  console.log('  📤 Export Files: /api/export');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });
