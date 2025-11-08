@@ -1,0 +1,167 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "close": "Close",
+    "open": "Open",
+    "copy": "Copy",
+    "paste": "Paste",
+    "cut": "Cut",
+    "rename": "Rename",
+    "new": "New",
+    "edit": "Edit",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "apply": "Apply",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "menu": {
+    "workbench": "Workbench",
+    "window": "Window",
+    "icons": "Icons",
+    "tools": "Tools",
+    "about": "About",
+    "executeCommand": "Execute Command",
+    "redrawAll": "Redraw All",
+    "update": "Update",
+    "quit": "Quit",
+    "newDrawer": "New Drawer",
+    "openParent": "Open Parent",
+    "closeWindow": "Close Window",
+    "selectContents": "Select Contents",
+    "cleanUp": "Clean Up",
+    "snapshot": "Snapshot",
+    "unsnapshot": "Unsnapshot",
+    "information": "Information",
+    "leaveOut": "Leave Out",
+    "putAway": "Put Away",
+    "formatDisk": "Format Disk"
+  },
+  "apps": {
+    "calculator": "Calculator",
+    "notepad": "NotePad",
+    "shell": "Shell",
+    "clock": "Clock",
+    "paint": "Paint",
+    "multiview": "MultiView",
+    "preferences": "Preferences",
+    "search": "Search Files",
+    "systemMonitor": "System Monitor",
+    "clipboard": "Clipboard",
+    "awmlRunner": "AWML Runner",
+    "awmlWizard": "AWML Wizard",
+    "languageSelector": "Language Selector"
+  },
+  "desktop": {
+    "workbench": "Workbench3.1",
+    "system": "System",
+    "work": "Work",
+    "ramDisk": "RAM Disk",
+    "utilities": "Utilities",
+    "trash": "Trash",
+    "monitor": "Monitor"
+  },
+  "file": {
+    "file": "File",
+    "folder": "Folder",
+    "disk": "Disk",
+    "drawer": "Drawer",
+    "size": "Size",
+    "modified": "Modified",
+    "created": "Created",
+    "type": "Type",
+    "name": "Name",
+    "path": "Path",
+    "bytes": "bytes",
+    "kilobytes": "KB",
+    "megabytes": "MB"
+  },
+  "messages": {
+    "fileDeleted": "File {name} deleted",
+    "fileCopied": "File {name} copied",
+    "fileRenamed": "File renamed to {name}",
+    "itemsSelected": {
+      "singular": "{count} item selected",
+      "plural": "{count} items selected"
+    },
+    "filesFound": {
+      "singular": "{count} file found",
+      "plural": "{count} files found"
+    },
+    "confirmDelete": "Delete {count} item(s)?",
+    "confirmQuit": "Really quit Workbench?",
+    "enterNewName": "Enter new name:",
+    "enterDrawerName": "Enter new drawer name:",
+    "drawerCreated": "Drawer \"{name}\" created successfully!",
+    "failedToCreate": "Failed to create drawer",
+    "errorCreating": "Error creating drawer",
+    "noSelection": "No icons selected",
+    "selectOneOnly": "Please select only one icon to rename",
+    "copyFunctionality": "Copy functionality: {count} icon(s) would be copied to clipboard.",
+    "renameTo": "Icon would be renamed to: {name}",
+    "moveToTrash": "{count} icon(s) would be moved to trash."
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": {
+      "singular": "{count} minute ago",
+      "plural": "{count} minutes ago"
+    },
+    "hoursAgo": {
+      "singular": "{count} hour ago",
+      "plural": "{count} hours ago"
+    },
+    "daysAgo": {
+      "singular": "{count} day ago",
+      "plural": "{count} days ago"
+    }
+  },
+  "system": {
+    "chipMemory": "Chip",
+    "fastMemory": "Fast",
+    "screenDepth": "Screen: Workbench (640x256, 16 colors)",
+    "driveActivity": "Drive Activity",
+    "clipboardHasItems": "Clipboard has items"
+  },
+  "about": {
+    "title": "WebOS v2.0.0",
+    "subtitle": "Amiga Workbench Style Interface",
+    "builtWith": "Built with Vue 3 + TypeScript",
+    "server": "Server: Express.js with JSON persistence",
+    "features": "Features: 8 working applications",
+    "copyright": "© 2024 WebOS Project"
+  },
+  "language": {
+    "selectLanguage": "Select Language",
+    "currentLanguage": "Current Language",
+    "availableLanguages": "Available Languages",
+    "changeLanguage": "Change Language",
+    "completion": "Completion",
+    "downloadMore": "Download More Languages",
+    "searchLanguages": "Search Languages",
+    "sampleText": "Sample Text",
+    "languageChanged": "Language changed to {language}",
+    "translationCoverage": "Translation Coverage"
+  },
+  "tooltips": {
+    "close": "Close window",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "help": "Help",
+    "dragToMove": "Drag to move",
+    "doubleClickToOpen": "Double-click to open"
+  }
+}

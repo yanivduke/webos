@@ -127,37 +127,58 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
   const hasClipboard = clipboard.hasItems();
   const hasSelection = selectedItems.value.length > 0;
   const isMultiSelection = selectedItems.value.length > 1;
-  
+
   // Base menu items
   const menuItems: ContextMenuItem[] = [];
-  
+
   // If item-specific (right-clicked on item)
   if (contextMenuItem.value) {
+    const isZipFile = contextMenuItem.value.name.toLowerCase().endsWith('.zip');
+
     menuItems.push(
       { label: 'Open', action: 'open', icon: '▶' },
       { label: '', action: '', separator: true },
       { label: 'Copy', action: 'copy', icon: '📋', disabled: isMultiSelection && !hasSelection },
       { label: 'Cut', action: 'cut', icon: '✂', disabled: isMultiSelection && !hasSelection },
       { label: 'Duplicate', action: 'duplicate', icon: '⧉' },
-      { label: '', action: '', separator: true },
+      { label: '', action: '', separator: true }
+    );
+
+    // Archive-specific menu items
+    if (isZipFile) {
+      menuItems.push(
+        { label: 'Extract Here', action: 'extract-here', icon: '📦' },
+        { label: 'Extract To...', action: 'extract-to', icon: '📂' },
+        { label: 'Open with Archiver', action: 'open-archiver', icon: '🗜️' },
+        { label: '', action: '', separator: true }
+      );
+    } else if (hasSelection && contextMenuItem.value.type === 'file') {
+      // If file(s) selected, show compress option
+      menuItems.push(
+        { label: 'Compress to ZIP', action: 'compress-to-zip', icon: '🗜️' },
+        { label: '', action: '', separator: true }
+      );
+    }
+
+    menuItems.push(
       { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
       { label: 'Delete', action: 'delete', icon: '🗑' },
       { label: '', action: '', separator: true },
       { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
     );
   }
-  
+
   // Universal menu items (always available)
   if (hasClipboard) {
     menuItems.push({ label: 'Paste', action: 'paste', icon: '📄', disabled: false });
     menuItems.push({ label: '', action: '', separator: true });
   }
-  
+
   menuItems.push(
     { label: 'New File', action: 'new-file', icon: '📄' },
     { label: 'New Folder', action: 'new-folder', icon: '📁' }
   );
-  
+
   return menuItems;
 });
 
@@ -335,6 +356,18 @@ const handleContextAction = async (action: string) => {
       break;
     case 'duplicate':
       if (item) await duplicateItem(item);
+      break;
+    case 'extract-here':
+      if (item) await extractArchiveHere(item);
+      break;
+    case 'extract-to':
+      if (item) await extractArchiveTo(item);
+      break;
+    case 'open-archiver':
+      if (item) openWithArchiver(item);
+      break;
+    case 'compress-to-zip':
+      await compressToZip();
       break;
   }
 
@@ -540,6 +573,106 @@ const duplicateItem = async (item: FolderItem) => {
     console.error('Error duplicating item:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     alert(`Failed to duplicate item: ${message}`);
+  }
+};
+
+// Archive operations
+const extractArchiveHere = async (item: FolderItem) => {
+  try {
+    const archivePath = item.path || `${currentPath.value}/${item.name}`;
+
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: currentPath.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files from ${item.name}`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive. Note: Server-side ZIP extraction requires additional dependencies.');
+  }
+};
+
+const extractArchiveTo = async (item: FolderItem) => {
+  const destination = prompt('Extract to path:', currentPath.value);
+  if (!destination) return;
+
+  try {
+    const archivePath = item.path || `${currentPath.value}/${item.name}`;
+
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: destination
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files to ${destination}`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive. Note: Server-side ZIP extraction requires additional dependencies.');
+  }
+};
+
+const openWithArchiver = (_item: FolderItem) => {
+  // Emit event to open the archiver tool
+  emit('openTool', 'Archiver');
+};
+
+const compressToZip = async () => {
+  const selected = getSelectedItems();
+  if (selected.length === 0) {
+    alert('Please select files to compress');
+    return;
+  }
+
+  const archiveName = prompt('Enter archive name (without .zip):', 'archive');
+  if (!archiveName) return;
+
+  const fileName = archiveName.endsWith('.zip') ? archiveName : `${archiveName}.zip`;
+
+  try {
+    const filePaths = selected.map(item => item.path || `${currentPath.value}/${item.name}`);
+
+    const response = await fetch('/api/files/compress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        files: filePaths,
+        archiveName: fileName,
+        destinationPath: currentPath.value,
+        compressionLevel: 'normal'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create archive');
+    }
+
+    const result = await response.json();
+    alert(`Created archive "${fileName}" with ${result.fileCount || selected.length} files`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error creating archive:', error);
+    alert('Failed to create archive. Note: Server-side ZIP compression requires additional dependencies.');
   }
 };
 

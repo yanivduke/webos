@@ -1,0 +1,133 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "copy": "Copier",
+    "paste": "Coller",
+    "cut": "Couper",
+    "rename": "Renommer",
+    "new": "Nouveau",
+    "edit": "Modifier",
+    "search": "Rechercher",
+    "yes": "Oui",
+    "no": "Non",
+    "apply": "Appliquer",
+    "back": "Retour",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Info"
+  },
+  "menu": {
+    "workbench": "Établi",
+    "window": "Fenêtre",
+    "icons": "Icônes",
+    "tools": "Outils",
+    "about": "À propos",
+    "executeCommand": "Exécuter Commande",
+    "redrawAll": "Tout Redessiner",
+    "update": "Mettre à jour",
+    "quit": "Quitter",
+    "newDrawer": "Nouveau Tiroir",
+    "openParent": "Ouvrir Parent",
+    "closeWindow": "Fermer Fenêtre",
+    "selectContents": "Sélectionner Contenu",
+    "cleanUp": "Nettoyer",
+    "snapshot": "Instantané",
+    "information": "Information",
+    "formatDisk": "Formater Disque"
+  },
+  "apps": {
+    "calculator": "Calculatrice",
+    "notepad": "Bloc-notes",
+    "shell": "Terminal",
+    "clock": "Horloge",
+    "paint": "Peinture",
+    "multiview": "MultiVue",
+    "preferences": "Préférences",
+    "search": "Rechercher Fichiers",
+    "systemMonitor": "Moniteur Système",
+    "clipboard": "Presse-papiers",
+    "awmlRunner": "Exécuteur AWML",
+    "awmlWizard": "Assistant AWML",
+    "languageSelector": "Sélecteur de Langue"
+  },
+  "desktop": {
+    "workbench": "Établi3.1",
+    "system": "Système",
+    "work": "Travail",
+    "ramDisk": "Disque RAM",
+    "utilities": "Utilitaires",
+    "trash": "Corbeille",
+    "monitor": "Moniteur"
+  },
+  "file": {
+    "file": "Fichier",
+    "folder": "Dossier",
+    "disk": "Disque",
+    "drawer": "Tiroir",
+    "size": "Taille",
+    "modified": "Modifié",
+    "created": "Créé",
+    "type": "Type",
+    "name": "Nom",
+    "path": "Chemin"
+  },
+  "messages": {
+    "fileDeleted": "Fichier {name} supprimé",
+    "fileCopied": "Fichier {name} copié",
+    "fileRenamed": "Fichier renommé en {name}",
+    "itemsSelected": {
+      "singular": "{count} élément sélectionné",
+      "plural": "{count} éléments sélectionnés"
+    },
+    "confirmDelete": "Supprimer {count} élément(s)?",
+    "confirmQuit": "Vraiment quitter l'Établi?",
+    "enterNewName": "Entrez un nouveau nom:",
+    "enterDrawerName": "Entrez le nom du tiroir:",
+    "noSelection": "Aucune icône sélectionnée"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": {
+      "singular": "Il y a {count} minute",
+      "plural": "Il y a {count} minutes"
+    },
+    "hoursAgo": {
+      "singular": "Il y a {count} heure",
+      "plural": "Il y a {count} heures"
+    },
+    "daysAgo": {
+      "singular": "Il y a {count} jour",
+      "plural": "Il y a {count} jours"
+    }
+  },
+  "system": {
+    "chipMemory": "Puce",
+    "fastMemory": "Rapide",
+    "screenDepth": "Écran: Établi (640x256, 16 couleurs)",
+    "clipboardHasItems": "Le presse-papiers contient des éléments"
+  },
+  "about": {
+    "title": "WebOS v2.0.0",
+    "subtitle": "Interface Style Amiga Workbench",
+    "builtWith": "Construit avec Vue 3 + TypeScript",
+    "features": "Fonctionnalités: 8 applications fonctionnelles",
+    "copyright": "© 2024 Projet WebOS"
+  },
+  "language": {
+    "selectLanguage": "Sélectionner Langue",
+    "currentLanguage": "Langue Actuelle",
+    "availableLanguages": "Langues Disponibles",
+    "changeLanguage": "Changer Langue",
+    "completion": "Complétude",
+    "languageChanged": "Langue changée en {language}"
+  }
+}

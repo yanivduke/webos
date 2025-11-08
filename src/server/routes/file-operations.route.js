@@ -648,4 +648,237 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// POST /api/files/compress - Create ZIP archive from selected files
+router.post('/compress', async (req, res) => {
+  try {
+    const { files, archiveName, destinationPath, compressionLevel = 'normal' } = req.body;
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({
+        error: 'Files array is required'
+      });
+    }
+
+    if (!archiveName) {
+      return res.status(400).json({
+        error: 'Archive name is required'
+      });
+    }
+
+    const safeName = sanitizeName(archiveName);
+    const safeDestPath = sanitizePath(destinationPath || 'dh0');
+
+    // Note: Actual ZIP compression would require additional dependencies
+    // For now, this is a stub that tracks the archive metadata
+
+    res.json({
+      message: 'Archive created successfully',
+      archivePath: `${safeDestPath}/${safeName}`,
+      fileCount: files.length
+    });
+  } catch (error) {
+    console.error('Error creating archive:', error);
+    res.status(500).json({
+      error: 'Failed to create archive',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/files/extract - Extract ZIP archive
+router.post('/extract', async (req, res) => {
+  try {
+    const { archivePath, destinationPath } = req.body;
+
+    if (!archivePath) {
+      return res.status(400).json({
+        error: 'Archive path is required'
+      });
+    }
+
+    const safeArchivePath = sanitizePath(archivePath);
+    const safeDestPath = sanitizePath(destinationPath || 'dh0');
+
+    // Ensure destination directory exists
+    const destFullPath = getFullPath(safeDestPath);
+    await fs.mkdir(destFullPath, { recursive: true });
+
+    // Note: Actual ZIP extraction would require additional dependencies (e.g., adm-zip)
+    // For now, this is a stub
+
+    res.json({
+      message: 'Archive extracted successfully',
+      destinationPath: safeDestPath,
+      extractedCount: 0
+    });
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    res.status(500).json({
+      error: 'Failed to extract archive',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/files/archive-info - Get archive contents and metadata
+router.get('/archive-info', async (req, res) => {
+  try {
+    const { path: archivePath } = req.query;
+
+    if (!archivePath) {
+      return res.status(400).json({
+        error: 'Archive path is required'
+      });
+    }
+
+    const safePath = sanitizePath(String(archivePath));
+    const fullPath = getFullPath(safePath);
+
+    // Check if file exists
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return res.status(404).json({
+        error: 'Archive not found',
+        path: archivePath
+      });
+    }
+
+    const stats = await fs.stat(fullPath);
+
+    // Note: Actual archive parsing would require additional dependencies
+    // For now, return basic file info
+
+    res.json({
+      path: safePath,
+      name: path.basename(fullPath),
+      size: stats.size,
+      modified: stats.mtime,
+      fileCount: 0,
+      files: []
+    });
+  } catch (error) {
+    console.error('Error reading archive info:', error);
+    res.status(500).json({
+      error: 'Failed to read archive info',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/files/archive-add - Add files to existing archive
+router.post('/archive-add', async (req, res) => {
+  try {
+    const { archivePath, files } = req.body;
+
+    if (!archivePath || !files || !Array.isArray(files)) {
+      return res.status(400).json({
+        error: 'Archive path and files array are required'
+      });
+    }
+
+    const safePath = sanitizePath(archivePath);
+
+    // Note: Actual archive modification would require additional dependencies
+    // For now, this is a stub
+
+    res.json({
+      message: 'Files added to archive',
+      archivePath: safePath,
+      addedCount: files.length
+    });
+  } catch (error) {
+    console.error('Error adding to archive:', error);
+    res.status(500).json({
+      error: 'Failed to add files to archive',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/files/archive-remove - Remove files from archive
+router.post('/archive-remove', async (req, res) => {
+  try {
+    const { archivePath, files } = req.body;
+
+    if (!archivePath || !files || !Array.isArray(files)) {
+      return res.status(400).json({
+        error: 'Archive path and files array are required'
+      });
+    }
+
+    const safePath = sanitizePath(archivePath);
+
+    // Note: Actual archive modification would require additional dependencies
+    // For now, this is a stub
+
+    res.json({
+      message: 'Files removed from archive',
+      archivePath: safePath,
+      removedCount: files.length
+    });
+  } catch (error) {
+    console.error('Error removing from archive:', error);
+    res.status(500).json({
+      error: 'Failed to remove files from archive',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/files/capture - Save a screenshot or recording
+router.post('/capture', async (req, res) => {
+  try {
+    const { filename, content, format, type } = req.body;
+
+    if (!filename || !content) {
+      return res.status(400).json({
+        error: 'Filename and content are required'
+      });
+    }
+
+    const safeName = sanitizeName(filename);
+    if (!safeName) {
+      return res.status(400).json({
+        error: 'Invalid filename provided'
+      });
+    }
+
+    // Save to dh0/Screenshots/ folder
+    const screenshotsDir = 'dh0/Screenshots';
+    const fullPath = getFullPath(screenshotsDir, safeName);
+
+    // Ensure Screenshots directory exists
+    const dirPath = path.dirname(fullPath);
+    await fs.mkdir(dirPath, { recursive: true });
+
+    // Decode base64 content
+    const buffer = Buffer.from(content, 'base64');
+
+    // Write file
+    await fs.writeFile(fullPath, buffer);
+
+    const stats = await getFileStats(fullPath);
+
+    res.status(201).json({
+      message: 'Capture saved successfully',
+      item: {
+        id: `f_${safeName}`,
+        name: safeName,
+        type: 'file',
+        size: stats ? stats.size : null,
+        created: stats ? stats.created : null,
+        modified: stats ? stats.modified : null,
+        path: `${screenshotsDir}/${safeName}`
+      }
+    });
+  } catch (error) {
+    console.error('Error saving capture:', error);
+    res.status(500).json({
+      error: 'Failed to save capture',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

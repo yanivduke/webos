@@ -1,0 +1,133 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "open": "Öffnen",
+    "copy": "Kopieren",
+    "paste": "Einfügen",
+    "cut": "Ausschneiden",
+    "rename": "Umbenennen",
+    "new": "Neu",
+    "edit": "Bearbeiten",
+    "search": "Suchen",
+    "yes": "Ja",
+    "no": "Nein",
+    "apply": "Anwenden",
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Fertig",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Info"
+  },
+  "menu": {
+    "workbench": "Werkbank",
+    "window": "Fenster",
+    "icons": "Symbole",
+    "tools": "Werkzeuge",
+    "about": "Über",
+    "executeCommand": "Befehl Ausführen",
+    "redrawAll": "Alles Neu Zeichnen",
+    "update": "Aktualisieren",
+    "quit": "Beenden",
+    "newDrawer": "Neue Schublade",
+    "openParent": "Übergeordnet Öffnen",
+    "closeWindow": "Fenster Schließen",
+    "selectContents": "Inhalt Auswählen",
+    "cleanUp": "Aufräumen",
+    "snapshot": "Schnappschuss",
+    "information": "Information",
+    "formatDisk": "Datenträger Formatieren"
+  },
+  "apps": {
+    "calculator": "Rechner",
+    "notepad": "Notizblock",
+    "shell": "Terminal",
+    "clock": "Uhr",
+    "paint": "Malen",
+    "multiview": "MultiAnsicht",
+    "preferences": "Einstellungen",
+    "search": "Dateien Suchen",
+    "systemMonitor": "Systemmonitor",
+    "clipboard": "Zwischenablage",
+    "awmlRunner": "AWML-Runner",
+    "awmlWizard": "AWML-Assistent",
+    "languageSelector": "Sprachauswahl"
+  },
+  "desktop": {
+    "workbench": "Werkbank3.1",
+    "system": "System",
+    "work": "Arbeit",
+    "ramDisk": "RAM-Disk",
+    "utilities": "Dienstprogramme",
+    "trash": "Papierkorb",
+    "monitor": "Monitor"
+  },
+  "file": {
+    "file": "Datei",
+    "folder": "Ordner",
+    "disk": "Datenträger",
+    "drawer": "Schublade",
+    "size": "Größe",
+    "modified": "Geändert",
+    "created": "Erstellt",
+    "type": "Typ",
+    "name": "Name",
+    "path": "Pfad"
+  },
+  "messages": {
+    "fileDeleted": "Datei {name} gelöscht",
+    "fileCopied": "Datei {name} kopiert",
+    "fileRenamed": "Datei umbenannt in {name}",
+    "itemsSelected": {
+      "singular": "{count} Element ausgewählt",
+      "plural": "{count} Elemente ausgewählt"
+    },
+    "confirmDelete": "{count} Element(e) löschen?",
+    "confirmQuit": "Werkbank wirklich beenden?",
+    "enterNewName": "Neuen Namen eingeben:",
+    "enterDrawerName": "Schubladennamen eingeben:",
+    "noSelection": "Keine Symbole ausgewählt"
+  },
+  "time": {
+    "justNow": "Gerade eben",
+    "minutesAgo": {
+      "singular": "Vor {count} Minute",
+      "plural": "Vor {count} Minuten"
+    },
+    "hoursAgo": {
+      "singular": "Vor {count} Stunde",
+      "plural": "Vor {count} Stunden"
+    },
+    "daysAgo": {
+      "singular": "Vor {count} Tag",
+      "plural": "Vor {count} Tagen"
+    }
+  },
+  "system": {
+    "chipMemory": "Chip",
+    "fastMemory": "Schnell",
+    "screenDepth": "Bildschirm: Werkbank (640x256, 16 Farben)",
+    "clipboardHasItems": "Zwischenablage hat Elemente"
+  },
+  "about": {
+    "title": "WebOS v2.0.0",
+    "subtitle": "Amiga Workbench Stil Oberfläche",
+    "builtWith": "Gebaut mit Vue 3 + TypeScript",
+    "features": "Funktionen: 8 funktionierende Anwendungen",
+    "copyright": "© 2024 WebOS Projekt"
+  },
+  "language": {
+    "selectLanguage": "Sprache Auswählen",
+    "currentLanguage": "Aktuelle Sprache",
+    "availableLanguages": "Verfügbare Sprachen",
+    "changeLanguage": "Sprache Ändern",
+    "completion": "Vollständigkeit",
+    "languageChanged": "Sprache geändert zu {language}"
+  }
+}

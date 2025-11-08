@@ -32,6 +32,7 @@
         <div v-if="hasClipboardItems" class="clipboard-indicator" @click="handleOpenTool('Clipboard')" title="Clipboard has items">
           📋
         </div>
+        <AmigaWorkspaceSwitcher @openManager="handleOpenTool('Workspace Manager')" />
         <div class="system-time">{{ currentTime }}</div>
         <div class="memory-indicator">Chip: {{ chipMem }} | Fast: {{ fastMem }}</div>
       </div>
@@ -108,7 +109,7 @@
               <line x1="36" y1="36" x2="50" y2="50" stroke="#666" stroke-width="3" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="icon-label">Search</div>
+          <div class="icon-label">Search  </div>
         <!-- System Monitor -->
         <div class="disk-icon sysmon" @dblclick="openSystemMonitor">
           <div class="icon-image">
@@ -125,6 +126,56 @@
             </svg>
           </div>
           <div class="icon-label">Monitor</div>
+        </div>
+        <!-- Task Manager -->
+        <div class="disk-icon taskmgr" @dblclick="openTaskManager">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="taskmgr-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#888" stroke="#000" stroke-width="2"/>
+              <rect x="12" y="16" width="40" height="6" fill="#0055aa"/>
+              <rect x="12" y="24" width="40" height="2" fill="#fff"/>
+              <rect x="12" y="28" width="40" height="2" fill="#fff"/>
+              <rect x="12" y="32" width="40" height="2" fill="#fff"/>
+              <rect x="12" y="36" width="40" height="2" fill="#fff"/>
+              <rect x="12" y="40" width="40" height="2" fill="#fff"/>
+              <text x="32" y="20" text-anchor="middle" fill="#fff" font-size="5" font-family="monospace">TASKS</text>
+            </svg>
+          </div>
+          <div class="icon-label">Tasks</div>
+        </div>
+        <!-- Screen Capture -->
+        <div class="disk-icon capture" @dblclick="openScreenCapture">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="capture-svg">
+              <rect x="8" y="16" width="48" height="32" fill="#666" stroke="#000" stroke-width="2"/>
+              <circle cx="32" cy="32" r="12" fill="#333"/>
+              <circle cx="32" cy="32" r="8" fill="#888"/>
+              <circle cx="32" cy="32" r="4" fill="#000"/>
+              <rect x="48" y="20" width="4" height="4" fill="#ff0000"/>
+              <circle cx="32" cy="32" r="2" fill="#ffffff" opacity="0.5"/>
+            </svg>
+          </div>
+          <div class="icon-label">Capture</div>
+        <!-- Archiver -->
+        <div class="disk-icon archiver" @dblclick="openArchiver">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="archiver-svg">
+              <rect x="12" y="10" width="40" height="44" fill="#ffaa00" stroke="#000" stroke-width="2"/>
+              <rect x="16" y="14" width="32" height="36" fill="#ff8800" stroke="#000" stroke-width="1"/>
+              <!-- Zipper effect -->
+              <line x1="32" y1="14" x2="32" y2="50" stroke="#333" stroke-width="2"/>
+              <rect x="30" y="16" width="4" height="3" fill="#666"/>
+              <rect x="30" y="21" width="4" height="3" fill="#666"/>
+              <rect x="30" y="26" width="4" height="3" fill="#666"/>
+              <rect x="30" y="31" width="4" height="3" fill="#666"/>
+              <rect x="30" y="36" width="4" height="3" fill="#666"/>
+              <rect x="30" y="41" width="4" height="3" fill="#666"/>
+              <rect x="30" y="46" width="4" height="3" fill="#666"/>
+              <text x="32" y="60" text-anchor="middle" fill="#000" font-size="6" font-family="monospace">ZIP</text>
+            </svg>
+          </div>
+          <div class="icon-label">Archiver</div>
+        </div>
         </div>
         </div>
       </div>
@@ -180,7 +231,14 @@ import AmigaPreferences from './apps/AmigaPreferences.vue';
 import AmigaSearch from './apps/AmigaSearch.vue';
 import AmigaSysMonitor from './apps/AmigaSysMonitor.vue';
 import AmigaClipboard from './apps/AmigaClipboard.vue';
+import AmigaArchiver from './apps/AmigaArchiver.vue';
+import AmigaTaskManager from './apps/AmigaTaskManager.vue';
+import AmigaWorkspaceSwitcher from './AmigaWorkspaceSwitcher.vue';
+import AmigaWorkspaceManager from './apps/AmigaWorkspaceManager.vue';
+import AmigaScreenCapture from './apps/AmigaScreenCapture.vue';
 import advancedClipboard from '../utils/clipboard-manager';
+import workspaceManager from '../utils/workspace-manager';
+import { screenCapture } from '../utils/screen-capture';
 interface Disk {
   id: string;
   name: string;
@@ -208,7 +266,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Clipboard', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Workspace Manager', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -252,6 +310,23 @@ onMounted(() => {
 
   // Initial clipboard check
   hasClipboardItems.value = advancedClipboard.hasItems();
+
+  // Load windows from current workspace
+  openWindows.value = workspaceManager.getCurrentWindows();
+
+  // Subscribe to workspace changes
+  workspaceManager.subscribe(() => {
+    // Save current windows before switching
+    workspaceManager.setCurrentWindows(openWindows.value);
+
+    // Load windows from new workspace
+    openWindows.value = workspaceManager.getCurrentWindows();
+  });
+
+  // Save windows periodically (in case of crashes)
+  setInterval(() => {
+    workspaceManager.setCurrentWindows(openWindows.value);
+  }, 5000);
 });
 
 onUnmounted(() => {
@@ -363,7 +438,7 @@ const handleWindowAction = (action: string) => {
         const windowData = { ...currentWindow };
         closeWindow(currentWindow.id);
         setTimeout(() => {
-          openWindows.value.push(windowData);
+          addWindow(windowData);
         }, 100);
       }
       break;
@@ -401,8 +476,9 @@ const handleToolsAction = (action: string) => {
   handleOpenTool(action);
 };
 
-const handleGlobalKeyDown = (event: KeyboardEvent) => {
+const handleGlobalKeyDown = async (event: KeyboardEvent) => {
   const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+  const isAlt = event.altKey;
 
   // Ctrl+Shift+V to open clipboard manager
   if (isCtrlOrCmd && event.shiftKey && event.key.toLowerCase() === 'v') {
@@ -414,6 +490,31 @@ const handleGlobalKeyDown = (event: KeyboardEvent) => {
   if (isCtrlOrCmd && event.shiftKey && event.key === 'F') {
     event.preventDefault();
     openSearch();
+  }
+
+  // Ctrl+Alt+Delete to open task manager
+  if (isCtrlOrCmd && isAlt && event.key === 'Delete') {
+    event.preventDefault();
+    handleOpenTool('Task Manager');
+  }
+
+  // Screenshot shortcuts
+  // PrintScreen: Full desktop screenshot
+  if (event.key === 'PrintScreen' && !isCtrlOrCmd && !isAlt) {
+    event.preventDefault();
+    await quickScreenshot('full-desktop');
+  }
+
+  // Alt+PrintScreen: Active window screenshot
+  if (event.key === 'PrintScreen' && isAlt && !isCtrlOrCmd) {
+    event.preventDefault();
+    await quickScreenshot('active-window');
+  }
+
+  // Ctrl+PrintScreen: Area selection (currently defaults to full desktop)
+  if (event.key === 'PrintScreen' && isCtrlOrCmd && !isAlt) {
+    event.preventDefault();
+    await quickScreenshot('area');
   }
 };
 
@@ -453,7 +554,7 @@ const openDisk = (disk: Disk) => {
     component: AmigaFolder,
     data: disk
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
   driveActivity.value = true;
   setTimeout(() => driveActivity.value = false, 500);
 };
@@ -469,7 +570,7 @@ const openRAM = () => {
     component: AmigaFolder,
     data: { id: 'ram', name: 'RAM Disk', type: 'ram' }
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 const openUtilities = () => {
@@ -483,7 +584,7 @@ const openUtilities = () => {
     component: AmigaFolder,
     data: { id: 'utils', name: 'Utilities', type: 'drawer' }
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 const openTrash = () => {
@@ -497,7 +598,7 @@ const openTrash = () => {
     component: AmigaFolder,
     data: { id: 'trash', name: 'Trash', type: 'trash' }
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: string]: any }) => {
@@ -543,7 +644,7 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
     data = { filePath, meta: fileMeta };
   }
 
-  openWindows.value.push(createWindow(config, data));
+  addWindow(createWindow(config, data));
 };
 
 // Tool configurations for window creation - Updated to use AWML platform
@@ -625,6 +726,14 @@ const toolConfigs = {
     baseX: 150,
     baseY: 80
   },
+  'Task Manager': {
+    title: 'Task Manager',
+    width: 750,
+    height: 600,
+    component: AmigaTaskManager,
+    baseX: 140,
+    baseY: 70
+  },
   'Clipboard': {
     title: 'Clipboard Manager',
     width: 580,
@@ -632,6 +741,30 @@ const toolConfigs = {
     component: AmigaClipboard,
     baseX: 180,
     baseY: 120
+  },
+  'Archiver': {
+    title: 'Archiver',
+    width: 800,
+    height: 600,
+    component: AmigaArchiver,
+    baseX: 130,
+    baseY: 70
+  },
+  'Workspace Manager': {
+    title: 'Workspace Manager',
+    width: 700,
+    height: 600,
+    component: AmigaWorkspaceManager,
+    baseX: 150,
+    baseY: 70
+  },
+  'Screen Capture': {
+    title: 'Screen Capture',
+    width: 700,
+    height: 600,
+    component: AmigaScreenCapture,
+    baseX: 150,
+    baseY: 80
   }
 };
 
@@ -674,7 +807,7 @@ const handleOpenTool = (toolName: string) => {
 
   const config = toolConfigs[toolName as keyof typeof toolConfigs];
   if (config) {
-    openWindows.value.push(createWindow(config));
+    addWindow(createWindow(config));
   } else {
     console.log(`Tool "${toolName}" not found in toolConfigs`);
   }
@@ -695,7 +828,7 @@ const handleExecuteAwml = (filePath: string) => {
     filePath,
     meta: { name: fileName, type: 'awml' }
   };
-  openWindows.value.push(createWindow(config, data));
+  addWindow(createWindow(config, data));
 };
 
 const handleEditFile = (filePath: string) => {
@@ -710,7 +843,7 @@ const handleEditFile = (filePath: string) => {
     baseY: 100
   };
   const data = { filePath, fileName };
-  openWindows.value.push(createWindow(config, data));
+  addWindow(createWindow(config, data));
 };
 
 // Preferences
@@ -725,7 +858,7 @@ const openPreferences = () => {
     component: AmigaPreferences,
     data: {}
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 // Window management functions
@@ -808,13 +941,36 @@ const deleteSelectedIcons = async () => {
   }
 };
 
+// Helper to add window and sync with workspace manager
+const addWindow = (window: Window) => {
+  openWindows.value.push(window);
+  workspaceManager.setCurrentWindows(openWindows.value);
+};
+
 const closeWindow = (windowId: string) => {
   const index = openWindows.value.findIndex(w => w.id === windowId);
   if (index !== -1) {
     openWindows.value.splice(index, 1);
+    // Update workspace manager
+    workspaceManager.setCurrentWindows(openWindows.value);
   }
 };
 
+
+// Open Task Manager
+const openTaskManager = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Task Manager',
+    x: 140,
+    y: 70,
+    width: 750,
+    height: 600,
+    component: AmigaTaskManager,
+    data: {}
+  };
+  addWindow(newWindow);
+};
 
 // Open System Monitor
 const openSystemMonitor = () => {
@@ -828,7 +984,7 @@ const openSystemMonitor = () => {
     component: AmigaSysMonitor,
     data: {}
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 // Open search window
@@ -843,7 +999,7 @@ const openSearch = () => {
     component: AmigaSearch,
     data: {}
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
 
 // Handle opening folder from search
@@ -862,8 +1018,63 @@ const handleOpenFolder = (folderPath: string) => {
     component: AmigaFolder,
     data: { id: folderPath, name: diskName, type: 'folder' }
   };
-  openWindows.value.push(newWindow);
+  addWindow(newWindow);
 };
+
+// Open screen capture window
+const openScreenCapture = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Screen Capture',
+    x: 150,
+    y: 80,
+    width: 700,
+    height: 600,
+    component: AmigaScreenCapture,
+    data: {}
+  };
+  addWindow(newWindow);
+};
+
+// Quick screenshot function for keyboard shortcuts
+const quickScreenshot = async (mode: 'full-desktop' | 'active-window' | 'area' = 'full-desktop') => {
+  try {
+    const result = await screenCapture.takeScreenshot({
+      mode,
+      format: 'png',
+      countdown: 0
+    });
+    if (result) {
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `screenshot-${timestamp}.png`;
+        await screenCapture.saveToFiles(result, filename);
+        console.log(`Screenshot saved: ${filename}`);
+        // Could show a toast notification here
+      } catch (error) {
+        console.error('Failed to auto-save screenshot:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Quick screenshot failed:', error);
+  }
+};
+
+// Open archiver window
+const openArchiver = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Archiver',
+    x: 130,
+    y: 70,
+    width: 800,
+    height: 600,
+    component: AmigaArchiver,
+    data: {}
+  };
+  addWindow(newWindow);
+};
+
 </script>
 
 <style scoped>

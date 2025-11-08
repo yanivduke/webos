@@ -1,0 +1,133 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "close": "Fechar",
+    "open": "Abrir",
+    "copy": "Copiar",
+    "paste": "Colar",
+    "cut": "Recortar",
+    "rename": "Renomear",
+    "new": "Novo",
+    "edit": "Editar",
+    "search": "Pesquisar",
+    "yes": "Sim",
+    "no": "Não",
+    "apply": "Aplicar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "finish": "Concluir",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "warning": "Aviso",
+    "info": "Informação"
+  },
+  "menu": {
+    "workbench": "Bancada",
+    "window": "Janela",
+    "icons": "Ícones",
+    "tools": "Ferramentas",
+    "about": "Sobre",
+    "executeCommand": "Executar Comando",
+    "redrawAll": "Redesenhar Tudo",
+    "update": "Atualizar",
+    "quit": "Sair",
+    "newDrawer": "Nova Gaveta",
+    "openParent": "Abrir Pai",
+    "closeWindow": "Fechar Janela",
+    "selectContents": "Selecionar Conteúdo",
+    "cleanUp": "Limpar",
+    "snapshot": "Captura",
+    "information": "Informação",
+    "formatDisk": "Formatar Disco"
+  },
+  "apps": {
+    "calculator": "Calculadora",
+    "notepad": "Bloco de Notas",
+    "shell": "Terminal",
+    "clock": "Relógio",
+    "paint": "Pintura",
+    "multiview": "MultiVisão",
+    "preferences": "Preferências",
+    "search": "Pesquisar Arquivos",
+    "systemMonitor": "Monitor do Sistema",
+    "clipboard": "Área de Transferência",
+    "awmlRunner": "Executor AWML",
+    "awmlWizard": "Assistente AWML",
+    "languageSelector": "Seletor de Idioma"
+  },
+  "desktop": {
+    "workbench": "Bancada3.1",
+    "system": "Sistema",
+    "work": "Trabalho",
+    "ramDisk": "Disco RAM",
+    "utilities": "Utilitários",
+    "trash": "Lixeira",
+    "monitor": "Monitor"
+  },
+  "file": {
+    "file": "Arquivo",
+    "folder": "Pasta",
+    "disk": "Disco",
+    "drawer": "Gaveta",
+    "size": "Tamanho",
+    "modified": "Modificado",
+    "created": "Criado",
+    "type": "Tipo",
+    "name": "Nome",
+    "path": "Caminho"
+  },
+  "messages": {
+    "fileDeleted": "Arquivo {name} excluído",
+    "fileCopied": "Arquivo {name} copiado",
+    "fileRenamed": "Arquivo renomeado para {name}",
+    "itemsSelected": {
+      "singular": "{count} item selecionado",
+      "plural": "{count} itens selecionados"
+    },
+    "confirmDelete": "Excluir {count} item(ns)?",
+    "confirmQuit": "Realmente sair da Bancada?",
+    "enterNewName": "Digite novo nome:",
+    "enterDrawerName": "Digite nome da gaveta:",
+    "noSelection": "Nenhum ícone selecionado"
+  },
+  "time": {
+    "justNow": "Agora mesmo",
+    "minutesAgo": {
+      "singular": "Há {count} minuto",
+      "plural": "Há {count} minutos"
+    },
+    "hoursAgo": {
+      "singular": "Há {count} hora",
+      "plural": "Há {count} horas"
+    },
+    "daysAgo": {
+      "singular": "Há {count} dia",
+      "plural": "Há {count} dias"
+    }
+  },
+  "system": {
+    "chipMemory": "Chip",
+    "fastMemory": "Rápida",
+    "screenDepth": "Tela: Bancada (640x256, 16 cores)",
+    "clipboardHasItems": "Área de transferência tem itens"
+  },
+  "about": {
+    "title": "WebOS v2.0.0",
+    "subtitle": "Interface Estilo Amiga Workbench",
+    "builtWith": "Construído com Vue 3 + TypeScript",
+    "features": "Recursos: 8 aplicativos funcionais",
+    "copyright": "© 2024 Projeto WebOS"
+  },
+  "language": {
+    "selectLanguage": "Selecionar Idioma",
+    "currentLanguage": "Idioma Atual",
+    "availableLanguages": "Idiomas Disponíveis",
+    "changeLanguage": "Mudar Idioma",
+    "completion": "Conclusão",
+    "languageChanged": "Idioma alterado para {language}"
+  }
+}
