@@ -157,6 +157,19 @@ class DesktopCustomizer {
         highlight: '#00ff00',
         text: '#00ff00'
       }
+    },
+    {
+      id: 'c64',
+      name: 'Commodore 64',
+      colors: {
+        background: '#352879',
+        menuBar: '#4a3fa5',
+        menuText: '#7c70da',
+        windowTitle: '#6c5eb5',
+        windowBorder: '#7c70da',
+        highlight: '#a39be2',
+        text: '#7c70da'
+      }
     }
   ];
 

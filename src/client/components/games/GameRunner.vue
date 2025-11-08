@@ -16,6 +16,13 @@ import { ref, onMounted, computed, markRaw } from 'vue';
 import type { Component } from 'vue';
 import PongGame from './PongGame.vue';
 import SnakeGame from './SnakeGame.vue';
+import BreakoutGame from './BreakoutGame.vue';
+import TetrisGame from './TetrisGame.vue';
+import AsteroidsGame from './AsteroidsGame.vue';
+import SpaceInvadersGame from './SpaceInvadersGame.vue';
+import SokobanGame from './SokobanGame.vue';
+import Game2048 from './Game2048.vue';
+import MinesweeperGame from './MinesweeperGame.vue';
 
 interface Props {
   data?: {
@@ -47,13 +54,13 @@ const gameData = computed(() => {
 const componentMap: { [key: string]: Component } = {
   'PongGame': markRaw(PongGame),
   'SnakeGame': markRaw(SnakeGame),
-  'BreakoutGame': markRaw(PongGame), // Placeholder - using Pong for now
-  'TetrisGame': markRaw(SnakeGame), // Placeholder - using Snake for now
-  'AsteroidsGame': markRaw(PongGame), // Placeholder
-  'SpaceInvadersGame': markRaw(PongGame), // Placeholder
-  'SokobanGame': markRaw(SnakeGame), // Placeholder
-  'Game2048': markRaw(SnakeGame), // Placeholder
-  'MinesweeperGame': markRaw(PongGame) // Placeholder
+  'BreakoutGame': markRaw(BreakoutGame),
+  'TetrisGame': markRaw(TetrisGame),
+  'AsteroidsGame': markRaw(AsteroidsGame),
+  'SpaceInvadersGame': markRaw(SpaceInvadersGame),
+  'SokobanGame': markRaw(SokobanGame),
+  'Game2048': markRaw(Game2048),
+  'MinesweeperGame': markRaw(MinesweeperGame)
 };
 
 onMounted(async () => {
