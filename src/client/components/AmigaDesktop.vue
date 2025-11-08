@@ -198,17 +198,45 @@
         <AmigaWindow
           v-for="window in openWindows"
           :key="window.id"
-          :title="window.title"
+          :title="window.tabs ? (getActiveTab(window.id)?.title || window.title) : window.title"
           :x="window.x"
           :y="window.y"
           :width="window.width"
           :height="window.height"
           @close="closeWindow(window.id)"
+          @minimize="handleDockMinimizeWindow(window.id)"
         >
+          <!-- Tab Bar (if window has tabs) -->
+          <template v-if="window.tabs && window.tabs.length > 0" #tab-bar>
+            <AmigaTabBar
+              :tabs="getWindowTabs(window.id)"
+              :active-tab-id="window.activeTabId || null"
+              @tab-click="(tab) => handleTabClick(window.id, tab)"
+              @tab-close="(tab) => handleTabClose(window.id, tab)"
+              @tab-reorder="(from, to) => handleTabReorder(window.id, from, to)"
+              @tab-tear-off="(tab, x, y) => handleTabTearOff(window.id, tab, x, y)"
+              @new-tab="handleNewTab(window.id)"
+              @close-other-tabs="(tab) => handleCloseOtherTabs(window.id, tab)"
+              @close-tabs-to-right="(tab) => handleCloseTabsToRight(window.id, tab)"
+            />
+          </template>
+
+          <!-- Window content - either from active tab or single window content -->
           <component
+            v-if="window.tabs && window.tabs.length > 0"
+            :is="getActiveTab(window.id)?.component || window.component"
+            :data="getActiveTab(window.id)?.data || window.data"
+            @openFile="(path, item) => handleOpenFileInTab(window.id, path, item)"
+            @openTool="handleOpenTool"
+            @executeAwml="handleExecuteAwml"
+            @editFile="handleEditFile"
+            @quickView="handleQuickView"
+          />
+          <component
+            v-else
             :is="window.component"
             :data="window.data"
-            @openFile="handleOpenFile"
+            @openFile="(path, item) => handleOpenFileInTab(window.id, path, item)"
             @openTool="handleOpenTool"
             @executeAwml="handleExecuteAwml"
             @editFile="handleEditFile"
@@ -265,6 +293,16 @@
 
     <!-- Quick View -->
     <AmigaQuickView />
+
+    <!-- Dock -->
+    <AmigaDock
+      :open-windows="openWindows"
+      @launch-app="handleDockLaunchApp"
+      @focus-window="handleDockFocusWindow"
+      @restore-window="handleDockRestoreWindow"
+      @minimize-window="handleDockMinimizeWindow"
+      @close-window="handleDockCloseWindow"
+    />
   </div>
 </template>
 
@@ -289,9 +327,12 @@ import ClockGadget from './widgets/ClockGadget.vue';
 import SystemMonitorGadget from './widgets/SystemMonitorGadget.vue';
 import DiskUsageGadget from './widgets/DiskUsageGadget.vue';
 import NetworkStatusGadget from './widgets/NetworkStatusGadget.vue';
+import WorkspaceSwitcher from './widgets/WorkspaceSwitcher.vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 import AmigaQuickView from './AmigaQuickView.vue';
 import AmigaTooltip from './AmigaTooltip.vue';
+import AmigaDock from './AmigaDock.vue';
+import AmigaTabBar from './AmigaTabBar.vue';
 import { useTheme } from '../composables/useTheme';
 import { useIconStates } from '../composables/useIconStates';
 import { useWindowSnapshots } from '../composables/useWindowSnapshots';
@@ -299,6 +340,8 @@ import { useTooltip, type FileMetadata, type TooltipPosition } from '../composab
 import { useQuickView, type QuickViewItem } from '../composables/useQuickView';
 import { useGlobalKeyboardShortcuts, formatShortcut } from '../composables/useKeyboardShortcuts';
 import { useSoundEffects } from '../composables/useSoundEffects';
+import { useDock } from '../composables/useDock';
+import { useWindowTabs } from '../composables/useWindowTabs';
 
 interface Disk {
   id: string;
@@ -316,6 +359,17 @@ interface Window {
   component: any;
   data?: any;
   typeId?: string;
+  tabs?: Tab[];
+  activeTabId?: string;
+}
+
+interface Tab {
+  id: string;
+  title: string;
+  component: any;
+  data: any;
+  icon: string;
+  path?: string;
 }
 
 interface Menu {
@@ -334,6 +388,9 @@ interface Widget {
 
 // Initialize theme
 const { currentTheme } = useTheme();
+
+// Initialize dock
+const { dockItems, addRunningWindow, removeRunningWindow, minimizeWindow, restoreWindow, isWindowMinimized } = useDock();
 
 // Initialize icon states
 const {
@@ -360,6 +417,22 @@ const { registerShortcut, formatShortcut: formatShortcutKey } = useGlobalKeyboar
 
 // Initialize Quick View
 const { open: openQuickView } = useQuickView();
+
+// Initialize Window Tabs
+const {
+  getWindowTabs,
+  getActiveTab,
+  initializeWindow,
+  addTab,
+  removeTab,
+  setActiveTab,
+  reorderTabs,
+  moveTabToWindow,
+  closeOtherTabs,
+  closeTabsToRight,
+  navigateTab,
+  cleanupWindow
+} = useWindowTabs();
 
 // Tooltip state
 const tooltipVisible = ref(false);
@@ -1076,8 +1149,96 @@ const closeWindow = (windowId: string) => {
       fetchTrashItemCount();
     }
 
+    // Remove from dock if it was there
+    removeRunningWindow(windowId, window.typeId || 'unknown');
+
     openWindows.value.splice(index, 1);
   }
+};
+
+// Dock event handlers
+const handleDockLaunchApp = (appId: string) => {
+  const appMap: { [key: string]: string } = {
+    'workbench': 'df0',
+    'system': 'dh0',
+    'shell': 'Shell',
+    'calculator': 'Calculator',
+    'paint': 'Paint',
+    'notepad': 'NotePad',
+    'utilities': 'utils'
+  };
+
+  const target = appMap[appId];
+  if (!target) return;
+
+  // Check if already open
+  const existingWindow = openWindows.value.find(w => {
+    if (appId === 'workbench' || appId === 'system' || appId === 'utilities') {
+      return w.typeId === target || (w.data?.id === target);
+    }
+    return w.title === target;
+  });
+
+  if (existingWindow) {
+    // Bring to front
+    const index = openWindows.value.findIndex(w => w.id === existingWindow.id);
+    if (index !== -1) {
+      // Move to end (highest z-index)
+      const window = openWindows.value.splice(index, 1)[0];
+      openWindows.value.push(window);
+    }
+  } else {
+    // Launch app
+    switch (appId) {
+      case 'workbench':
+        openDisk(disks.value[0]);
+        break;
+      case 'system':
+        openDisk(disks.value[1]);
+        break;
+      case 'utilities':
+        openUtilities();
+        break;
+      case 'shell':
+      case 'calculator':
+      case 'paint':
+      case 'notepad':
+        handleOpenTool(target);
+        break;
+    }
+  }
+};
+
+const handleDockFocusWindow = (windowId: string) => {
+  const index = openWindows.value.findIndex(w => w.id === windowId);
+  if (index !== -1) {
+    // Move to end (highest z-index)
+    const window = openWindows.value.splice(index, 1)[0];
+    openWindows.value.push(window);
+    playSound('click');
+  }
+};
+
+const handleDockRestoreWindow = (windowId: string) => {
+  const windowData = restoreWindow(windowId);
+  if (windowData) {
+    // Add window back to openWindows
+    openWindows.value.push(windowData);
+    playSound('open');
+  }
+};
+
+const handleDockMinimizeWindow = (windowId: string) => {
+  const index = openWindows.value.findIndex(w => w.id === windowId);
+  if (index !== -1) {
+    const windowData = openWindows.value.splice(index, 1)[0];
+    minimizeWindow(windowId, windowData);
+    playSound('close');
+  }
+};
+
+const handleDockCloseWindow = (windowId: string) => {
+  closeWindow(windowId);
 };
 
 // Widget management functions

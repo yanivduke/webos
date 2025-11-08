@@ -21,11 +21,17 @@
       </div>
       <div class="window-title">{{ title }}</div>
       <div class="title-bar-right">
+        <div class="title-bar-button minimize-button" @click.stop="minimize" title="Minimize to Dock">
+          <div class="minimize-icon"></div>
+        </div>
         <div class="title-bar-button zoom-button" @click.stop="toggleMaximize">
           <div class="zoom-icon"></div>
         </div>
       </div>
     </div>
+
+    <!-- Tab Bar Slot (optional) -->
+    <slot name="tab-bar"></slot>
 
     <!-- Window Content Area -->
     <div class="window-content">
@@ -189,6 +195,10 @@ const stopResize = () => {
 // Window actions
 const close = () => {
   emit('close');
+};
+
+const minimize = () => {
+  emit('minimize');
 };
 
 const toggleMaximize = () => {
@@ -378,6 +388,14 @@ onUnmounted(() => {
   height: 8px;
   border: 2px solid #0055aa;
   background: transparent;
+}
+
+/* Minimize Button */
+.minimize-button .minimize-icon {
+  width: 10px;
+  height: 2px;
+  background: #0055aa;
+  position: relative;
 }
 
 /* Zoom Button (maximize) */
