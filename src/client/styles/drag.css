@@ -1,5 +1,5 @@
 /**
- * Enhanced Drag & Drop Styles
+ * Enhanced Drag & Drop Styles with Prediction Areas
  * Amiga Workbench aesthetic with modern functionality
  */
 
@@ -9,6 +9,7 @@
   background: #0055aa;
   border: 2px solid #ffffff;
   cursor: grabbing !important;
+  filter: drop-shadow(0 0 8px rgba(0, 85, 170, 0.6));
 }
 
 /* Element while being dragged */
@@ -254,4 +255,452 @@
   to {
     left: 100%;
   }
+}
+
+/* ============================================
+   PREDICTION AREAS & ENHANCED VISUAL FEEDBACK
+   ============================================ */
+
+/* Prediction zone - shows where item will land */
+.drag-prediction-zone {
+  position: relative;
+  overflow: visible;
+}
+
+.drag-prediction-zone::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 3px dashed #0055aa;
+  border-radius: 2px;
+  opacity: 0;
+  animation: fade-in-border 0.3s ease-out forwards;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes fade-in-border {
+  to {
+    opacity: 1;
+  }
+}
+
+/* High confidence prediction (90%+) */
+.drag-prediction-high {
+  position: relative;
+}
+
+.drag-prediction-high::after {
+  content: '✓ Drop Here';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #00aa00;
+  color: #ffffff;
+  padding: 8px 16px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  pointer-events: none;
+  animation: bounce-in 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Medium confidence prediction (50-90%) */
+.drag-prediction-medium {
+  border: 2px dashed #ffaa00 !important;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 170, 0, 0.1),
+    rgba(255, 170, 0, 0.1) 10px,
+    rgba(255, 170, 0, 0.2) 10px,
+    rgba(255, 170, 0, 0.2) 20px
+  );
+  animation: diagonal-slide 1s linear infinite;
+}
+
+@keyframes diagonal-slide {
+  to {
+    background-position: 28px 28px;
+  }
+}
+
+/* Low confidence / invalid prediction */
+.drag-prediction-low {
+  border: 2px dashed #aa0000 !important;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(170, 0, 0, 0.1),
+    rgba(170, 0, 0, 0.1) 10px,
+    rgba(170, 0, 0, 0.2) 10px,
+    rgba(170, 0, 0, 0.2) 20px
+  );
+}
+
+/* Animated corner indicators for drop zones */
+.drag-drop-zone {
+  position: relative;
+}
+
+.drag-drop-zone.active::before,
+.drag-drop-zone.active::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #0055aa;
+  animation: corner-pulse 1s ease-in-out infinite;
+}
+
+.drag-drop-zone.active::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.drag-drop-zone.active::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+@keyframes corner-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+/* Marching ants border for precise drop targeting */
+.drag-target-precise {
+  position: relative;
+  border: 2px solid transparent;
+  background-image: 
+    repeating-linear-gradient(0deg, #0055aa, #0055aa 10px, transparent 10px, transparent 20px),
+    repeating-linear-gradient(90deg, #0055aa, #0055aa 10px, transparent 10px, transparent 20px),
+    repeating-linear-gradient(180deg, #0055aa, #0055aa 10px, transparent 10px, transparent 20px),
+    repeating-linear-gradient(270deg, #0055aa, #0055aa 10px, transparent 10px, transparent 20px);
+  background-size: 2px 100%, 100% 2px, 2px 100%, 100% 2px;
+  background-position: 0 0, 0 0, 100% 0, 0 100%;
+  background-repeat: no-repeat;
+  animation: marching-ants 1s linear infinite;
+}
+
+@keyframes marching-ants {
+  to {
+    background-position: 0 -20px, 20px 0, 100% 20px, -20px 100%;
+  }
+}
+
+/* Glowing border for active drop zones */
+.drag-active-zone {
+  position: relative;
+  border: 2px solid #ffaa00;
+  box-shadow: 
+    inset 0 0 20px rgba(255, 170, 0, 0.3),
+    0 0 20px rgba(255, 170, 0, 0.5);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      inset 0 0 20px rgba(255, 170, 0, 0.3),
+      0 0 20px rgba(255, 170, 0, 0.5);
+  }
+  50% {
+    box-shadow: 
+      inset 0 0 30px rgba(255, 170, 0, 0.5),
+      0 0 30px rgba(255, 170, 0, 0.7);
+  }
+}
+
+/* 3D depth effect for drag items */
+.drag-item-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease;
+}
+
+.drag-item-3d:hover {
+  transform: translateZ(10px) scale(1.05);
+}
+
+.drag-item-3d.dragging {
+  transform: translateZ(20px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 
+    8px 8px 0px rgba(0, 0, 0, 0.3),
+    12px 12px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Ripple effect on drop */
+.drag-drop-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.drag-drop-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(0, 170, 0, 0.5);
+  transform: translate(-50%, -50%);
+  animation: ripple-expand 0.6s ease-out;
+}
+
+@keyframes ripple-expand {
+  to {
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+  }
+}
+
+/* Proximity indicator - gets brighter as you get closer */
+.drag-proximity-zone {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.drag-proximity-zone[data-proximity="far"] {
+  border: 2px solid rgba(0, 85, 170, 0.2);
+  background: rgba(0, 85, 170, 0.05);
+}
+
+.drag-proximity-zone[data-proximity="near"] {
+  border: 2px solid rgba(0, 85, 170, 0.5);
+  background: rgba(0, 85, 170, 0.15);
+}
+
+.drag-proximity-zone[data-proximity="close"] {
+  border: 2px solid rgba(0, 85, 170, 0.8);
+  background: rgba(0, 85, 170, 0.25);
+}
+
+.drag-proximity-zone[data-proximity="very-close"] {
+  border: 2px solid #0055aa;
+  background: rgba(0, 85, 170, 0.35);
+  box-shadow: inset 0 0 30px rgba(0, 85, 170, 0.5);
+}
+
+/* Insert position indicator */
+.drag-insert-indicator {
+  position: absolute;
+  height: 3px;
+  left: 0;
+  right: 0;
+  background: #0055aa;
+  z-index: 1000;
+  pointer-events: none;
+  animation: indicator-glow 1s ease-in-out infinite;
+}
+
+.drag-insert-indicator::before,
+.drag-insert-indicator::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  background: #0055aa;
+  border-radius: 50%;
+}
+
+.drag-insert-indicator::before {
+  left: -5px;
+}
+
+.drag-insert-indicator::after {
+  right: -5px;
+}
+
+@keyframes indicator-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px #0055aa;
+  }
+  50% {
+    box-shadow: 0 0 15px #0055aa;
+  }
+}
+
+/* Snap grid visualization */
+.drag-snap-grid {
+  background-image:
+    linear-gradient(rgba(0, 85, 170, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 85, 170, 0.1) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: grid-fade 0.3s ease-in;
+}
+
+@keyframes grid-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Snap point indicator */
+.drag-snap-point {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #0055aa;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: snap-point-pulse 1s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+@keyframes snap-point-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+/* Folder expand on hover during drag */
+.drag-folder-expand {
+  position: relative;
+}
+
+.drag-folder-expand.will-expand::after {
+  content: '⏎ Will Open';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0055aa;
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 8px;
+  white-space: nowrap;
+  border: 1px solid #ffffff;
+  animation: fade-slide-up 0.3s ease-out;
+}
+
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Touch device drag indicators */
+.drag-touch-indicator {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #0055aa;
+  border-radius: 50%;
+  background: rgba(0, 85, 170, 0.2);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: touch-pulse 1s ease-in-out infinite;
+}
+
+@keyframes touch-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.4;
+  }
+}
+
+/* Drag count badge for multi-select */
+.drag-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff0000;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #ffffff;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  animation: badge-pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Amiga-style scanline effect on drag preview */
+.drag-preview-scanlines {
+  position: relative;
+}
+
+.drag-preview-scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Performance optimization for large drag operations */
+.drag-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
