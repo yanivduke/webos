@@ -748,8 +748,12 @@ const closeWindow = (windowId: string) => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  background: #a0a0a0; /* Authentic Amiga gray */
+  font-family: var(--font-family);
+  background: var(--desktop-bg-color);
+  background-image: var(--desktop-bg-image);
+  background-repeat: var(--desktop-bg-repeat);
+  background-size: var(--desktop-bg-size);
+  background-position: var(--desktop-bg-position);
   overflow: hidden;
 }
 
@@ -757,11 +761,11 @@ const closeWindow = (windowId: string) => {
 .workbench-menu {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-bottom: 2px solid #000000;
+  background: var(--menu-bg);
+  border-bottom: var(--window-border-width) solid var(--color-border-dark);
   padding: 4px 8px;
-  font-size: 11px;
-  box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #ffffff;
+  font-size: var(--font-size-menu);
+  box-shadow: inset -1px -1px 0 var(--color-border-dark), inset 1px 1px 0 var(--color-border-light);
 }
 
 .menu-left {
@@ -773,15 +777,15 @@ const closeWindow = (windowId: string) => {
   position: relative;
   cursor: pointer;
   padding: 2px 8px;
-  color: #000000;
-  transition: all 0.1s;
+  color: var(--menu-text);
+  transition: all var(--animation-duration);
   user-select: none;
 }
 
 .menu-item:hover,
 .menu-item.active {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--menu-hover-bg);
+  color: var(--menu-hover-text);
 }
 
 /* Menu Dropdown */
@@ -789,22 +793,22 @@ const closeWindow = (windowId: string) => {
   position: absolute;
   top: 100%;
   left: 0;
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  background: var(--color-background);
+  border: var(--window-border-width) solid;
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
+  box-shadow: 2px 2px 4px var(--color-shadow);
   z-index: 1000;
   min-width: 180px;
-  font-size: 11px;
+  font-size: var(--font-size-menu);
 }
 
 .menu-dropdown-item {
   padding: 4px 12px;
   cursor: pointer;
-  color: #000000;
-  background: #a0a0a0;
-  border-bottom: 1px solid #808080;
-  transition: all 0.1s;
+  color: var(--color-text);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--menu-separator);
+  transition: all var(--animation-duration);
   white-space: nowrap;
 }
 
@@ -813,12 +817,13 @@ const closeWindow = (windowId: string) => {
 }
 
 .menu-dropdown-item:hover:not(.disabled) {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--menu-hover-bg);
+  color: var(--menu-hover-text);
 }
 
 .menu-dropdown-item.disabled {
-  color: #808080;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -826,23 +831,23 @@ const closeWindow = (windowId: string) => {
   display: flex;
   gap: 20px;
   align-items: center;
-  color: #000000;
-  font-size: 9px;
+  color: var(--menu-text);
+  font-size: var(--font-size-small);
 }
 
 .system-time {
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }
 
 .memory-indicator {
-  color: #0055aa;
+  color: var(--color-primary);
 }
 
 /* Desktop Background */
 .desktop-background {
   flex: 1;
   position: relative;
-  background: #a0a0a0; /* Authentic Amiga Workbench gray */
+  background: var(--desktop-bg-color);
   overflow: hidden;
   padding: 20px;
 }
@@ -866,12 +871,13 @@ const closeWindow = (windowId: string) => {
 }
 
 .disk-icon:hover {
-  background: rgba(0, 85, 170, 0.2);
+  background: var(--color-selection);
+  opacity: 0.2;
 }
 
 .icon-image {
-  width: 64px;
-  height: 64px;
+  width: var(--icon-size-large);
+  height: var(--icon-size-large);
   margin-bottom: 4px;
 }
 
@@ -881,18 +887,18 @@ const closeWindow = (windowId: string) => {
 .trash-svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(2px 2px 0px var(--color-shadow));
 }
 
 .icon-label {
-  font-size: 9px;
-  color: #000000;
+  font-size: var(--font-size-small);
+  color: var(--color-text);
   text-align: center;
   text-shadow:
-    -1px -1px 0 #ffffff,
-    1px -1px 0 #ffffff,
-    -1px 1px 0 #ffffff,
-    1px 1px 0 #ffffff;
+    -1px -1px 0 var(--color-border-light),
+    1px -1px 0 var(--color-border-light),
+    -1px 1px 0 var(--color-border-light),
+    1px 1px 0 var(--color-border-light);
   max-width: 80px;
   word-wrap: break-word;
 }
@@ -915,12 +921,12 @@ const closeWindow = (windowId: string) => {
 .workbench-footer {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-top: 2px solid #000000;
+  background: var(--systembar-bg);
+  border-top: var(--window-border-width) solid var(--systembar-border);
   padding: 4px 12px;
-  font-size: 9px;
-  color: #000000;
-  box-shadow: inset -1px 1px 0 #808080, inset 1px -1px 0 #ffffff;
+  font-size: var(--font-size-small);
+  color: var(--systembar-text);
+  box-shadow: inset -1px 1px 0 var(--color-border-dark), inset 1px -1px 0 var(--color-border-light);
 }
 
 .footer-left {
@@ -935,8 +941,8 @@ const closeWindow = (windowId: string) => {
 }
 
 .screen-depth {
-  color: #0055aa;
-  font-weight: bold;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
 }
 
 .drive-activity {
@@ -944,13 +950,13 @@ const closeWindow = (windowId: string) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #555555;
+  background: var(--color-text-secondary);
   transition: all 0.2s;
 }
 
 .drive-activity.active {
-  background: #ff0000;
-  box-shadow: 0 0 8px #ff0000;
+  background: var(--color-error);
+  box-shadow: 0 0 8px var(--color-error);
   animation: pulse 0.5s ease-in-out;
 }
 
@@ -980,18 +986,23 @@ const closeWindow = (windowId: string) => {
 
 /* Classic Amiga button style */
 .amiga-button {
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  padding: 4px 12px;
-  font-size: 10px;
+  background: var(--button-bg);
+  border: var(--button-border-width) var(--button-border-style);
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
+  border-radius: var(--button-border-radius);
+  padding: var(--button-padding);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  color: #000000;
-  font-family: 'Press Start 2P', monospace;
+  color: var(--button-text);
+  font-family: var(--font-family);
+}
+
+.amiga-button:hover {
+  background: var(--button-hover-bg);
 }
 
 .amiga-button:active {
-  border-color: #000000 #ffffff #ffffff #000000;
-  background: #888888;
+  border-color: var(--color-border-dark) var(--color-border-light) var(--color-border-light) var(--color-border-dark);
+  background: var(--button-active-bg);
 }
 </style>

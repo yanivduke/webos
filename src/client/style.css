@@ -1,4 +1,101 @@
-/* Global Amiga Workbench Styles */
+/* Global WebOS Theme Styles */
+
+/* Default CSS Variables (will be overridden by theme system) */
+:root {
+  /* Desktop */
+  --desktop-bg-color: #a0a0a0;
+  --desktop-bg-image: none;
+  --desktop-bg-repeat: repeat;
+  --desktop-bg-size: auto;
+  --desktop-bg-position: center;
+
+  /* Colors */
+  --color-primary: #0055aa;
+  --color-secondary: #ffaa00;
+  --color-background: #a0a0a0;
+  --color-surface: #a0a0a0;
+  --color-text: #000000;
+  --color-text-secondary: #000000;
+  --color-border: #888888;
+  --color-border-light: #ffffff;
+  --color-border-dark: #000000;
+  --color-accent: #0055aa;
+  --color-success: #00aa00;
+  --color-warning: #ffaa00;
+  --color-error: #aa0000;
+  --color-selection: #0055aa;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Typography */
+  --font-family: 'Press Start 2P', 'Courier New', monospace;
+  --font-family-mono: 'Press Start 2P', 'Courier New', monospace;
+  --font-size-base: 10px;
+  --font-size-small: 8px;
+  --font-size-large: 12px;
+  --font-size-title: 10px;
+  --font-size-menu: 10px;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  --line-height: 1.6;
+
+  /* Window */
+  --window-border-width: 2px;
+  --window-border-style: solid;
+  --window-titlebar-height: 24px;
+  --window-titlebar-bg: #a0a0a0;
+  --window-titlebar-text: #000000;
+  --window-content-bg: #ffffff;
+  --window-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --window-border-radius: 0;
+
+  /* Button */
+  --button-bg: #a0a0a0;
+  --button-text: #000000;
+  --button-border-width: 2px;
+  --button-border-style: solid;
+  --button-padding: 4px 12px;
+  --button-border-radius: 0;
+  --button-hover-bg: #b0b0b0;
+  --button-active-bg: #888888;
+  --button-disabled-bg: #999999;
+  --button-disabled-text: #666666;
+
+  /* Icon */
+  --icon-folder-color: #ffaa00;
+  --icon-disk-color: #0055aa;
+  --icon-file-color: #ffffff;
+  --icon-executable-color: #00aa00;
+  --icon-size-small: 32px;
+  --icon-size-medium: 48px;
+  --icon-size-large: 64px;
+
+  /* Menu */
+  --menu-bg: #a0a0a0;
+  --menu-text: #000000;
+  --menu-hover-bg: #0055aa;
+  --menu-hover-text: #ffffff;
+  --menu-separator: #666666;
+  --menu-border: #000000;
+
+  /* Scrollbar */
+  --scrollbar-width: 16px;
+  --scrollbar-track: #888888;
+  --scrollbar-thumb: #a0a0a0;
+  --scrollbar-thumb-hover: #b0b0b0;
+  --scrollbar-button: #a0a0a0;
+  --scrollbar-arrow: #000000;
+
+  /* System bar */
+  --systembar-height: 24px;
+  --systembar-bg: #a0a0a0;
+  --systembar-text: #000000;
+  --systembar-border: #000000;
+
+  /* Animations */
+  --animation-duration: 0s;
+  --animation-easing: linear;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -12,7 +109,10 @@ html, body {
 }
 
 body {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  line-height: var(--line-height);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

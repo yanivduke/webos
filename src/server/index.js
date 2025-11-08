@@ -10,6 +10,7 @@ const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
+const themesRoutes = require('./routes/themes.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -35,6 +36,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/themes', themesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -59,13 +61,15 @@ app.get('/', (req, res) => {
       files: '/api/files',
       settings: '/api/settings',
       appState: '/api/app-state',
-      shell: '/api/shell'
+      shell: '/api/shell',
+      themes: '/api/themes'
     },
     features: [
       'Real file system with persistence',
       'Application state management',
       'Shell command execution',
       'System settings persistence',
+      'Multi-theme support (6 retro OS themes)',
       '5 working applications'
     ]
   });
@@ -82,7 +86,8 @@ app.use((req, res) => {
       '/api/files',
       '/api/settings',
       '/api/app-state',
-      '/api/shell'
+      '/api/shell',
+      '/api/themes'
     ]
   });
 });
@@ -123,6 +128,7 @@ server.listen(PORT, () => {
   console.log('  💻 Shell Commands: /api/shell');
   console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
+  console.log('  🎨 Themes: /api/themes');
   console.log('  📊 System Info: /api/system');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');

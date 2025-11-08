@@ -28,6 +28,11 @@ let settings = {
     timeFormat: '24h',
     startupSound: true,
     confirmDelete: true
+  },
+  theme: {
+    currentTheme: 'amiga',  // Default to Amiga theme
+    customColors: {},        // Optional custom color overrides
+    customFonts: {}          // Optional custom font overrides
   }
 };
 
@@ -106,6 +111,11 @@ router.post('/reset', (req, res) => {
       timeFormat: '24h',
       startupSound: true,
       confirmDelete: true
+    },
+    theme: {
+      currentTheme: 'amiga',
+      customColors: {},
+      customFonts: {}
     }
   };
 

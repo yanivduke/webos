@@ -13,6 +13,11 @@
     </div>
 
     <div class="prefs-content">
+      <!-- Themes Settings -->
+      <div v-if="activeTab === 'themes'" class="prefs-panel themes-panel">
+        <ThemeSelector />
+      </div>
+
       <!-- Display Settings -->
       <div v-if="activeTab === 'display'" class="prefs-panel">
         <h3>Display Settings</h3>
@@ -173,14 +178,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import ThemeSelector from '../ThemeSelector.vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-const activeTab = ref('display');
+const activeTab = ref('themes');
 
 const tabs = [
+  { id: 'themes', name: 'Themes' },
   { id: 'display', name: 'Display' },
   { id: 'sound', name: 'Sound' },
   { id: 'workbench', name: 'Workbench' },
@@ -407,5 +414,15 @@ onMounted(() => {
 .amiga-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   background: #888888;
+}
+
+/* Themes Panel */
+.themes-panel {
+  padding: 0;
+  height: 100%;
+}
+
+.themes-panel :deep(.theme-selector) {
+  height: 100%;
 }
 </style>
