@@ -148,6 +148,9 @@ import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
+import LinuxTerminal from './apps/LinuxTerminal.vue';
+import C64Terminal from './apps/C64Terminal.vue';
+import DOSTerminal from './apps/DOSTerminal.vue';
 
 interface Disk {
   id: string;
@@ -176,7 +179,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -549,13 +552,37 @@ const toolConfigs = {
     baseX: 180, 
     baseY: 110 
   },
-  'AWML Wizard': { 
-    title: 'AWML Wizard', 
-    width: 600, 
-    height: 500, 
-    component: AmigaAwmlWizard, 
-    baseX: 200, 
-    baseY: 130 
+  'AWML Wizard': {
+    title: 'AWML Wizard',
+    width: 600,
+    height: 500,
+    component: AmigaAwmlWizard,
+    baseX: 200,
+    baseY: 130
+  },
+  'Linux Terminal': {
+    title: 'Linux Terminal',
+    width: 700,
+    height: 500,
+    component: LinuxTerminal,
+    baseX: 180,
+    baseY: 100
+  },
+  'C64 Terminal': {
+    title: 'Commodore 64',
+    width: 680,
+    height: 480,
+    component: C64Terminal,
+    baseX: 200,
+    baseY: 110
+  },
+  'DOS Terminal': {
+    title: 'MS-DOS',
+    width: 720,
+    height: 520,
+    component: DOSTerminal,
+    baseX: 160,
+    baseY: 90
   }
 };
 
