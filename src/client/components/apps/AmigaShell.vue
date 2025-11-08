@@ -94,24 +94,24 @@ const executeCommand = async () => {
       break;
     case 'ls':
     case 'dir':
-      await listFiles(args[0] || '');
+      await listFiles(_args);
       break;
     case 'cd':
-      changeDirectory(args[0] || '');
+      changeDirectory(_args);
       break;
     case 'cat':
     case 'type':
-      await readFile(args[0] || '');
+      await readFile(_args);
       break;
     case 'mkdir':
-      await makeDirectory(args[0] || '');
+      await makeDirectory(_args);
       break;
     case 'rm':
     case 'delete':
-      await deleteItem(args[0] || '');
+      await deleteItem(_args);
       break;
     case 'echo':
-      addOutput(args.join(' '), 'output');
+      addOutput(_args, 'output');
       break;
     case 'pwd':
       addOutput(currentPath.value, 'output');

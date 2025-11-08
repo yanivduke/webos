@@ -95,27 +95,27 @@ class SystemLogger {
 
     console.log = (...args: any[]) => {
       originalConsole.log.apply(console, args);
-      this.debug('Console', args.map(a => String(a)).join(' '));
+      this.debug('Console', Array.from(args).join(' '));
     };
 
     console.warn = (...args: any[]) => {
       originalConsole.warn.apply(console, args);
-      this.warn('Console', args.map(a => String(a)).join(' '));
+      this.warn('Console', Array.from(args).join(' '));
     };
 
     console.error = (...args: any[]) => {
       originalConsole.error.apply(console, args);
-      this.error('Console', args.map(a => String(a)).join(' '));
+      this.error('Console', Array.from(args).join(' '));
     };
 
     console.debug = (...args: any[]) => {
       originalConsole.debug.apply(console, args);
-      this.debug('Console', args.map(a => String(a)).join(' '));
+      this.debug('Console', Array.from(args).join(' '));
     };
 
     console.info = (...args: any[]) => {
       originalConsole.info.apply(console, args);
-      this.info('Console', args.map(a => String(a)).join(' '));
+      this.info('Console', Array.from(args).join(' '));
     };
   }
 

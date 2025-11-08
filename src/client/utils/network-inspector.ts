@@ -49,9 +49,9 @@ class NetworkInspector {
   private interceptFetch() {
     const originalFetch = window.fetch;
 
-    window.fetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
+    window.fetch = async (_args): Promise<Response> => {
       if (!this.enabled) {
-        return originalFetch.apply(window, args);
+        return originalFetch.apply(_args);
       }
 
       const [resource, config] = args;
@@ -74,7 +74,7 @@ class NetworkInspector {
       }
 
       try {
-        const response = await originalFetch.apply(window, args);
+        const response = await originalFetch.apply(_args);
         const endTime = Date.now();
 
         // Clone response to read body without consuming it
@@ -86,7 +86,7 @@ class NetworkInspector {
 
         // Get response headers
         const headers: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
+        response.headers.forEach((value, _key) => {
           headers[key] = value;
         });
         request.responseHeaders = headers;

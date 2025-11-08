@@ -24,7 +24,7 @@
       <div v-if="Object.keys(visibleConfig).length" class="config-list">
         <div class="config-heading">Configuration</div>
         <ul>
-          <li v-for="(value, key) in visibleConfig" :key="key">
+          <li v-for="(value, _key) in visibleConfig" :key="key">
             <strong>{{ key }}:</strong> {{ value }}
           </li>
         </ul>

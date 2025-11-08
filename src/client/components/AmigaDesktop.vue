@@ -32,7 +32,7 @@
         <div v-if="hasClipboardItems" class="clipboard-indicator" @click="handleOpenTool('Clipboard')" title="Clipboard has items">
           📋
         </div>
-        <AmigaWorkspaceSwitcher @openManager="handleOpenTool('Workspace Manager')" />
+        <AmigaWorkspaceSwitcher :visible="workspaceSwitcherVisible" @close="workspaceSwitcherVisible = false" @openManager="handleOpenTool('Workspace Manager')" />
         <div class="system-time">{{ currentTime }}</div>
         <div class="memory-indicator">Chip: {{ chipMem }} | Fast: {{ fastMem }}</div>
       </div>
@@ -226,6 +226,21 @@
           </div>
           <div class="icon-label">Debug</div>
         </div>
+
+        <!-- Smart Folders Section -->
+        <div v-if="smartFolders.length > 0" class="smart-folders-section">
+          <div class="section-divider"></div>
+          <SmartFolderItem
+            v-for="folder in smartFolders"
+            :key="folder.id"
+            :folder="folder"
+            :selected="selectedSmartFolder === folder.id"
+            @open="openSmartFolderWindow"
+            @select="selectSmartFolder"
+            @refresh="handleSmartFolderRefresh"
+            @delete="handleSmartFolderDelete"
+          />
+        </div>
         </div>
         </div>
       </div>
@@ -298,6 +313,7 @@ import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
 import AmigaSearch from './apps/AmigaSearch.vue';
 import AmigaSysMonitor from './apps/AmigaSysMonitor.vue';
+import AmigaResourceMonitor from './apps/AmigaResourceMonitor.vue';
 import AmigaClipboard from './apps/AmigaClipboard.vue';
 import AmigaArchiver from './apps/AmigaArchiver.vue';
 import AmigaTaskManager from './apps/AmigaTaskManager.vue';
@@ -312,6 +328,10 @@ import AmigaBatchManager from './apps/AmigaBatchManager.vue';
 import AmigaThemeEditor from './apps/AmigaThemeEditor.vue';
 import AmigaCommandPalette from './AmigaCommandPalette.vue';
 import AmigaShortcutsEditor from './apps/AmigaShortcutsEditor.vue';
+import AmigaAdvancedSearch from './apps/AmigaAdvancedSearch.vue';
+import AmigaTerminal from './apps/AmigaTerminal.vue';
+import AmigaSessionManager from './apps/AmigaSessionManager.vue';
+import SmartFolderItem from './SmartFolderItem.vue';
 import advancedClipboard from '../utils/clipboard-manager';
 import workspaceManager from '../utils/workspace-manager';
 import { screenCapture } from '../utils/screen-capture';
@@ -319,6 +339,10 @@ import dragDropManager from '../utils/drag-drop-manager';
 import { systemLogger } from '../utils/system-logger';
 import keyboardManager from '../utils/keyboard-manager';
 import commandPalette from '../utils/command-palette';
+import { getAllSmartFolders, refreshSmartFolder, subscribe as subscribeToSmartFolders, initializeSmartFolders, type SmartFolder } from '../utils/smart-folders';
+import { getSessionManager } from '../utils/session-manager';
+import { getWorkspaceSwitcher } from '../utils/workspace-switcher';
+import { getWindowHistory } from '../utils/window-history';
 interface Disk {
   id: string;
   name: string;
@@ -346,7 +370,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
 ]);
 
 // System info
@@ -356,6 +380,10 @@ const fastMem = ref('512K');
 const driveActivity = ref(false);
 const selectedCount = ref(0);
 const hasClipboardItems = ref(false);
+
+// Smart folders state
+const smartFolders = ref<SmartFolder[]>([]);
+const selectedSmartFolder = ref<string | null>(null);
 
 // Drag-and-drop state
 const isDraggingFiles = ref(false);
@@ -368,6 +396,7 @@ let duplicateResolve: ((action: 'overwrite' | 'keep-both' | 'skip') => void) | n
 
 // Command palette state
 const commandPaletteVisible = ref(false);
+const workspaceSwitcherVisible = ref(false);
 
 // Disks
 const disks = ref<Disk[]>([
@@ -438,6 +467,48 @@ onMounted(() => {
   // Initialize keyboard manager and command palette
   initializeKeyboardShortcuts();
   initializeCommandPalette();
+
+  // Initialize smart folders
+  initializeSmartFolders();
+  loadSmartFolders();
+
+  // Subscribe to smart folder changes
+  subscribeToSmartFolders(() => {
+    loadSmartFolders();
+  });
+
+  // Initialize session management system
+  const sessionManager = getSessionManager();
+  // Initialize workspace switcher and window history (used elsewhere)
+  getWorkspaceSwitcher();
+  getWindowHistory();
+
+  // Auto-save sessions every 30 seconds
+  sessionManager.startAutoSave(() => {
+    return openWindows.value.map(win => ({
+      id: win.id,
+      type: win.component?.name || 'unknown',
+      title: win.title,
+      x: win.x,
+      y: win.y,
+      width: win.width,
+      height: win.height,
+      data: win.data,
+      minimized: false,
+      maximized: false
+    }));
+  });
+
+  // Try to restore last session on startup
+  const lastSession = sessionManager.restoreLastSession();
+  if (lastSession && lastSession.length > 0 && openWindows.value.length === 0) {
+    systemLogger.info('Session', 'Restoring last session', {
+      windowCount: lastSession.length
+    });
+    // Convert WindowState back to Window format
+    // Note: This is a simplified restoration - real restoration would need to
+    // properly reconstruct the component and data
+  }
 });
 
 onUnmounted(() => {
@@ -452,6 +523,14 @@ onUnmounted(() => {
 
   // Cleanup keyboard manager
   keyboardManager.destroy();
+
+  // Cleanup session manager
+  const sessionManager = getSessionManager();
+  sessionManager.stopAutoSave();
+
+  // Cleanup workspace switcher
+  const workspaceSwitcher = getWorkspaceSwitcher();
+  workspaceSwitcher.destroy();
 });
 
 const updateTime = () => {
@@ -606,10 +685,10 @@ const handleGlobalKeyDown = async (event: KeyboardEvent) => {
     handleOpenTool('Clipboard');
   }
 
-  // Ctrl+Shift+F to open search
+  // Ctrl+Shift+F to open advanced search
   if (isCtrlOrCmd && event.shiftKey && event.key === 'F') {
     event.preventDefault();
-    openSearch();
+    handleOpenTool('Advanced Search');
   }
 
   // Ctrl+Alt+Delete to open task manager
@@ -815,12 +894,19 @@ const toolConfigs = {
   },
   'Shell': {
     title: 'AmigaShell',
-    width: 650,
-    height: 450,
-    component: AmigaAwmlRunner,
+    width: 700,
+    height: 500,
+    component: AmigaTerminal,
     baseX: 170,
-    baseY: 110,
-    awmlPath: 'dh0/System/Applications/Shell.awml'
+    baseY: 110
+  },
+  'Terminal': {
+    title: 'Terminal',
+    width: 700,
+    height: 500,
+    component: AmigaTerminal,
+    baseX: 170,
+    baseY: 110
   },
   'Clock': { 
     title: 'Clock', 
@@ -871,6 +957,14 @@ const toolConfigs = {
     component: AmigaSysMonitor,
     baseX: 150,
     baseY: 80
+  },
+  'Resource Monitor': {
+    title: 'Resource Monitor',
+    width: 750,
+    height: 600,
+    component: AmigaResourceMonitor,
+    baseX: 140,
+    baseY: 70
   },
   'Task Manager': {
     title: 'Task Manager',
@@ -944,6 +1038,14 @@ const toolConfigs = {
     baseX: 120,
     baseY: 70
   },
+  'Session Manager': {
+    title: 'Session Manager',
+    width: 850,
+    height: 700,
+    component: AmigaSessionManager,
+    baseX: 110,
+    baseY: 65
+  },
   'Keyboard Shortcuts': {
     title: 'Keyboard Shortcuts',
     width: 800,
@@ -951,6 +1053,14 @@ const toolConfigs = {
     component: AmigaShortcutsEditor,
     baseX: 140,
     baseY: 80
+  },
+  'Advanced Search': {
+    title: 'Advanced Search',
+    width: 850,
+    height: 700,
+    component: AmigaAdvancedSearch,
+    baseX: 100,
+    baseY: 60
   }
 };
 
@@ -1150,6 +1260,22 @@ const closeWindow = (windowId: string) => {
     systemLogger.debug('Window', `Window closed: ${window.title}`, {
       id: windowId
     });
+
+    // Add to window history for potential restoration
+    const windowHistory = getWindowHistory();
+    const currentWorkspace = getWorkspaceSwitcher().getCurrentWorkspace();
+    windowHistory.addToHistory({
+      id: window.id,
+      type: window.component?.name || 'unknown',
+      title: window.title,
+      x: window.x,
+      y: window.y,
+      width: window.width,
+      height: window.height,
+      data: window.data,
+      minimized: false,
+      maximized: false
+    }, currentWorkspace?.id || 'default');
 
     openWindows.value.splice(index, 1);
     // Update workspace manager
@@ -1426,13 +1552,62 @@ const initializeKeyboardShortcuts = () => {
   keyboardManager.applyStoredProfile();
 };
 
+// Smart folder management
+const loadSmartFolders = () => {
+  smartFolders.value = getAllSmartFolders();
+};
+
+const selectSmartFolder = (folder: SmartFolder) => {
+  selectedSmartFolder.value = folder.id;
+};
+
+const openSmartFolderWindow = async (folder: SmartFolder) => {
+  try {
+    // Refresh the smart folder to get latest results
+    await refreshSmartFolder(folder.id);
+
+    // Open Advanced Search window with the folder's results
+    const config = {
+      title: `Advanced Search - ${folder.name}`,
+      width: 850,
+      height: 700,
+      component: AmigaAdvancedSearch,
+      baseX: 100,
+      baseY: 60
+    };
+
+    const data = {
+      smartFolder: folder,
+      initialCriteria: folder.criteria
+    };
+
+    addWindow(createWindow(config, data));
+  } catch (error) {
+    console.error('Failed to open smart folder:', error);
+    alert('Failed to open smart folder');
+  }
+};
+
+const handleSmartFolderRefresh = (folder: SmartFolder) => {
+  loadSmartFolders();
+  console.log(`Smart folder "${folder.name}" refreshed`);
+};
+
+const handleSmartFolderDelete = (folder: SmartFolder) => {
+  loadSmartFolders();
+  selectedSmartFolder.value = null;
+  console.log(`Smart folder "${folder.name}" deleted`);
+};
+
 // Initialize command palette
 const initializeCommandPalette = () => {
   commandPalette.registerCommands([
     { id: 'open-preferences', label: 'Open Preferences', description: 'Configure system settings', category: 'tools', keywords: ['settings'], action: () => handleOpenTool('Preferences') },
     { id: 'open-shortcuts', label: 'Keyboard Shortcuts', description: 'View and edit shortcuts', category: 'tools', keywords: ['hotkeys'], action: () => handleOpenTool('Keyboard Shortcuts') },
     { id: 'open-search', label: 'Search Files', description: 'Search for files', category: 'file', keywords: ['find'], action: () => openSearch() },
+    { id: 'open-advanced-search', label: 'Advanced Search', description: 'Advanced file search with filters', category: 'file', keywords: ['find', 'filter', 'smart'], action: () => handleOpenTool('Advanced Search') },
     { id: 'open-clipboard', label: 'Clipboard Manager', description: 'View clipboard history', category: 'edit', keywords: ['copy'], action: () => handleOpenTool('Clipboard') },
+    { id: 'open-resource-monitor', label: 'Resource Monitor', description: 'Monitor system resources and optimize', category: 'tools', keywords: ['cpu', 'memory', 'disk', 'performance', 'optimize'], action: () => handleOpenTool('Resource Monitor') },
     { id: 'open-task-manager', label: 'Task Manager', description: 'Manage tasks', category: 'tools', keywords: ['processes'], action: () => handleOpenTool('Task Manager') },
     { id: 'open-workspace', label: 'Workspace Manager', description: 'Manage workspaces', category: 'window', keywords: ['desktop'], action: () => handleOpenTool('Workspace Manager') },
     { id: 'open-capture', label: 'Screen Capture', description: 'Take screenshots', category: 'tools', keywords: ['screenshot'], action: () => openScreenCapture() },
@@ -1581,6 +1756,19 @@ const initializeCommandPalette = () => {
   user-select: none;
   padding: 8px;
   transition: all 0.1s;
+}
+
+.smart-folders-section {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.section-divider {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #808080 20%, #808080 80%, transparent);
+  margin: 10px 0;
 }
 
 .disk-icon:hover {

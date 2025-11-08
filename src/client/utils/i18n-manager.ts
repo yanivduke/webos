@@ -177,7 +177,7 @@ class I18nManager {
    * Example: "Hello {name}" with {name: "World"} => "Hello World"
    */
   private interpolate(template: string, params: Record<string, any>): string {
-    return template.replace(/\{(\w+)\}/g, (match, key) => {
+    return template.replace(/\{(\w+)\}/g, (match, _key) => {
       return params[key] !== undefined ? String(params[key]) : match;
     });
   }
