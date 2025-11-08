@@ -42,11 +42,17 @@
           class="disk-icon"
           v-for="disk in disks"
           :key="disk.id"
+          :style="{
+            left: `${getPosition(disk.id).x}px`,
+            top: `${getPosition(disk.id).y}px`
+          }"
           :class="{
             selected: isIconSelected(disk.id),
             hovered: isIconHovered(disk.id),
-            active: isIconActive(disk.id)
+            active: isIconActive(disk.id),
+            dragging: draggingIconId === disk.id
           }"
+          @mousedown="startIconDrag(disk.id, $event)"
           @click="handleIconClick(disk.id, $event)"
           @dblclick="openDisk(disk)"
           @mouseenter="handleIconHover(disk.id, true)"
