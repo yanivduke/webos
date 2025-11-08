@@ -81,6 +81,23 @@
           <div class="icon-label">Utilities</div>
         </div>
 
+        <!-- Games -->
+        <div class="disk-icon" @dblclick="openGames">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="games-svg">
+              <rect x="12" y="20" width="40" height="28" rx="4" fill="#666" stroke="#000" stroke-width="2"/>
+              <circle cx="22" cy="32" r="6" fill="#888" stroke="#000" stroke-width="1"/>
+              <rect x="20" y="26" width="4" height="12" fill="#000"/>
+              <rect x="16" y="30" width="12" height="4" fill="#000"/>
+              <circle cx="42" cy="28" r="3" fill="#f00"/>
+              <circle cx="48" cy="34" r="3" fill="#0f0"/>
+              <circle cx="42" cy="38" r="3" fill="#00f"/>
+              <circle cx="36" cy="34" r="3" fill="#ff0"/>
+            </svg>
+          </div>
+          <div class="icon-label">Games</div>
+        </div>
+
         <!-- Trash Can -->
         <div class="disk-icon trash" @dblclick="openTrash">
           <div class="icon-image">
@@ -116,6 +133,7 @@
             @openTool="handleOpenTool"
             @executeAwml="handleExecuteAwml"
             @editFile="handleEditFile"
+            @launchGame="handleLaunchGame"
           />
         </AmigaWindow>
       </div>
@@ -152,6 +170,8 @@ import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
+import AmigaGames from './apps/AmigaGames.vue';
+import GameRunner from './games/GameRunner.vue';
 import LinuxTerminal from './apps/LinuxTerminal.vue';
 import C64Terminal from './apps/C64Terminal.vue';
 import DOSTerminal from './apps/DOSTerminal.vue';
@@ -194,6 +214,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Games', 'Preferences'] },
   { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
   { name: 'Network', items: ['Telnet Client', 'FTP Client', 'Gopher Browser', 'Network Diagnostic'] },
   { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
@@ -474,6 +495,45 @@ const openTrash = () => {
   openWindows.value.push(newWindow);
 };
 
+const openGames = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Games',
+    x: 180,
+    y: 160,
+    width: 520,
+    height: 420,
+    component: AmigaGames,
+    data: { id: 'games', name: 'Games', type: 'games' }
+  };
+  openWindows.value.push(newWindow);
+};
+
+const handleLaunchGame = (game: any) => {
+  console.log('Launching game from desktop:', game);
+  // Open game in a new window
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: game.name,
+    x: 200 + openWindows.value.length * 20,
+    y: 180 + openWindows.value.length * 20,
+    width: 640,
+    height: 520,
+    component: GameRunner,
+    data: {
+      game: game,
+      filePath: `games/${game.component}`,
+      meta: {
+        name: game.name,
+        type: 'game',
+        gameId: game.id,
+        component: game.component
+      }
+    }
+  };
+  openWindows.value.push(newWindow);
+};
+
 const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: string]: any }) => {
   const fileName = fileMeta?.name || filePath.split('/').pop() || 'Unknown';
   const lowerName = fileName.toLowerCase();
@@ -671,6 +731,13 @@ const toolConfigs = {
     baseX: 125,
     baseY: 75
   },
+  'Games': {
+    title: 'Games',
+    width: 520,
+    height: 420,
+    component: AmigaGames,
+    baseX: 180,
+    baseY: 160
   'Telnet Client': {
     title: 'Telnet Client',
     width: 720,
