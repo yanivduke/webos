@@ -119,6 +119,22 @@
           />
         </AmigaWindow>
       </div>
+
+      <!-- Widgets Container -->
+      <div class="widgets-container">
+        <AmigaWidget
+          v-for="widget in widgets"
+          :key="widget.id"
+          :id="widget.id"
+          :title="widget.title"
+          :x="widget.x"
+          :y="widget.y"
+          @close="closeWidget"
+          @updatePosition="updateWidgetPosition"
+        >
+          <component :is="widget.component" />
+        </AmigaWidget>
+      </div>
     </div>
 
     <!-- Amiga Workbench Footer Bar -->
@@ -148,6 +164,9 @@ import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
+import AmigaWidget from './widgets/AmigaWidget.vue';
+import ThemeWidget from './widgets/ThemeWidget.vue';
+import { useTheme } from '../composables/useTheme';
 
 interface Disk {
   id: string;
@@ -171,12 +190,25 @@ interface Menu {
   items: string[];
 }
 
+interface Widget {
+  id: string;
+  type: string;
+  title: string;
+  x: number;
+  y: number;
+  component: any;
+}
+
+// Initialize theme
+const { currentTheme } = useTheme();
+
 // Workbench Menu
 const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Widgets', items: ['Theme Selector', 'Hide All Widgets'] }
 ]);
 
 // System info
@@ -195,6 +227,9 @@ const disks = ref<Disk[]>([
 
 // Windows
 const openWindows = ref<Window[]>([]);
+
+// Widgets
+const widgets = ref<Widget[]>([]);
 
 // Menu state
 const activeMenu = ref<string | null>(null);
@@ -261,7 +296,7 @@ const isMenuItemDisabled = (menuName: string, item: string) => {
 const handleMenuAction = (menuName: string, item: string) => {
   console.log(`Menu action: ${menuName} -> ${item}`);
   activeMenu.value = null; // Close menu after action
-  
+
   switch (menuName) {
     case 'Workbench':
       handleWorkbenchAction(item);
@@ -274,6 +309,9 @@ const handleMenuAction = (menuName: string, item: string) => {
       break;
     case 'Tools':
       handleToolsAction(item);
+      break;
+    case 'Widgets':
+      handleWidgetsAction(item);
       break;
   }
 };
@@ -738,6 +776,50 @@ const closeWindow = (windowId: string) => {
     openWindows.value.splice(index, 1);
   }
 };
+
+// Widget management functions
+const handleWidgetsAction = (action: string) => {
+  switch (action) {
+    case 'Theme Selector':
+      toggleThemeWidget();
+      break;
+    case 'Hide All Widgets':
+      widgets.value = [];
+      break;
+  }
+};
+
+const toggleThemeWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'theme');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'theme',
+      title: 'Theme',
+      x: window.innerWidth - 280,
+      y: 80,
+      component: ThemeWidget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
+const closeWidget = (widgetId: string) => {
+  const index = widgets.value.findIndex(w => w.id === widgetId);
+  if (index !== -1) {
+    widgets.value.splice(index, 1);
+  }
+};
+
+const updateWidgetPosition = (widgetId: string, x: number, y: number) => {
+  const widget = widgets.value.find(w => w.id === widgetId);
+  if (widget) {
+    widget.x = x;
+    widget.y = y;
+  }
+};
 </script>
 
 <style scoped>
@@ -749,19 +831,21 @@ const closeWindow = (windowId: string) => {
   display: flex;
   flex-direction: column;
   font-family: 'Press Start 2P', 'Courier New', monospace;
-  background: #a0a0a0; /* Authentic Amiga gray */
+  background: var(--theme-background);
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 /* Workbench Menu Bar */
 .workbench-menu {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-bottom: 2px solid #000000;
+  background: var(--theme-menuBackground);
+  border-bottom: 2px solid var(--theme-borderDark);
   padding: 4px 8px;
   font-size: 11px;
-  box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #ffffff;
+  box-shadow: inset -1px -1px 0 var(--theme-border), inset 1px 1px 0 var(--theme-borderLight);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .menu-left {
@@ -773,15 +857,15 @@ const closeWindow = (windowId: string) => {
   position: relative;
   cursor: pointer;
   padding: 2px 8px;
-  color: #000000;
+  color: var(--theme-menuText);
   transition: all 0.1s;
   user-select: none;
 }
 
 .menu-item:hover,
 .menu-item.active {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--theme-highlight);
+  color: var(--theme-highlightText);
 }
 
 /* Menu Dropdown */
@@ -789,21 +873,22 @@ const closeWindow = (windowId: string) => {
   position: absolute;
   top: 100%;
   left: 0;
-  background: #a0a0a0;
+  background: var(--theme-background);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  border-color: var(--theme-borderLight) var(--theme-borderDark) var(--theme-borderDark) var(--theme-borderLight);
+  box-shadow: 2px 2px 4px var(--theme-shadow);
   z-index: 1000;
   min-width: 180px;
   font-size: 11px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .menu-dropdown-item {
   padding: 4px 12px;
   cursor: pointer;
-  color: #000000;
-  background: #a0a0a0;
-  border-bottom: 1px solid #808080;
+  color: var(--theme-text);
+  background: var(--theme-background);
+  border-bottom: 1px solid var(--theme-border);
   transition: all 0.1s;
   white-space: nowrap;
 }
@@ -813,12 +898,12 @@ const closeWindow = (windowId: string) => {
 }
 
 .menu-dropdown-item:hover:not(.disabled) {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--theme-highlight);
+  color: var(--theme-highlightText);
 }
 
 .menu-dropdown-item.disabled {
-  color: #808080;
+  color: var(--theme-border);
   cursor: not-allowed;
 }
 
@@ -826,7 +911,7 @@ const closeWindow = (windowId: string) => {
   display: flex;
   gap: 20px;
   align-items: center;
-  color: #000000;
+  color: var(--theme-menuText);
   font-size: 9px;
 }
 
@@ -835,16 +920,17 @@ const closeWindow = (windowId: string) => {
 }
 
 .memory-indicator {
-  color: #0055aa;
+  color: var(--theme-highlight);
 }
 
 /* Desktop Background */
 .desktop-background {
   flex: 1;
   position: relative;
-  background: #a0a0a0; /* Authentic Amiga Workbench gray */
+  background: var(--theme-background);
   overflow: hidden;
   padding: 20px;
+  transition: background-color 0.3s ease;
 }
 
 /* Desktop Icons */
@@ -866,7 +952,8 @@ const closeWindow = (windowId: string) => {
 }
 
 .disk-icon:hover {
-  background: rgba(0, 85, 170, 0.2);
+  background: var(--theme-highlight);
+  opacity: 0.2;
 }
 
 .icon-image {
@@ -886,13 +973,13 @@ const closeWindow = (windowId: string) => {
 
 .icon-label {
   font-size: 9px;
-  color: #000000;
+  color: var(--theme-text);
   text-align: center;
   text-shadow:
-    -1px -1px 0 #ffffff,
-    1px -1px 0 #ffffff,
-    -1px 1px 0 #ffffff,
-    1px 1px 0 #ffffff;
+    -1px -1px 0 var(--theme-borderLight),
+    1px -1px 0 var(--theme-borderLight),
+    -1px 1px 0 var(--theme-borderLight),
+    1px 1px 0 var(--theme-borderLight);
   max-width: 80px;
   word-wrap: break-word;
 }
@@ -915,12 +1002,13 @@ const closeWindow = (windowId: string) => {
 .workbench-footer {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-top: 2px solid #000000;
+  background: var(--theme-menuBackground);
+  border-top: 2px solid var(--theme-borderDark);
   padding: 4px 12px;
   font-size: 9px;
-  color: #000000;
-  box-shadow: inset -1px 1px 0 #808080, inset 1px -1px 0 #ffffff;
+  color: var(--theme-menuText);
+  box-shadow: inset -1px 1px 0 var(--theme-border), inset 1px -1px 0 var(--theme-borderLight);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .footer-left {
@@ -935,7 +1023,7 @@ const closeWindow = (windowId: string) => {
 }
 
 .screen-depth {
-  color: #0055aa;
+  color: var(--theme-highlight);
   font-weight: bold;
 }
 
@@ -980,18 +1068,34 @@ const closeWindow = (windowId: string) => {
 
 /* Classic Amiga button style */
 .amiga-button {
-  background: #a0a0a0;
+  background: var(--theme-background);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-borderLight) var(--theme-borderDark) var(--theme-borderDark) var(--theme-borderLight);
   padding: 4px 12px;
   font-size: 10px;
   cursor: pointer;
-  color: #000000;
+  color: var(--theme-text);
   font-family: 'Press Start 2P', monospace;
+  transition: all 0.1s;
 }
 
 .amiga-button:active {
-  border-color: #000000 #ffffff #ffffff #000000;
-  background: #888888;
+  border-color: var(--theme-borderDark) var(--theme-borderLight) var(--theme-borderLight) var(--theme-borderDark);
+  background: var(--theme-border);
+}
+
+/* Widgets Container */
+.widgets-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 800;
+}
+
+.widgets-container > * {
+  pointer-events: all;
 }
 </style>

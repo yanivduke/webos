@@ -1,4 +1,23 @@
 /* Global Amiga Workbench Styles */
+
+/* CSS Variables for theming */
+:root {
+  /* Default bright theme colors */
+  --theme-background: #a0a0a0;
+  --theme-windowBackground: #ffffff;
+  --theme-menuBackground: #ffffff;
+  --theme-menuText: #000000;
+  --theme-text: #000000;
+  --theme-border: #808080;
+  --theme-borderLight: #ffffff;
+  --theme-borderDark: #000000;
+  --theme-highlight: #0055aa;
+  --theme-highlightText: #ffffff;
+  --theme-shadow: rgba(0, 0, 0, 0.4);
+  --theme-diskIcon: #666666;
+  --theme-folderColor: #ffaa00;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,12 +28,15 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
   font-family: 'Press Start 2P', 'Courier New', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--theme-background);
+  color: var(--theme-text);
 }
 
 #app {
