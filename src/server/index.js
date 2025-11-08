@@ -15,6 +15,9 @@ const networkRoutes = require('./routes/network.route');
 const batchOperationsRoutes = require('./routes/batch-operations.route');
 const metadataRoutes = require('./routes/metadata.route');
 const systemMonitorRoutes = require('./routes/system-monitor.route');
+const calendarRoutes = require('./routes/calendar.route');
+const emailRoutes = require('./routes/email.route');
+const mediaRoutes = require('./routes/media.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -45,6 +48,9 @@ app.use('/api/network', networkRoutes);
 app.use('/api/batch', batchOperationsRoutes);
 app.use('/api/metadata', metadataRoutes);
 app.use('/api/monitor', systemMonitorRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/media', mediaRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -74,7 +80,10 @@ app.get('/', (req, res) => {
       network: '/api/network',
       batch: '/api/batch',
       metadata: '/api/metadata',
-      monitor: '/api/monitor'
+      monitor: '/api/monitor',
+      calendar: '/api/calendar',
+      email: '/api/email',
+      media: '/api/media'
     },
     features: [
       'Real file system with persistence',
@@ -102,7 +111,10 @@ app.use((req, res) => {
       '/api/network',
       '/api/batch',
       '/api/metadata',
-      '/api/monitor'
+      '/api/monitor',
+      '/api/calendar',
+      '/api/email',
+      '/api/media'
     ]
   });
 });
@@ -149,6 +161,8 @@ server.listen(PORT, () => {
   console.log('  📦 Batch Operations: /api/batch');
   console.log('  🏷️  File Metadata: /api/metadata');
   console.log('  📊 Resource Monitor: /api/monitor');
+  console.log('  📅 Calendar & Events: /api/calendar');
+  console.log('  🎵 Media Player: /api/media');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });

@@ -190,6 +190,26 @@
           </div>
           <div class="icon-label">Archiver</div>
         </div>
+        <!-- Media Player -->
+        <div class="disk-icon media-player" @dblclick="handleOpenTool('Media Player')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="media-player-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#0055aa" stroke="#000" stroke-width="2"/>
+              <rect x="12" y="16" width="40" height="32" fill="#000" stroke="#fff" stroke-width="1"/>
+              <!-- Musical note -->
+              <circle cx="28" cy="36" r="4" fill="#ffaa00"/>
+              <circle cx="38" cy="34" r="4" fill="#ffaa00"/>
+              <rect x="28" y="24" width="2" height="12" fill="#ffaa00"/>
+              <rect x="38" y="22" width="2" height="12" fill="#ffaa00"/>
+              <path d="M 30 24 L 40 22 L 40 26 L 30 28 Z" fill="#ffaa00"/>
+              <!-- Play button overlay -->
+              <circle cx="24" cy="42" r="6" fill="rgba(255, 170, 0, 0.3)" stroke="#ffaa00" stroke-width="1"/>
+              <polygon points="22,40 22,44 26,42" fill="#ffaa00"/>
+              <text x="32" y="60" text-anchor="middle" fill="#ffaa00" font-size="6" font-family="monospace">MEDIA</text>
+            </svg>
+          </div>
+          <div class="icon-label">Media</div>
+        </div>
         <!-- Plugin Manager -->
         <div class="disk-icon plugins" @dblclick="handleOpenTool('Plugin Manager')">
           <div class="icon-image">
@@ -301,37 +321,49 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+// Core components (loaded immediately)
 import AmigaWindow from './AmigaWindow.vue';
 import AmigaFolder from './AmigaFolder.vue';
-import AmigaNotePad from './apps/AmigaNotePad.vue';
-import AmigaCodeEditor from './apps/AmigaCodeEditor.vue';
-import AmigaMultiView from './apps/AmigaMultiView.vue';
-import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
-import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
-import AmigaFileInfo from './apps/AmigaFileInfo.vue';
-import AmigaPreferences from './apps/AmigaPreferences.vue';
-import AmigaSearch from './apps/AmigaSearch.vue';
-import AmigaSysMonitor from './apps/AmigaSysMonitor.vue';
-import AmigaResourceMonitor from './apps/AmigaResourceMonitor.vue';
-import AmigaClipboard from './apps/AmigaClipboard.vue';
-import AmigaArchiver from './apps/AmigaArchiver.vue';
-import AmigaTaskManager from './apps/AmigaTaskManager.vue';
 import AmigaWorkspaceSwitcher from './AmigaWorkspaceSwitcher.vue';
-import AmigaWorkspaceManager from './apps/AmigaWorkspaceManager.vue';
-import AmigaScreenCapture from './apps/AmigaScreenCapture.vue';
 import AmigaUploadProgress from './AmigaUploadProgress.vue';
 import AmigaDuplicateDialog from './AmigaDuplicateDialog.vue';
-import AmigaPluginManager from './apps/AmigaPluginManager.vue';
-import AmigaDebugConsole from './apps/AmigaDebugConsole.vue';
-import AmigaBatchManager from './apps/AmigaBatchManager.vue';
-import AmigaThemeEditor from './apps/AmigaThemeEditor.vue';
 import AmigaCommandPalette from './AmigaCommandPalette.vue';
-import AmigaShortcutsEditor from './apps/AmigaShortcutsEditor.vue';
-import AmigaAdvancedSearch from './apps/AmigaAdvancedSearch.vue';
-import AmigaTerminal from './apps/AmigaTerminal.vue';
-import AmigaSessionManager from './apps/AmigaSessionManager.vue';
 import SmartFolderItem from './SmartFolderItem.vue';
+
+// Async app components (loaded on demand)
+const AmigaNotePad = defineAsyncComponent(() => import('./apps/AmigaNotePad.vue'));
+const AmigaCodeEditor = defineAsyncComponent(() => import('./apps/AmigaCodeEditor.vue'));
+const AmigaMultiView = defineAsyncComponent(() => import('./apps/AmigaMultiView.vue'));
+const AmigaAwmlRunner = defineAsyncComponent(() => import('./apps/AmigaAwmlRunner.vue'));
+const AmigaAwmlWizard = defineAsyncComponent(() => import('./apps/AmigaAwmlWizard.vue'));
+const AmigaFileInfo = defineAsyncComponent(() => import('./apps/AmigaFileInfo.vue'));
+const AmigaPreferences = defineAsyncComponent(() => import('./apps/AmigaPreferences.vue'));
+const AmigaSearch = defineAsyncComponent(() => import('./apps/AmigaSearch.vue'));
+const AmigaSysMonitor = defineAsyncComponent(() => import('./apps/AmigaSysMonitor.vue'));
+const AmigaResourceMonitor = defineAsyncComponent(() => import('./apps/AmigaResourceMonitor.vue'));
+const AmigaClipboard = defineAsyncComponent(() => import('./apps/AmigaClipboard.vue'));
+const AmigaArchiver = defineAsyncComponent(() => import('./apps/AmigaArchiver.vue'));
+const AmigaTaskManager = defineAsyncComponent(() => import('./apps/AmigaTaskManager.vue'));
+const AmigaWorkspaceManager = defineAsyncComponent(() => import('./apps/AmigaWorkspaceManager.vue'));
+const AmigaScreenCapture = defineAsyncComponent(() => import('./apps/AmigaScreenCapture.vue'));
+const AmigaPluginManager = defineAsyncComponent(() => import('./apps/AmigaPluginManager.vue'));
+const AmigaDebugConsole = defineAsyncComponent(() => import('./apps/AmigaDebugConsole.vue'));
+const AmigaBatchManager = defineAsyncComponent(() => import('./apps/AmigaBatchManager.vue'));
+const AmigaThemeEditor = defineAsyncComponent(() => import('./apps/AmigaThemeEditor.vue'));
+const AmigaShortcutsEditor = defineAsyncComponent(() => import('./apps/AmigaShortcutsEditor.vue'));
+const AmigaAdvancedSearch = defineAsyncComponent(() => import('./apps/AmigaAdvancedSearch.vue'));
+const AmigaTerminal = defineAsyncComponent(() => import('./apps/AmigaTerminal.vue'));
+const AmigaSessionManager = defineAsyncComponent(() => import('./apps/AmigaSessionManager.vue'));
+const AmigaCalendar = defineAsyncComponent(() => import('./apps/AmigaCalendar.vue'));
+const AmigaMediaPlayer = defineAsyncComponent(() => import('./apps/AmigaMediaPlayer.vue'));
+const AmigaVideoPlayer = defineAsyncComponent(() => import('./apps/AmigaVideoPlayer.vue'));
+const AmigaEmail = defineAsyncComponent(() => import('./apps/AmigaEmail.vue'));
+const AmigaEmailCompose = defineAsyncComponent(() => import('./dialogs/AmigaEmailCompose.vue'));
+const AmigaAddressBook = defineAsyncComponent(() => import('./dialogs/AmigaAddressBook.vue'));
+const AmigaEmailSettings = defineAsyncComponent(() => import('./dialogs/AmigaEmailSettings.vue'));
+
+// Utilities (loaded immediately)
 import advancedClipboard from '../utils/clipboard-manager';
 import workspaceManager from '../utils/workspace-manager';
 import { screenCapture } from '../utils/screen-capture';
@@ -370,7 +402,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
 ]);
 
 // System info
@@ -1059,6 +1091,38 @@ const toolConfigs = {
     width: 850,
     height: 700,
     component: AmigaAdvancedSearch,
+    baseX: 100,
+    baseY: 60
+  },
+  'Calendar': {
+    title: 'Calendar',
+    width: 950,
+    height: 700,
+    component: AmigaCalendar,
+    baseX: 90,
+    baseY: 50
+  },
+  'Email': {
+    title: 'Email',
+    width: 1000,
+    height: 700,
+    component: AmigaEmail,
+    baseX: 80,
+    baseY: 50
+  },
+  'Media Player': {
+    title: 'Media Player',
+    width: 1000,
+    height: 700,
+    component: AmigaMediaPlayer,
+    baseX: 80,
+    baseY: 50
+  },
+  'Video Player': {
+    title: 'Video Player',
+    width: 900,
+    height: 650,
+    component: AmigaVideoPlayer,
     baseX: 100,
     baseY: 60
   }
