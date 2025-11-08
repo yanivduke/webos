@@ -74,11 +74,17 @@
         <!-- RAM Disk -->
         <div
           class="disk-icon"
+          :style="{
+            left: `${getPosition('ram').x}px`,
+            top: `${getPosition('ram').y}px`
+          }"
           :class="{
             selected: isIconSelected('ram'),
             hovered: isIconHovered('ram'),
-            active: isIconActive('ram')
+            active: isIconActive('ram'),
+            dragging: draggingIconId === 'ram'
           }"
+          @mousedown="startIconDrag('ram', $event)"
           @click="handleIconClick('ram', $event)"
           @dblclick="openRAM"
           @mouseenter="handleIconHover('ram', true)"
@@ -100,12 +106,18 @@
         <!-- Utilities Drawer -->
         <div
           class="disk-icon"
+          :style="{
+            left: `${getPosition('utils').x}px`,
+            top: `${getPosition('utils').y}px`
+          }"
           :class="{
             selected: isIconSelected('utils'),
             hovered: isIconHovered('utils'),
             open: isIconOpen('utils'),
-            active: isIconActive('utils')
+            active: isIconActive('utils'),
+            dragging: draggingIconId === 'utils'
           }"
+          @mousedown="startIconDrag('utils', $event)"
           @click="handleIconClick('utils', $event)"
           @dblclick="openUtilities"
           @mouseenter="handleIconHover('utils', true)"
