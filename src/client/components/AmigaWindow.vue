@@ -209,27 +209,28 @@ onUnmounted(() => {
 /* Authentic Amiga Window Styling */
 .amiga-window {
   position: absolute;
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+  background: var(--window-titlebar-bg);
+  border: var(--window-border-width) var(--window-border-style);
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
+  border-radius: var(--window-border-radius);
+  box-shadow: var(--window-shadow);
   display: flex;
   flex-direction: column;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: var(--font-family);
 }
 
 /* Title Bar */
 .window-titlebar {
-  background: linear-gradient(180deg, #ffffff 0%, #c0c0c0 50%, #a0a0a0 100%);
-  border-bottom: 2px solid #000000;
+  background: var(--window-titlebar-bg);
+  border-bottom: var(--window-border-width) solid var(--color-border-dark);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 2px 4px;
   cursor: move;
   user-select: none;
-  height: 24px;
-  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+  height: var(--window-titlebar-height);
+  box-shadow: inset 1px 1px 0 var(--color-border-light), inset -1px -1px 0 var(--color-border);
 }
 
 .window-titlebar:active {
@@ -246,9 +247,9 @@ onUnmounted(() => {
 .window-title {
   flex: 1;
   text-align: center;
-  font-size: 10px;
-  color: #000000;
-  font-weight: bold;
+  font-size: var(--font-size-title);
+  color: var(--window-titlebar-text);
+  font-weight: var(--font-weight-bold);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -259,23 +260,24 @@ onUnmounted(() => {
 .title-bar-button {
   width: 18px;
   height: 18px;
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  background: var(--button-bg);
+  border: var(--button-border-width) var(--button-border-style);
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
+  border-radius: var(--button-border-radius);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.1s;
+  transition: all var(--animation-duration);
 }
 
 .title-bar-button:hover {
-  background: #b0b0b0;
+  background: var(--button-hover-bg);
 }
 
 .title-bar-button:active {
-  border-color: #000000 #ffffff #ffffff #000000;
-  background: #888888;
+  border-color: var(--color-border-dark) var(--color-border-light) var(--color-border-light) var(--color-border-dark);
+  background: var(--button-active-bg);
 }
 
 /* Close Button */
@@ -291,7 +293,7 @@ onUnmounted(() => {
   position: absolute;
   width: 12px;
   height: 2px;
-  background: #ff6600;
+  background: var(--color-error);
   top: 4px;
   left: -1px;
 }
@@ -308,7 +310,7 @@ onUnmounted(() => {
 .depth-button .depth-icon {
   width: 8px;
   height: 8px;
-  border: 2px solid #0055aa;
+  border: 2px solid var(--color-primary);
   background: transparent;
 }
 
@@ -316,7 +318,7 @@ onUnmounted(() => {
 .zoom-button .zoom-icon {
   width: 10px;
   height: 10px;
-  border: 2px solid #0055aa;
+  border: 2px solid var(--color-primary);
   background: transparent;
   position: relative;
 }
@@ -328,16 +330,17 @@ onUnmounted(() => {
   left: -2px;
   right: -2px;
   height: 3px;
-  background: #0055aa;
+  background: var(--color-primary);
 }
 
 /* Window Content */
 .window-content {
   flex: 1;
-  background: #ffffff;
+  background: var(--window-content-bg);
+  color: var(--color-text);
   overflow: auto;
   padding: 8px;
-  border: 1px solid #808080;
+  border: 1px solid var(--color-border);
   margin: 2px;
   min-height: 100px;
 }
@@ -350,7 +353,7 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 0%, transparent 45%, #000000 45%, #000000 50%, transparent 50%);
+  background: linear-gradient(135deg, transparent 0%, transparent 45%, var(--color-border-dark) 45%, var(--color-border-dark) 50%, transparent 50%);
 }
 
 .resize-handle::after {
@@ -362,49 +365,49 @@ onUnmounted(() => {
   height: 8px;
   background: repeating-linear-gradient(
     45deg,
-    #000000,
-    #000000 1px,
+    var(--color-border-dark),
+    var(--color-border-dark) 1px,
     transparent 1px,
     transparent 2px
   );
 }
 
-/* Scrollbar styling for authentic Amiga look */
+/* Scrollbar styling for authentic look */
 .window-content::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
 
 .window-content::-webkit-scrollbar-track {
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #808080 #ffffff #ffffff #808080;
+  background: var(--scrollbar-track);
+  border: var(--window-border-width) var(--window-border-style);
+  border-color: var(--color-border) var(--color-border-light) var(--color-border-light) var(--color-border);
 }
 
 .window-content::-webkit-scrollbar-thumb {
-  background: #0055aa;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  background: var(--scrollbar-thumb);
+  border: var(--window-border-width) var(--window-border-style);
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
 }
 
 .window-content::-webkit-scrollbar-thumb:hover {
-  background: #0066cc;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .window-content::-webkit-scrollbar-corner {
-  background: #a0a0a0;
+  background: var(--scrollbar-track);
 }
 
 /* Arrow buttons for scrollbar */
 .window-content::-webkit-scrollbar-button {
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  height: 16px;
-  width: 16px;
+  background: var(--scrollbar-button);
+  border: var(--window-border-width) var(--window-border-style);
+  border-color: var(--color-border-light) var(--color-border-dark) var(--color-border-dark) var(--color-border-light);
+  height: var(--scrollbar-width);
+  width: var(--scrollbar-width);
 }
 
 .window-content::-webkit-scrollbar-button:hover {
-  background: #b0b0b0;
+  background: var(--button-hover-bg);
 }
 </style>
