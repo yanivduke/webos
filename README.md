@@ -38,6 +38,27 @@ WebOS is a labor of love bringing authentic 1980s-90s Amiga computing nostalgia 
 
 Every coffee fuels another pixel-perfect window border!
 
+## Live Demo
+
+🚀 **[Try WebOS Live](https://your-deployment-url.vercel.app)** (Deploy to get your URL!)
+
+Experience the authentic Amiga Workbench interface directly in your browser. No installation required!
+
+## Quick Deploy
+
+Deploy your own instance of WebOS for free:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yanivduke/webos)
+
+**One-click deployment to Vercel:**
+1. Click the button above
+2. Sign in to Vercel (free account)
+3. Click "Deploy"
+4. Wait 2-3 minutes
+5. Your WebOS is live!
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions, custom domain setup, and production configuration.
+
 ## Architecture
 
 ### Security Best Practices Overview
