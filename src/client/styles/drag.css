@@ -1,0 +1,257 @@
+/**
+ * Enhanced Drag & Drop Styles
+ * Amiga Workbench aesthetic with modern functionality
+ */
+
+/* Drag ghost (element being dragged) */
+.drag-ghost {
+  opacity: 0.5;
+  background: #0055aa;
+  border: 2px solid #ffffff;
+  cursor: grabbing !important;
+}
+
+/* Element while being dragged */
+.drag-dragging {
+  opacity: 0.7;
+  cursor: grabbing !important;
+  transform: rotate(-3deg);
+  transition: transform 0.1s ease;
+}
+
+/* Element when chosen/selected for drag */
+.drag-chosen {
+  background: rgba(0, 85, 170, 0.2);
+  border: 2px dashed #0055aa;
+}
+
+/* Drop zone when drag is over */
+.drag-over {
+  background: rgba(255, 170, 0, 0.3) !important;
+  border: 2px solid #ffaa00 !important;
+  border-color: #ffaa00 !important;
+  animation: pulse-border 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #ffaa00;
+  }
+  50% {
+    border-color: #ff8800;
+  }
+}
+
+/* Invalid drop zone */
+.drag-invalid {
+  background: rgba(170, 0, 0, 0.2) !important;
+  border: 2px solid #aa0000 !important;
+  cursor: not-allowed !important;
+}
+
+/* Multi-item drag preview */
+.drag-preview-multi {
+  position: fixed;
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 8px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  z-index: 10000;
+  pointer-events: none;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* Drag handle indicator */
+.drag-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  color: #555555;
+}
+
+.drag-handle:hover {
+  color: #0055aa;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Sortable list styles */
+.sortable-list {
+  min-height: 50px;
+  position: relative;
+}
+
+.sortable-list.empty {
+  border: 2px dashed #555555;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.05) 10px,
+    rgba(0, 0, 0, 0.05) 20px
+  );
+}
+
+/* Drag item base styles */
+.drag-item {
+  position: relative;
+  cursor: move;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.drag-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Amiga-style drag indicator */
+.drag-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #0055aa;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.drag-item:hover .drag-indicator {
+  opacity: 1;
+}
+
+/* Settings panel drag styles */
+.setting-item-draggable {
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  background: #a0a0a0;
+  padding: 8px;
+  margin: 4px 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+}
+
+.setting-item-draggable:active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: #888888;
+}
+
+/* Desktop icon drag styles */
+.desktop-icon-dragging {
+  opacity: 0.6;
+  cursor: grabbing !important;
+  filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.5));
+}
+
+/* Trash drop zone */
+.trash-drop-active {
+  animation: trash-shake 0.3s ease-in-out infinite;
+  background: rgba(170, 0, 0, 0.2);
+}
+
+@keyframes trash-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px) rotate(-2deg); }
+  75% { transform: translateX(2px) rotate(2deg); }
+}
+
+/* Drag success feedback */
+.drag-success {
+  animation: drag-success 0.5s ease-out;
+}
+
+@keyframes drag-success {
+  0% {
+    transform: scale(1);
+    background: rgba(0, 170, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    background: rgba(0, 170, 0, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    background: transparent;
+  }
+}
+
+/* Drag error feedback */
+.drag-error {
+  animation: drag-error 0.5s ease-out;
+}
+
+@keyframes drag-error {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* Reorder indicators */
+.drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #0055aa;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.drop-indicator::before,
+.drop-indicator::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #0055aa;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.drop-indicator::before {
+  left: -4px;
+}
+
+.drop-indicator::after {
+  right: -4px;
+}
+
+/* Amiga-style loading for drag operations */
+.drag-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.drag-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 85, 170, 0.3),
+    transparent
+  );
+  animation: drag-loading 1s linear infinite;
+}
+
+@keyframes drag-loading {
+  to {
+    left: 100%;
+  }
+}

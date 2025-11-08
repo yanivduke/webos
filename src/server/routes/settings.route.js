@@ -115,4 +115,59 @@ router.post('/reset', (req, res) => {
   });
 });
 
+// POST /api/settings/reorder - Reorder settings items
+// Used for drag-and-drop reordering of settings UI
+router.post('/reorder', (req, res) => {
+  const { context, items } = req.body;
+
+  if (!context || !items || !Array.isArray(items)) {
+    return res.status(400).json({
+      error: 'Invalid request',
+      message: 'context and items array are required'
+    });
+  }
+
+  // Store the custom order in workbench settings
+  if (!settings.workbench.customOrder) {
+    settings.workbench.customOrder = {};
+  }
+
+  settings.workbench.customOrder[context] = items;
+
+  res.json({
+    message: 'Settings reordered successfully',
+    context: context,
+    order: items
+  });
+});
+
+// POST /api/settings/desktop/icons - Save desktop icon positions
+router.post('/desktop/icons', (req, res) => {
+  const { icons } = req.body;
+
+  if (!icons || !Array.isArray(icons)) {
+    return res.status(400).json({
+      error: 'Invalid request',
+      message: 'icons array is required'
+    });
+  }
+
+  // Store desktop icon positions in workbench settings
+  settings.workbench.desktopIcons = icons;
+
+  res.json({
+    message: 'Desktop icon positions saved successfully',
+    icons: icons
+  });
+});
+
+// GET /api/settings/desktop/icons - Get desktop icon positions
+router.get('/desktop/icons', (req, res) => {
+  const icons = settings.workbench.desktopIcons || [];
+
+  res.json({
+    icons: icons
+  });
+});
+
 module.exports = router;
