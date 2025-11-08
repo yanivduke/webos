@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 
 export interface ContextMenuItem {
   label: string;
@@ -58,7 +58,7 @@ const handleClick = (item: ContextMenuItem) => {
   emit('close');
 };
 
-const handleOutsideClick = (e: MouseEvent) => {
+const handleOutsideClick = () => {
   emit('close');
 };
 

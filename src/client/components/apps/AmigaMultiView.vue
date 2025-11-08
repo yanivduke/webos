@@ -108,7 +108,7 @@ let lastPanY = 0;
 
 // Computed
 const hasPrevious = computed(() => imageIndex.value > 0);
-const hasNext = computed(() => imageIndex.value < imageFiles.length - 1);
+const hasNext = computed(() => imageIndex.value < imageFiles.value.length - 1);
 
 // Methods
 const openFile = async () => {

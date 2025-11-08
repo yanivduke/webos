@@ -84,7 +84,6 @@ const visibleConfig = computed(() => {
 });
 
 const filename = computed(() => props.data?.meta?.name || props.data?.filePath || 'AWML Program');
-const configKeys = computed(() => (descriptor.value ? Object.keys(descriptor.value.config) : []));
 
 // Extract app name from file path for legacy mode
 const appName = computed(() => {
@@ -157,7 +156,7 @@ const runWithConfig = async () => {
       await ensureDescriptor();
     }
 
-    if (Object.keys(activeConfig.value).length) {
+    if (Object.keys(activeConfig.value).length && descriptor.value) {
       descriptor.value = {
         ...descriptor.value,
         config: {
@@ -168,6 +167,9 @@ const runWithConfig = async () => {
     }
 
     statusMessage.value = 'Executing…';
+    if (!descriptor.value) {
+      throw new Error('Descriptor not loaded');
+    }
     await executeAwml(descriptor.value, {
       onLog: (message) => {
         logs.value.push(message);

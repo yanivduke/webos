@@ -486,4 +486,166 @@ const copyDirectory = async (src, dest) => {
   }
 };
 
+// GET /api/files/search - Search for files across disks
+router.get('/search', async (req, res) => {
+  try {
+    const { query = '', disk = '', types = '', minSize = '', maxSize = '' } = req.query;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({
+        error: 'Query parameter is required',
+        results: []
+      });
+    }
+
+    const searchQuery = query.toLowerCase();
+    const fileTypes = types ? String(types).split(',').map(t => t.trim().toLowerCase()) : [];
+    const minSizeBytes = minSize ? parseInt(String(minSize)) : 0;
+    const maxSizeBytes = maxSize ? parseInt(String(maxSize)) : Infinity;
+
+    // Determine which disks to search
+    const disksToSearch = disk && disk !== 'all' ? [String(disk)] : ['df0', 'dh0', 'dh1', 'ram'];
+
+    const results = [];
+    const MAX_RESULTS = 500;
+
+    // Fuzzy match function
+    const fuzzyScore = (searchTerm, target) => {
+      searchTerm = searchTerm.toLowerCase();
+      target = target.toLowerCase();
+
+      // Exact match
+      if (target === searchTerm) return 1.0;
+
+      // Contains match
+      if (target.includes(searchTerm)) return 0.9;
+
+      // Fuzzy match
+      let score = 0;
+      let searchIndex = 0;
+
+      for (let i = 0; i < target.length && searchIndex < searchTerm.length; i++) {
+        if (target[i] === searchTerm[searchIndex]) {
+          score += (1.0 / searchTerm.length);
+
+          // Bonus for matching at start or after separator
+          if (i === 0 || target[i - 1] === ' ' || target[i - 1] === '/' || target[i - 1] === '_') {
+            score += 0.1;
+          }
+
+          searchIndex++;
+        }
+      }
+
+      // All characters must match
+      if (searchIndex !== searchTerm.length) return 0;
+
+      return Math.max(0, Math.min(1, score));
+    };
+
+    // Recursive search function
+    const searchInDirectory = async (diskPath, currentPath = '') => {
+      if (results.length >= MAX_RESULTS) return;
+
+      try {
+        const fullPath = path.join(STORAGE_BASE, diskPath, currentPath);
+
+        // Check if directory exists
+        try {
+          await fs.access(fullPath);
+        } catch {
+          return; // Directory doesn't exist, skip
+        }
+
+        const entries = await fs.readdir(fullPath, { withFileTypes: true });
+
+        for (const entry of entries) {
+          if (results.length >= MAX_RESULTS) break;
+
+          const itemPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
+          const itemFullPath = path.join(fullPath, entry.name);
+          const diskItemPath = `${diskPath}/${itemPath}`;
+
+          // Calculate relevance score
+          const relevance = fuzzyScore(searchQuery, entry.name);
+
+          if (relevance > 0) {
+            const stats = await getFileStats(itemFullPath);
+
+            // Apply file type filter
+            if (fileTypes.length > 0 && !entry.isDirectory()) {
+              const ext = path.extname(entry.name).toLowerCase().replace('.', '');
+              if (!fileTypes.includes(ext)) continue;
+            }
+
+            // Apply size filter
+            if (stats && stats.size) {
+              const sizeBytes = parseSizeStringToBytes(stats.size);
+              if (sizeBytes < minSizeBytes || sizeBytes > maxSizeBytes) continue;
+            }
+
+            results.push({
+              id: `${entry.isDirectory() ? 'd' : 'f'}_${diskItemPath}`,
+              name: entry.name,
+              type: entry.isDirectory() ? 'folder' : 'file',
+              path: diskItemPath,
+              size: stats ? stats.size : null,
+              created: stats ? stats.created : null,
+              modified: stats ? stats.modified : null,
+              relevance: relevance,
+              isDirectory: entry.isDirectory()
+            });
+          }
+
+          // Recursively search subdirectories
+          if (entry.isDirectory()) {
+            await searchInDirectory(diskPath, itemPath);
+          }
+        }
+      } catch (error) {
+        console.error(`Error searching in ${diskPath}/${currentPath}:`, error.message);
+      }
+    };
+
+    // Helper to parse size string to bytes
+    const parseSizeStringToBytes = (sizeStr) => {
+      if (!sizeStr) return 0;
+      const match = String(sizeStr).match(/^([\d.]+)([KMG]?)$/);
+      if (!match) return parseInt(sizeStr) || 0;
+
+      const value = parseFloat(match[1]);
+      const unit = match[2];
+
+      switch (unit) {
+        case 'K': return value * 1024;
+        case 'M': return value * 1024 * 1024;
+        case 'G': return value * 1024 * 1024 * 1024;
+        default: return value;
+      }
+    };
+
+    // Search each disk
+    for (const diskId of disksToSearch) {
+      await searchInDirectory(diskId);
+    }
+
+    // Sort by relevance (highest first)
+    results.sort((a, b) => b.relevance - a.relevance);
+
+    res.json({
+      query: query,
+      disk: disk || 'all',
+      count: results.length,
+      results: results
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      error: 'Search failed',
+      message: error.message,
+      results: []
+    });
+  }
+});
+
 module.exports = router;

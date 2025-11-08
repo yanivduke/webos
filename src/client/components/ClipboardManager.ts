@@ -1,7 +1,10 @@
 /**
  * Clipboard Manager for Amiga Workbench File Operations
  * Handles copy/cut/paste operations for files and folders
+ * Now integrates with Advanced Clipboard Manager for history support
  */
+
+import advancedClipboard, { type ClipboardHistoryItem } from '../utils/clipboard-manager';
 
 export interface ClipboardItem {
   id: string;
@@ -10,8 +13,8 @@ export interface ClipboardItem {
   path: string;
   operation: 'copy' | 'cut';
   size?: string;
-  created?: Date;
-  modified?: Date;
+  created?: string;
+  modified?: string;
 }
 
 class AmigaClipboard {
@@ -23,6 +26,19 @@ class AmigaClipboard {
     this.items = items.map(item => ({ ...item, operation: 'copy' }));
     this.notifyListeners();
     console.log(`Copied ${items.length} item(s) to clipboard`);
+
+    // Integrate with advanced clipboard manager
+    const historyItems: ClipboardHistoryItem[] = items.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type as 'file' | 'folder',
+      path: item.path,
+      operation: 'copy',
+      size: item.size,
+      timestamp: new Date(),
+      preview: `${item.name} (${item.size || '0 bytes'})`
+    }));
+    advancedClipboard.copy(historyItems);
   }
 
   // Cut items to clipboard
@@ -30,6 +46,19 @@ class AmigaClipboard {
     this.items = items.map(item => ({ ...item, operation: 'cut' }));
     this.notifyListeners();
     console.log(`Cut ${items.length} item(s) to clipboard`);
+
+    // Integrate with advanced clipboard manager
+    const historyItems: ClipboardHistoryItem[] = items.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type as 'file' | 'folder',
+      path: item.path,
+      operation: 'cut',
+      size: item.size,
+      timestamp: new Date(),
+      preview: `${item.name} (${item.size || '0 bytes'})`
+    }));
+    advancedClipboard.cut(historyItems);
   }
 
   // Get clipboard items
@@ -39,7 +68,7 @@ class AmigaClipboard {
 
   // Check if clipboard has items
   hasItems(): boolean {
-    return this.items.length > 0;
+    return this.items.length > 0 || advancedClipboard.hasItems();
   }
 
   // Check if clipboard has items with specific operation

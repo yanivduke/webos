@@ -29,6 +29,9 @@
         </div>
       </div>
       <div class="menu-right">
+        <div v-if="hasClipboardItems" class="clipboard-indicator" @click="handleOpenTool('Clipboard')" title="Clipboard has items">
+          📋
+        </div>
         <div class="system-time">{{ currentTime }}</div>
         <div class="memory-indicator">Chip: {{ chipMem }} | Fast: {{ fastMem }}</div>
       </div>
@@ -95,6 +98,35 @@
           </div>
           <div class="icon-label">Trash</div>
         </div>
+        <!-- Search Files -->
+        <div class="disk-icon search" @dblclick="openSearch">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="search-svg">
+              <circle cx="26" cy="26" r="14" fill="#0055aa" stroke="#000" stroke-width="2"/>
+              <circle cx="26" cy="26" r="9" fill="#ffffff" stroke="#000" stroke-width="2"/>
+              <line x1="36" y1="36" x2="50" y2="50" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+              <line x1="36" y1="36" x2="50" y2="50" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="icon-label">Search</div>
+        <!-- System Monitor -->
+        <div class="disk-icon sysmon" @dblclick="openSystemMonitor">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="sysmon-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#0055aa" stroke="#000" stroke-width="2"/>
+              <rect x="12" y="16" width="40" height="32" fill="#000" stroke="#fff" stroke-width="1"/>
+              <!-- Bar chart inside -->
+              <rect x="16" y="38" width="6" height="8" fill="#00ff00"/>
+              <rect x="24" y="32" width="6" height="14" fill="#ffaa00"/>
+              <rect x="32" y="28" width="6" height="18" fill="#ff6600"/>
+              <rect x="40" y="24" width="6" height="22" fill="#ff0000"/>
+              <!-- Top text -->
+              <text x="32" y="24" text-anchor="middle" fill="#00ff00" font-size="6" font-family="monospace">SYS</text>
+            </svg>
+          </div>
+          <div class="icon-label">Monitor</div>
+        </div>
+        </div>
       </div>
 
       <!-- Windows Container -->
@@ -116,6 +148,7 @@
             @openTool="handleOpenTool"
             @executeAwml="handleExecuteAwml"
             @editFile="handleEditFile"
+            @openFolder="handleOpenFolder"
           />
         </AmigaWindow>
       </div>
@@ -139,16 +172,15 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AmigaWindow from './AmigaWindow.vue';
 import AmigaFolder from './AmigaFolder.vue';
 import AmigaNotePad from './apps/AmigaNotePad.vue';
-import AmigaPaint from './apps/AmigaPaint.vue';
-import AmigaCalculator from './apps/AmigaCalculator.vue';
-import AmigaShell from './apps/AmigaShell.vue';
-import AmigaClock from './apps/AmigaClock.vue';
 import AmigaMultiView from './apps/AmigaMultiView.vue';
 import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
 import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
 import AmigaFileInfo from './apps/AmigaFileInfo.vue';
 import AmigaPreferences from './apps/AmigaPreferences.vue';
-
+import AmigaSearch from './apps/AmigaSearch.vue';
+import AmigaSysMonitor from './apps/AmigaSysMonitor.vue';
+import AmigaClipboard from './apps/AmigaClipboard.vue';
+import advancedClipboard from '../utils/clipboard-manager';
 interface Disk {
   id: string;
   name: string;
@@ -176,7 +208,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Search Files', 'Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'System Monitor', 'Clipboard', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
 ]);
 
 // System info
@@ -185,6 +217,7 @@ const chipMem = ref('512K');
 const fastMem = ref('512K');
 const driveActivity = ref(false);
 const selectedCount = ref(0);
+const hasClipboardItems = ref(false);
 
 // Disks
 const disks = ref<Disk[]>([
@@ -198,7 +231,6 @@ const openWindows = ref<Window[]>([]);
 
 // Menu state
 const activeMenu = ref<string | null>(null);
-const menuHoverTimeout = ref<number | null>(null);
 
 // Time update
 let timeInterval: number | undefined;
@@ -206,9 +238,20 @@ let timeInterval: number | undefined;
 onMounted(() => {
   updateTime();
   timeInterval = window.setInterval(updateTime, 1000);
-  
+
   // Close menu when clicking outside
   document.addEventListener('click', closeMenuOnClickOutside);
+
+  // Add global keyboard shortcuts
+  document.addEventListener('keydown', handleGlobalKeyDown);
+
+  // Subscribe to clipboard changes
+  advancedClipboard.subscribe(() => {
+    hasClipboardItems.value = advancedClipboard.hasItems();
+  });
+
+  // Initial clipboard check
+  hasClipboardItems.value = advancedClipboard.hasItems();
 });
 
 onUnmounted(() => {
@@ -216,6 +259,7 @@ onUnmounted(() => {
     clearInterval(timeInterval);
   }
   document.removeEventListener('click', closeMenuOnClickOutside);
+  document.removeEventListener('keydown', handleGlobalKeyDown);
 });
 
 const updateTime = () => {
@@ -355,6 +399,22 @@ const handleIconsAction = (action: string) => {
 
 const handleToolsAction = (action: string) => {
   handleOpenTool(action);
+};
+
+const handleGlobalKeyDown = (event: KeyboardEvent) => {
+  const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+
+  // Ctrl+Shift+V to open clipboard manager
+  if (isCtrlOrCmd && event.shiftKey && event.key.toLowerCase() === 'v') {
+    event.preventDefault();
+    handleOpenTool('Clipboard');
+  }
+
+  // Ctrl+Shift+F to open search
+  if (isCtrlOrCmd && event.shiftKey && event.key === 'F') {
+    event.preventDefault();
+    openSearch();
+  }
 };
 
 const showAboutDialog = () => {
@@ -549,13 +609,29 @@ const toolConfigs = {
     baseX: 180, 
     baseY: 110 
   },
-  'AWML Wizard': { 
-    title: 'AWML Wizard', 
-    width: 600, 
-    height: 500, 
-    component: AmigaAwmlWizard, 
-    baseX: 200, 
-    baseY: 130 
+  'AWML Wizard': {
+    title: 'AWML Wizard',
+    width: 600,
+    height: 500,
+    component: AmigaAwmlWizard,
+    baseX: 200,
+    baseY: 130
+  },
+  'System Monitor': {
+    title: 'System Monitor',
+    width: 700,
+    height: 550,
+    component: AmigaSysMonitor,
+    baseX: 150,
+    baseY: 80
+  },
+  'Clipboard': {
+    title: 'Clipboard Manager',
+    width: 580,
+    height: 450,
+    component: AmigaClipboard,
+    baseX: 180,
+    baseY: 120
   }
 };
 
@@ -568,10 +644,10 @@ const createWindow = (config: any, data = {}) => {
     windowData = {
       ...data,
       filePath: config.awmlPath,
-      meta: { 
+      meta: {
         name: config.title,
         type: 'awml',
-        ...data.meta 
+        ...(data as any).meta
       }
     };
   }
@@ -738,6 +814,56 @@ const closeWindow = (windowId: string) => {
     openWindows.value.splice(index, 1);
   }
 };
+
+
+// Open System Monitor
+const openSystemMonitor = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'System Monitor',
+    x: 150,
+    y: 80,
+    width: 700,
+    height: 550,
+    component: AmigaSysMonitor,
+    data: {}
+  };
+  openWindows.value.push(newWindow);
+};
+
+// Open search window
+const openSearch = () => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Search Files',
+    x: 180,
+    y: 100,
+    width: 600,
+    height: 500,
+    component: AmigaSearch,
+    data: {}
+  };
+  openWindows.value.push(newWindow);
+};
+
+// Handle opening folder from search
+const handleOpenFolder = (folderPath: string) => {
+  const pathParts = folderPath.split('/');
+  const diskId = pathParts[0];
+  const diskName = disks.value.find(d => d.id === diskId)?.name || diskId;
+
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: diskName,
+    x: 100 + openWindows.value.length * 30,
+    y: 80 + openWindows.value.length * 30,
+    width: 500,
+    height: 350,
+    component: AmigaFolder,
+    data: { id: folderPath, name: diskName, type: 'folder' }
+  };
+  openWindows.value.push(newWindow);
+};
 </script>
 
 <style scoped>
@@ -836,6 +962,18 @@ const closeWindow = (windowId: string) => {
 
 .memory-indicator {
   color: #0055aa;
+}
+
+.clipboard-indicator {
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: all 0.1s;
+}
+
+.clipboard-indicator:hover {
+  background: rgba(0, 85, 170, 0.2);
+  border-radius: 2px;
 }
 
 /* Desktop Background */

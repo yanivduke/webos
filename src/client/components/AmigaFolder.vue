@@ -96,7 +96,7 @@ interface Props {
 interface FolderItem {
   id: string;
   name: string;
-  type: 'folder' | 'file' | 'disk' | 'tool';
+  type: 'folder' | 'file' | 'disk' | 'tool' | 'awml-app';
   size?: string;
   icon?: string;
   created?: string;
@@ -276,7 +276,7 @@ const openItem = (item: FolderItem) => {
   if (item.type === 'awml-app') {
     // AWML applications - emit as file with .awml extension
     const filePath = item.path || `${currentPath.value}/${item.name}.awml`;
-    emit('openFile', filePath, { ...item, type: 'awml' });
+    emit('openFile', filePath, { ...item, type: 'awml-app' });
   } else if (item.type === 'tool') {
     // Emit tool opening event
     emit('openTool', item.name);
@@ -305,10 +305,10 @@ const handleContextAction = async (action: string) => {
 
   switch (action) {
     case 'open':
-      openItem(item);
+      if (item) openItem(item);
       break;
     case 'delete':
-      if (confirm(`Delete "${item.name}"?`)) {
+      if (item && confirm(`Delete "${item.name}"?`)) {
         await deleteItem(item);
       }
       break;
@@ -322,10 +322,10 @@ const handleContextAction = async (action: string) => {
       await pasteItems();
       break;
     case 'rename':
-      await renameItem(item);
+      if (item) await renameItem(item);
       break;
     case 'info':
-      showItemInfo(item);
+      if (item) showItemInfo(item);
       break;
     case 'new-file':
       await createNewFile();
@@ -334,7 +334,7 @@ const handleContextAction = async (action: string) => {
       await createNewFolder();
       break;
     case 'duplicate':
-      await duplicateItem(item);
+      if (item) await duplicateItem(item);
       break;
   }
 
@@ -359,43 +359,6 @@ const deleteItem = async (item: FolderItem) => {
   } catch (error) {
     console.error('Error deleting item:', error);
     alert('Error deleting item');
-  }
-};
-
-const copyItem = async (item: FolderItem) => {
-  const newName = prompt(`Copy "${item.name}" as:`, `${item.name}_copy`);
-  if (!newName) return;
-
-  try {
-    const sourcePath = item.path || `${currentPath.value}/${item.name}`;
-    const targetPath = `${currentPath.value}/${newName}`;
-
-    const readResponse = await fetch('/api/files/read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: sourcePath })
-    });
-
-    if (!readResponse.ok) throw new Error('Failed to read source file');
-    const readData = await readResponse.json();
-
-    const writeResponse = await fetch('/api/files/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: targetPath,
-        type: item.type === 'folder' ? 'folder' : 'file',
-        content: readData.content || ''
-      })
-    });
-
-    if (!writeResponse.ok) throw new Error('Failed to create copy');
-
-    alert(`"${item.name}" copied to "${newName}"`);
-    await loadFiles();
-  } catch (error) {
-    console.error('Error copying item:', error);
-    alert('Failed to copy item');
   }
 };
 
@@ -479,7 +442,8 @@ const pasteItems = async () => {
     await loadFiles(); // Refresh the view
   } catch (error) {
     console.error('Paste operation failed:', error);
-    alert(`Paste failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Paste failed: ${message}`);
   }
 };
 
@@ -512,7 +476,8 @@ const createNewFile = async () => {
     await loadFiles();
   } catch (error) {
     console.error('Error creating file:', error);
-    alert(`Failed to create file: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to create file: ${message}`);
   }
 };
 
@@ -540,7 +505,8 @@ const createNewFolder = async () => {
     await loadFiles();
   } catch (error) {
     console.error('Error creating folder:', error);
-    alert(`Failed to create folder: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to create folder: ${message}`);
   }
 };
 
@@ -552,7 +518,7 @@ const duplicateItem = async (item: FolderItem) => {
 
   try {
     const sourcePath = item.path || `${currentPath.value}/${item.name}`;
-    
+
     const response = await fetch('/api/files/copy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -572,7 +538,8 @@ const duplicateItem = async (item: FolderItem) => {
     await loadFiles();
   } catch (error) {
     console.error('Error duplicating item:', error);
-    alert(`Failed to duplicate item: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to duplicate item: ${message}`);
   }
 };
 
