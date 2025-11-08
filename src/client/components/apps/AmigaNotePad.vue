@@ -18,6 +18,7 @@
       <button class="amiga-button" @click="newFile" title="New File">New</button>
       <button class="amiga-button" @click="saveFile" title="Save File" :disabled="!isDirty">Save</button>
       <button class="amiga-button" @click="saveAsFile" title="Save As">Save As</button>
+      <button class="amiga-button" @click="openExportDialog" title="Export File">Export</button>
       <button class="amiga-button" @click="showFileInfo" title="File Info">Info</button>
     </div>
 
@@ -85,11 +86,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Export Dialog -->
+    <AmigaExportDialog
+      :visible="showExportDialog"
+      :fileName="fileName"
+      :content="content"
+      @close="closeExportDialog"
+      @exported="handleExported"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
+import AmigaExportDialog from '../AmigaExportDialog.vue';
 
 interface Props {
   data?: {
@@ -112,6 +123,7 @@ const statusMessage = ref('Ready');
 const showEditMenu = ref(false);
 const showSaveAsDialog = ref(false);
 const showInfoDialog = ref(false);
+const showExportDialog = ref(false);
 const saveAsName = ref('');
 const saveAsPath = ref('dh0');
 
@@ -289,6 +301,18 @@ const showFileInfo = () => {
 
 const closeInfoDialog = () => {
   showInfoDialog.value = false;
+};
+
+const openExportDialog = () => {
+  showExportDialog.value = true;
+};
+
+const closeExportDialog = () => {
+  showExportDialog.value = false;
+};
+
+const handleExported = (format: string) => {
+  statusMessage.value = `File exported to ${format.toUpperCase()}`;
 };
 </script>
 

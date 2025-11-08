@@ -81,12 +81,22 @@
       @close="contextMenuVisible = false"
       @action="handleContextAction"
     />
+
+    <!-- Export Dialog -->
+    <AmigaExportDialog
+      :visible="showExportDialog"
+      :fileName="exportFileName"
+      :path="exportFilePath"
+      @close="closeExportDialog"
+      @exported="handleExported"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaExportDialog from './AmigaExportDialog.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
 
 interface Props {
@@ -118,6 +128,9 @@ const contextMenuVisible = ref(false);
 const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
+const showExportDialog = ref(false);
+const exportFileName = ref('');
+const exportFilePath = ref('');
 
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
@@ -143,6 +156,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
       { label: 'Delete', action: 'delete', icon: '🗑' },
       { label: '', action: '', separator: true },
+      { label: 'Export', action: 'export', icon: '📤', disabled: isMultiSelection || contextMenuItem.value.type !== 'file' },
       { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
     );
   }
@@ -335,6 +349,9 @@ const handleContextAction = async (action: string) => {
       break;
     case 'duplicate':
       await duplicateItem(item);
+      break;
+    case 'export':
+      openExportDialog(item);
       break;
   }
 
@@ -763,6 +780,20 @@ const handleKeyDown = async (event: KeyboardEvent) => {
 const navigateUp = async () => {
   if (!parentPath.value) return;
   await navigateTo(parentPath.value);
+};
+
+const openExportDialog = (item: FolderItem) => {
+  exportFileName.value = item.name;
+  exportFilePath.value = item.path || `${currentPath.value}/${item.name}`;
+  showExportDialog.value = true;
+};
+
+const closeExportDialog = () => {
+  showExportDialog.value = false;
+};
+
+const handleExported = (format: string) => {
+  console.log(`File exported to ${format.toUpperCase()}`);
 };
 
 // Lifecycle hooks
