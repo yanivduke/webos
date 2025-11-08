@@ -216,6 +216,7 @@
             @openTool="handleOpenTool"
             @executeAwml="handleExecuteAwml"
             @editFile="handleEditFile"
+            @quickView="handleQuickView"
           />
         </AmigaWindow>
       </div>
@@ -265,6 +266,9 @@
       @close="contextMenuVisible = false"
       @action="handleDesktopContextAction"
     />
+
+    <!-- Quick View -->
+    <AmigaQuickView />
   </div>
 </template>
 
@@ -285,12 +289,18 @@ import AmigaPreferences from './apps/AmigaPreferences.vue';
 import AmigaWidget from './widgets/AmigaWidget.vue';
 import ThemeWidget from './widgets/ThemeWidget.vue';
 import KeyboardShortcutsWidget from './widgets/KeyboardShortcutsWidget.vue';
+import ClockGadget from './widgets/ClockGadget.vue';
+import SystemMonitorGadget from './widgets/SystemMonitorGadget.vue';
+import DiskUsageGadget from './widgets/DiskUsageGadget.vue';
+import NetworkStatusGadget from './widgets/NetworkStatusGadget.vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaQuickView from './AmigaQuickView.vue';
 import AmigaTooltip from './AmigaTooltip.vue';
 import { useTheme } from '../composables/useTheme';
 import { useIconStates } from '../composables/useIconStates';
 import { useWindowSnapshots } from '../composables/useWindowSnapshots';
 import { useTooltip, type FileMetadata, type TooltipPosition } from '../composables/useTooltip';
+import { useQuickView, type QuickViewItem } from '../composables/useQuickView';
 import { useGlobalKeyboardShortcuts, formatShortcut } from '../composables/useKeyboardShortcuts';
 import { useSoundEffects } from '../composables/useSoundEffects';
 
@@ -349,6 +359,12 @@ const { calculatePosition, formatDate, fetchMetadata } = useTooltip();
 // Initialize sound effects
 const { playSound } = useSoundEffects();
 
+// Initialize keyboard shortcuts
+const { registerShortcut, formatShortcut: formatShortcutKey } = useGlobalKeyboardShortcuts();
+
+// Initialize Quick View
+const { open: openQuickView } = useQuickView();
+
 // Tooltip state
 const tooltipVisible = ref(false);
 const tooltipPosition = ref<TooltipPosition>({ x: 0, y: 0 });
@@ -365,7 +381,8 @@ const menus = ref<Menu[]>([
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
   { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
-  { name: 'Widgets', items: ['Theme Selector', 'Hide All Widgets'] }
+  { name: 'Widgets', items: ['Theme Selector', 'Keyboard Shortcuts', 'Clock', 'System Monitor', 'Disk Usage', 'Network Status', 'Hide All Widgets'] },
+  { name: 'Help', items: ['Keyboard Shortcuts', 'About'] }
 ]);
 
 // System info
@@ -558,6 +575,9 @@ const handleMenuAction = (menuName: string, item: string) => {
     case 'Widgets':
       handleWidgetsAction(item);
       break;
+    case 'Help':
+      handleHelpAction(item);
+      break;
   }
 };
 
@@ -640,6 +660,17 @@ const handleToolsAction = (action: string) => {
   handleOpenTool(action);
 };
 
+const handleHelpAction = (action: string) => {
+  switch (action) {
+    case 'Keyboard Shortcuts':
+      toggleKeyboardShortcutsWidget();
+      break;
+    case 'About':
+      showAboutDialog();
+      break;
+  }
+};
+
 const showAboutDialog = () => {
   const aboutText = `WebOS v2.0.0
 Amiga Workbench Style Interface
@@ -689,6 +720,7 @@ const openDisk = (disk: Disk) => {
 const openRAM = () => {
   // Set active state for animation
   setActive('ram', true);
+  playSound('open');
 
   const newWindow: Window = {
     id: `window-${Date.now()}`,
@@ -707,6 +739,7 @@ const openRAM = () => {
 const openUtilities = () => {
   // Set active state for animation
   setActive('utils', true);
+  playSound('open');
 
   const newWindow: Window = {
     id: `window-${Date.now()}`,
@@ -728,6 +761,7 @@ const openUtilities = () => {
 const openTrash = () => {
   // Set active state for animation
   setActive('trash', true);
+  playSound('open');
 
   const newWindow: Window = {
     id: `window-${Date.now()}`,
@@ -735,6 +769,32 @@ const openTrash = () => {
     x: 160,
     y: 140,
     width: 450,
+const handleQuickView = (item: any, allItems: any[]) => {
+  // Convert item to QuickViewItem format
+  const quickViewItem: QuickViewItem = {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    path: item.path || `${item.name}`,
+    size: item.size,
+    created: item.created,
+    modified: item.modified
+  };
+
+  // Convert all items
+  const quickViewItems: QuickViewItem[] = allItems.map(i => ({
+    id: i.id,
+    name: i.name,
+    type: i.type,
+    path: i.path || `${i.name}`,
+    size: i.size,
+    created: i.created,
+    modified: i.modified
+  }));
+
+  openQuickView(quickViewItem, quickViewItems);
+};
+
     height: 300,
     component: AmigaFolder,
     data: { id: 'trash', name: 'Trash', type: 'trash' },
@@ -904,6 +964,7 @@ const handleOpenTool = (toolName: string) => {
 
   const config = toolConfigs[toolName as keyof typeof toolConfigs];
   if (config) {
+    playSound('open');
     openWindows.value.push(createWindow(config));
   } else {
     console.log(`Tool "${toolName}" not found in toolConfigs`);
@@ -945,6 +1006,7 @@ const handleEditFile = (filePath: string) => {
 
 // Preferences
 const openPreferences = () => {
+  playSound('open');
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Preferences',
@@ -1043,6 +1105,7 @@ const closeWindow = (windowId: string) => {
   const index = openWindows.value.findIndex(w => w.id === windowId);
   if (index !== -1) {
     const window = openWindows.value[index];
+    playSound('close');
 
     // Mark drawers as closed when window closes
     if (window.data?.id === 'utils') {
@@ -1062,6 +1125,21 @@ const handleWidgetsAction = (action: string) => {
   switch (action) {
     case 'Theme Selector':
       toggleThemeWidget();
+      break;
+    case 'Keyboard Shortcuts':
+      toggleKeyboardShortcutsWidget();
+    case 'Clock':
+      toggleClockWidget();
+      break;
+    case 'System Monitor':
+      toggleSystemMonitorWidget();
+      break;
+    case 'Disk Usage':
+      toggleDiskUsageWidget();
+      break;
+    case 'Network Status':
+      toggleNetworkStatusWidget();
+      break;
       break;
     case 'Hide All Widgets':
       widgets.value = [];
@@ -1085,6 +1163,24 @@ const toggleThemeWidget = () => {
     widgets.value.push(newWidget);
   }
 };
+
+const toggleKeyboardShortcutsWidget = () => {
+  const existingWidget = widgets.value.find(w => w.type === 'keyboard-shortcuts');
+  if (existingWidget) {
+    closeWidget(existingWidget.id);
+  } else {
+    const newWidget: Widget = {
+      id: `widget-${Date.now()}`,
+      type: 'keyboard-shortcuts',
+      title: 'Keyboard Shortcuts',
+      x: window.innerWidth - 420,
+      y: 80,
+      component: KeyboardShortcutsWidget
+    };
+    widgets.value.push(newWidget);
+  }
+};
+
 
 const closeWidget = (widgetId: string) => {
   const index = widgets.value.findIndex(w => w.id === widgetId);

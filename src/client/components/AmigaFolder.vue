@@ -99,6 +99,7 @@ import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 import AmigaTooltip from './AmigaTooltip.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
 import { useTooltip, type FileMetadata, type TooltipPosition } from '../composables/useTooltip';
+import { useSoundEffects } from '../composables/useSoundEffects';
 
 interface Props {
   data?: any;
@@ -138,6 +139,9 @@ const tooltipPosition = ref<TooltipPosition>({ x: 0, y: 0 });
 const tooltipMetadata = ref<FileMetadata | null>(null);
 const tooltipHoverTimer = ref<number | null>(null);
 const tooltipHoverItem = ref<string | null>(null);
+
+// Sound effects
+const { playSound } = useSoundEffects();
 
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
@@ -278,6 +282,7 @@ watch(
 const selectedItems = ref<string[]>([]);
 
 const selectItem = (item: FolderItem, event: MouseEvent) => {
+  playSound('click');
   if (event.ctrlKey || event.metaKey) {
     // Multi-select with Ctrl/Cmd
     const index = selectedItems.value.indexOf(item.id);

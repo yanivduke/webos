@@ -53,29 +53,43 @@
 
         <div class="pref-group">
           <label>
-            <input type="checkbox" v-model="settings.sound.enabled" class="amiga-checkbox" />
+            <input
+              type="checkbox"
+              :checked="!soundEffects.isMuted()"
+              @change="soundEffects.toggleMute()"
+              class="amiga-checkbox"
+            />
             Enable Sound Effects
           </label>
         </div>
 
         <div class="pref-group">
           <label>Master Volume:</label>
-          <input type="range" v-model.number="settings.sound.volume" min="0" max="100" class="amiga-slider" />
-          <span class="value-label">{{ settings.sound.volume }}%</span>
+          <input
+            type="range"
+            :value="soundEffects.getVolume()"
+            @input="(e) => soundEffects.setVolume(Number((e.target as HTMLInputElement).value))"
+            min="0"
+            max="100"
+            class="amiga-slider"
+          />
+          <span class="value-label">{{ soundEffects.getVolume() }}%</span>
         </div>
 
         <div class="pref-group">
-          <label>
-            <input type="checkbox" v-model="settings.sound.clickSounds" class="amiga-checkbox" />
-            Window Click Sounds
-          </label>
+          <label>Test Sounds:</label>
+          <div class="test-sounds-grid">
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('click')">Click</button>
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('open')">Open</button>
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('close')">Close</button>
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('error')">Error</button>
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('success')">Success</button>
+            <button class="amiga-button test-sound-btn" @click="soundEffects.playSound('startup')">Startup</button>
+          </div>
         </div>
 
-        <div class="pref-group">
-          <label>
-            <input type="checkbox" v-model="settings.sound.startupSound" class="amiga-checkbox" />
-            Startup Sound
-          </label>
+        <div class="sound-info">
+          <p>All sounds are generated using Web Audio API with authentic Amiga-style chiptuneish synthesis. No external audio files are loaded.</p>
         </div>
       </div>
 
@@ -173,10 +187,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useSoundEffects } from '../../composables/useSoundEffects';
 
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
+
+// Initialize sound effects
+const soundEffects = useSoundEffects();
 
 const activeTab = ref('display');
 
@@ -407,5 +425,32 @@ onMounted(() => {
 .amiga-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   background: #888888;
+}
+
+.test-sounds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.test-sound-btn {
+  padding: 8px 4px;
+  font-size: 8px;
+}
+
+.sound-info {
+  margin-top: 20px;
+  padding: 12px;
+  background: #f0f0f0;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+}
+
+.sound-info p {
+  font-size: 7px;
+  line-height: 1.6;
+  color: #333333;
+  margin: 0;
 }
 </style>
