@@ -88,29 +88,48 @@ We believe in the power of open collaboration to preserve computing history. Whe
 
 ---
 
-## Support This Project
+## 💰 Support This Project
 
-WebOS is a labor of love bringing authentic 1980s-90s Amiga computing nostalgia to the modern web. If you enjoy this project and want to help keep development going, consider supporting:
+WebOS is a labor of love bringing authentic 1980s-90s Amiga computing nostalgia to the modern web. This project is **100% open source and free forever** - but development time, hosting, and research aren't free!
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support%20WebOS-orange?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/YOUR_USERNAME)
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20WebOS-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/YOUR_USERNAME)
-[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=for-the-badge&logo=github-sponsors)](https://github.com/sponsors/YOUR_USERNAME)
-[![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?style=for-the-badge&logo=patreon)](https://patreon.com/YOUR_USERNAME)
+### Why Support WebOS?
 
-**Your support helps:**
-- Keep servers running for live demos
-- Fund development of new features (AWML SDK expansion, more Amiga apps, multiplayer features)
-- Pay for retro computing research and testing on real Amiga hardware
-- Create tutorials and documentation for the community
-- Maintain and improve the codebase
+- **🖥️ Preserving Computing History** - Keep the Amiga Workbench experience alive for future generations
+- **🎓 Educational Value** - Teaching retro computing and UI/UX evolution
+- **🌍 Open Source Forever** - MIT licensed, community-driven
+- **⚡ Active Development** - Regular updates with new features and authentic Amiga tools
 
-**Alternative ways to support:**
-- Star this repository
-- Share WebOS on social media and retro computing communities
-- Contribute code, bug reports, or documentation
-- Create AWML applications and share them with the community
+### 🎯 Current Funding Goal: $2,000
 
-Every coffee fuels another pixel-perfect window border!
+This will fund:
+- ✅ Complete system tools (Shell, Calculator, NotePad enhancements)
+- ✅ Authentic Amiga sound effects
+- ✅ Keyboard shortcuts and accessibility
+- ✅ Professional documentation and tutorials
+
+**Progress: $0 / $2,000** (0% funded)
+
+### How to Support
+
+**🌟 [View Full Funding Information](FUNDING.md)** - Sponsorship tiers, transparency, and goals
+
+**Quick Links:**
+- 💚 **[GitHub Sponsors](https://github.com/sponsors/yanivduke)** - Monthly recurring support (coming soon)
+- ☕ **Ko-fi** - One-time donations (coming soon)
+- 🏆 **Corporate Sponsorship** - [Contact us](SPONSOR_PITCH.md) for partnership opportunities
+
+**Can't contribute financially?** You can still help!
+- ⭐ **Star this repository** - Helps us reach more people
+- 📣 **Share on social media** - Spread the nostalgia!
+- 💻 **Contribute code** - See [CONTRIBUTING.md](CONTRIBUTING.md)
+- 🐛 **Report bugs** - Help us improve
+- 📝 **Write tutorials** - Teach others about WebOS
+
+### 💡 Special Opportunity: $10,000 Grant Available!
+
+**GitHub is offering $10,000 grants to open source projects in 2025** through the [GitHub Secure Open Source Fund](https://resources.github.com/github-secure-open-source-fund/). We're applying - wish us luck! 🤞
+
+Every contribution, no matter the size, helps preserve computing history. **Thank you!** 🙏
 
 ## Live Demo
 

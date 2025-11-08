@@ -1,16 +1,37 @@
-# GitHub funding configuration
-# These are supported funding model platforms
+# GitHub Sponsors configuration for WebOS
+# This file enables the "Sponsor" button on the repository
 
-github: # Replace with up to 4 GitHub Sponsors usernames e.g., [user1, user2]
-patreon: # Replace with a single Patreon username
-open_collective: # Replace with a single Open Collective username
-ko_fi: # Replace with a single Ko-fi username
-tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
-community_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry
-liberapay: # Replace with a single Liberapay username
-issuehunt: # Replace with a single IssueHunt username
-lfx_crowdfunding: # Replace with a single LFX Crowdfunding project-name e.g., cloud-foundry
-polar: # Replace with a single Polar username
-buy_me_a_coffee: # Replace with a single Buy Me a Coffee username
-thanks_dev: # Replace with a single thanks.dev username
-custom: # Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']
+# Instructions:
+# 1. Set up GitHub Sponsors at: https://github.com/sponsors
+# 2. Uncomment the 'github:' line below and add your username
+# 3. Set up any other platforms you want to use (Ko-fi, Patreon, etc.)
+# 4. Uncomment those lines and add your usernames
+# 5. Commit this file to enable the "Sponsor" button on your repo
+
+# GitHub Sponsors username
+# Uncomment and add your GitHub username when you set up GitHub Sponsors:
+# github: yanivduke
+
+# Other funding platforms
+# Uncomment and add your usernames when you set these up:
+
+# Patreon username
+# patreon: webos
+
+# Open Collective username
+# open_collective: webos
+
+# Ko-fi username
+# ko_fi: webos
+
+# Buy Me a Coffee username
+# buy_me_a_coffee: webos
+
+# Liberapay username
+# liberapay: webos
+
+# IssueHunt username
+# issuehunt: yanivduke
+
+# Custom URLs (up to 4) - PayPal, custom donation pages, etc.
+# custom: ['https://paypal.me/yourname']
