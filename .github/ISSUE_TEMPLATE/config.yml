@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Community Discussion
+    url: https://github.com/yanivduke/webos/discussions
+    about: Ask questions, share ideas, and chat with the community
+  - name: 📚 Documentation
+    url: https://github.com/yanivduke/webos/blob/main/CLAUDE.md
+    about: Read the technical documentation and architecture guide
+  - name: 🎨 Retro OS Implementation Guide
+    url: https://github.com/yanivduke/webos/blob/main/RETRO_OS_GUIDE.md
+    about: Learn how to implement a new retro OS theme
