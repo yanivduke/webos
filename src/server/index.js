@@ -11,6 +11,7 @@ const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
 const widgetsRoutes = require('./routes/widgets.route');
+const devtoolsRoutes = require('./routes/devtools.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -37,6 +38,7 @@ app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/widgets', widgetsRoutes);
+app.use('/api/devtools', devtoolsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -62,7 +64,8 @@ app.get('/', (req, res) => {
       settings: '/api/settings',
       appState: '/api/app-state',
       shell: '/api/shell',
-      widgets: '/api/widgets'
+      widgets: '/api/widgets',
+      devtools: '/api/devtools'
     },
     features: [
       'Real file system with persistence',
@@ -70,7 +73,8 @@ app.get('/', (req, res) => {
       'Shell command execution',
       'System settings persistence',
       '5 working applications',
-      'Cloud services widgets (Weather, News, Clock)'
+      'Cloud services widgets (Weather, News, Clock)',
+      '11+ developer tools (Database, GitHub, API Tester, etc.)'
     ]
   });
 });
@@ -87,7 +91,8 @@ app.use((req, res) => {
       '/api/settings',
       '/api/app-state',
       '/api/shell',
-      '/api/widgets'
+      '/api/widgets',
+      '/api/devtools'
     ]
   });
 });
@@ -130,6 +135,7 @@ server.listen(PORT, () => {
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
   console.log('  🌤️  Widgets (Weather/News): /api/widgets');
+  console.log('  🛠️  Dev Tools (Database/GitHub/API): /api/devtools');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });

@@ -45,6 +45,43 @@ let settings = {
       category: 'technology',
       maxItems: 5
     }
+  },
+  devtools: {
+    database: {
+      enabled: true,
+      defaultType: 'postgresql'
+    },
+    github: {
+      enabled: true,
+      token: ''
+    },
+    apiTester: {
+      enabled: true
+    },
+    jsonFormatter: {
+      enabled: true
+    },
+    regexTester: {
+      enabled: true
+    },
+    gitClient: {
+      enabled: true
+    },
+    docker: {
+      enabled: true
+    },
+    npmManager: {
+      enabled: true
+    },
+    envEditor: {
+      enabled: true
+    },
+    logViewer: {
+      enabled: true
+    },
+    snippets: {
+      enabled: true
+    }
   }
 };
 
@@ -139,6 +176,43 @@ router.post('/reset', (req, res) => {
         enabled: false,
         category: 'technology',
         maxItems: 5
+      }
+    },
+    devtools: {
+      database: {
+        enabled: true,
+        defaultType: 'postgresql'
+      },
+      github: {
+        enabled: true,
+        token: ''
+      },
+      apiTester: {
+        enabled: true
+      },
+      jsonFormatter: {
+        enabled: true
+      },
+      regexTester: {
+        enabled: true
+      },
+      gitClient: {
+        enabled: true
+      },
+      docker: {
+        enabled: true
+      },
+      npmManager: {
+        enabled: true
+      },
+      envEditor: {
+        enabled: true
+      },
+      logViewer: {
+        enabled: true
+      },
+      snippets: {
+        enabled: true
       }
     }
   };

@@ -170,6 +170,10 @@ import AmigaPreferences from './apps/AmigaPreferences.vue';
 import ClockWidget from './widgets/ClockWidget.vue';
 import WeatherWidget from './widgets/WeatherWidget.vue';
 import NewsWidget from './widgets/NewsWidget.vue';
+import DatabaseManager from './devtools/DatabaseManager.vue';
+import GitHubCodeEditor from './devtools/GitHubCodeEditor.vue';
+import APITester from './devtools/APITester.vue';
+import JSONFormatter from './devtools/JSONFormatter.vue';
 
 interface Disk {
   id: string;
@@ -198,7 +202,8 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] }
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Dev Tools', items: ['Database Manager', 'GitHub Editor', 'API Tester', 'JSON Formatter'] }
 ]);
 
 // System info
@@ -317,7 +322,7 @@ const isMenuItemDisabled = (menuName: string, item: string) => {
 const handleMenuAction = (menuName: string, item: string) => {
   console.log(`Menu action: ${menuName} -> ${item}`);
   activeMenu.value = null; // Close menu after action
-  
+
   switch (menuName) {
     case 'Workbench':
       handleWorkbenchAction(item);
@@ -330,6 +335,9 @@ const handleMenuAction = (menuName: string, item: string) => {
       break;
     case 'Tools':
       handleToolsAction(item);
+      break;
+    case 'Dev Tools':
+      handleDevToolsAction(item);
       break;
   }
 };
@@ -411,6 +419,52 @@ const handleIconsAction = (action: string) => {
 
 const handleToolsAction = (action: string) => {
   handleOpenTool(action);
+};
+
+const handleDevToolsAction = (action: string) => {
+  console.log('Opening dev tool:', action);
+
+  const devToolConfigs: Record<string, any> = {
+    'Database Manager': {
+      title: 'Database Manager',
+      width: 800,
+      height: 600,
+      component: DatabaseManager,
+      baseX: 100,
+      baseY: 80
+    },
+    'GitHub Editor': {
+      title: 'GitHub Code Editor',
+      width: 900,
+      height: 650,
+      component: GitHubCodeEditor,
+      baseX: 80,
+      baseY: 60
+    },
+    'API Tester': {
+      title: 'API Tester',
+      width: 700,
+      height: 550,
+      component: APITester,
+      baseX: 120,
+      baseY: 90
+    },
+    'JSON Formatter': {
+      title: 'JSON Formatter',
+      width: 800,
+      height: 500,
+      component: JSONFormatter,
+      baseX: 110,
+      baseY: 100
+    }
+  };
+
+  const config = devToolConfigs[action];
+  if (config) {
+    openWindows.value.push(createWindow(config));
+  } else {
+    console.log(`Dev tool "${action}" not found`);
+  }
 };
 
 const showAboutDialog = () => {
