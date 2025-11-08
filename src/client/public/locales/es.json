@@ -1,0 +1,133 @@
+{
+  "common": {
+    "ok": "Aceptar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "cut": "Cortar",
+    "rename": "Renombrar",
+    "new": "Nuevo",
+    "edit": "Editar",
+    "search": "Buscar",
+    "yes": "Sí",
+    "no": "No",
+    "apply": "Aplicar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "finish": "Finalizar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información"
+  },
+  "menu": {
+    "workbench": "Banco de Trabajo",
+    "window": "Ventana",
+    "icons": "Iconos",
+    "tools": "Herramientas",
+    "about": "Acerca de",
+    "executeCommand": "Ejecutar Comando",
+    "redrawAll": "Redibujar Todo",
+    "update": "Actualizar",
+    "quit": "Salir",
+    "newDrawer": "Nuevo Cajón",
+    "openParent": "Abrir Padre",
+    "closeWindow": "Cerrar Ventana",
+    "selectContents": "Seleccionar Contenido",
+    "cleanUp": "Limpiar",
+    "snapshot": "Instantánea",
+    "information": "Información",
+    "formatDisk": "Formatear Disco"
+  },
+  "apps": {
+    "calculator": "Calculadora",
+    "notepad": "Bloc de Notas",
+    "shell": "Terminal",
+    "clock": "Reloj",
+    "paint": "Pintura",
+    "multiview": "VistaMultiple",
+    "preferences": "Preferencias",
+    "search": "Buscar Archivos",
+    "systemMonitor": "Monitor del Sistema",
+    "clipboard": "Portapapeles",
+    "awmlRunner": "Ejecutor AWML",
+    "awmlWizard": "Asistente AWML",
+    "languageSelector": "Selector de Idioma"
+  },
+  "desktop": {
+    "workbench": "BancoDeTrabajo3.1",
+    "system": "Sistema",
+    "work": "Trabajo",
+    "ramDisk": "Disco RAM",
+    "utilities": "Utilidades",
+    "trash": "Papelera",
+    "monitor": "Monitor"
+  },
+  "file": {
+    "file": "Archivo",
+    "folder": "Carpeta",
+    "disk": "Disco",
+    "drawer": "Cajón",
+    "size": "Tamaño",
+    "modified": "Modificado",
+    "created": "Creado",
+    "type": "Tipo",
+    "name": "Nombre",
+    "path": "Ruta"
+  },
+  "messages": {
+    "fileDeleted": "Archivo {name} eliminado",
+    "fileCopied": "Archivo {name} copiado",
+    "fileRenamed": "Archivo renombrado a {name}",
+    "itemsSelected": {
+      "singular": "{count} elemento seleccionado",
+      "plural": "{count} elementos seleccionados"
+    },
+    "confirmDelete": "¿Eliminar {count} elemento(s)?",
+    "confirmQuit": "¿Realmente salir del Banco de Trabajo?",
+    "enterNewName": "Ingrese nuevo nombre:",
+    "enterDrawerName": "Ingrese nombre del cajón:",
+    "noSelection": "No hay iconos seleccionados"
+  },
+  "time": {
+    "justNow": "Ahora mismo",
+    "minutesAgo": {
+      "singular": "Hace {count} minuto",
+      "plural": "Hace {count} minutos"
+    },
+    "hoursAgo": {
+      "singular": "Hace {count} hora",
+      "plural": "Hace {count} horas"
+    },
+    "daysAgo": {
+      "singular": "Hace {count} día",
+      "plural": "Hace {count} días"
+    }
+  },
+  "system": {
+    "chipMemory": "Chip",
+    "fastMemory": "Rápida",
+    "screenDepth": "Pantalla: Banco de Trabajo (640x256, 16 colores)",
+    "clipboardHasItems": "El portapapeles tiene elementos"
+  },
+  "about": {
+    "title": "WebOS v2.0.0",
+    "subtitle": "Interfaz Estilo Amiga Workbench",
+    "builtWith": "Construido con Vue 3 + TypeScript",
+    "features": "Características: 8 aplicaciones funcionales",
+    "copyright": "© 2024 Proyecto WebOS"
+  },
+  "language": {
+    "selectLanguage": "Seleccionar Idioma",
+    "currentLanguage": "Idioma Actual",
+    "availableLanguages": "Idiomas Disponibles",
+    "changeLanguage": "Cambiar Idioma",
+    "completion": "Completado",
+    "languageChanged": "Idioma cambiado a {language}"
+  }
+}

@@ -5,7 +5,21 @@
       <div class="path-display">{{ displayPath }}</div>
     </div>
 
-    <div class="folder-content">
+    <div
+      class="folder-content"
+      :class="{ 'drag-over-folder': isDraggingFilesOver }"
+      @dragover="handleFolderDragOver"
+      @dragleave="handleFolderDragLeave"
+      @drop="handleFolderDrop"
+    >
+      <!-- Drop zone overlay -->
+      <div v-if="isDraggingFilesOver" class="folder-drop-overlay">
+        <div class="folder-drop-message">
+          <div class="folder-drop-icon">📁</div>
+          <div class="folder-drop-text">Drop files here to upload</div>
+          <div class="folder-drop-path">Destination: {{ currentPath }}</div>
+        </div>
+      </div>
       <div
         v-for="(item, index) in items"
         :key="index"
@@ -82,6 +96,15 @@
       @action="handleContextAction"
     />
 
+    <!-- Quick Look Preview -->
+    <AmigaQuickLook
+      :visible="quickLookVisible"
+      :file="quickLookFile"
+      :files="items"
+      :currentPath="currentPath"
+      @close="quickLookVisible = false"
+      @openFile="handleQuickLookOpen"
+      @extract="handleQuickLookExtract"
     <!-- Export Dialog -->
     <AmigaExportDialog
       :visible="showExportDialog"
@@ -96,8 +119,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
+import AmigaQuickLook from './AmigaQuickLook.vue';
 import AmigaExportDialog from './AmigaExportDialog.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
+import { filePreview } from '../utils/file-preview';
+import dragDropManager from '../utils/drag-drop-manager';
 
 interface Props {
   data?: any;
@@ -106,7 +132,7 @@ interface Props {
 interface FolderItem {
   id: string;
   name: string;
-  type: 'folder' | 'file' | 'disk' | 'tool';
+  type: 'folder' | 'file' | 'disk' | 'tool' | 'awml-app';
   size?: string;
   icon?: string;
   created?: string;
@@ -132,27 +158,68 @@ const showExportDialog = ref(false);
 const exportFileName = ref('');
 const exportFilePath = ref('');
 
+// Quick Look state
+const quickLookVisible = ref(false);
+const quickLookFile = ref<FolderItem | null>(null);
+
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
 const draggedItems = ref<FolderItem[]>([]);
+
+// File upload drag state
+const isDraggingFilesOver = ref(false);
+let folderDragLeaveTimeout: number | null = null;
 
 const contextMenuItems = computed<ContextMenuItem[]>(() => {
   const hasClipboard = clipboard.hasItems();
   const hasSelection = selectedItems.value.length > 0;
   const isMultiSelection = selectedItems.value.length > 1;
-  
+
   // Base menu items
   const menuItems: ContextMenuItem[] = [];
-  
+
   // If item-specific (right-clicked on item)
   if (contextMenuItem.value) {
+    const isZipFile = contextMenuItem.value.name.toLowerCase().endsWith('.zip');
+    const isPreviewable = contextMenuItem.value.type === 'file' &&
+                          filePreview.isPreviewable(contextMenuItem.value.name);
+
     menuItems.push(
       { label: 'Open', action: 'open', icon: '▶' },
-      { label: '', action: '', separator: true },
+      { label: '', action: '', separator: true }
+    );
+
+    // Add Quick Look option for previewable files
+    if (isPreviewable) {
+      menuItems.push(
+        { label: 'Quick Look', action: 'quick-look', icon: '👁', disabled: isMultiSelection }
+      );
+    }
+
+    menuItems.push(
       { label: 'Copy', action: 'copy', icon: '📋', disabled: isMultiSelection && !hasSelection },
       { label: 'Cut', action: 'cut', icon: '✂', disabled: isMultiSelection && !hasSelection },
       { label: 'Duplicate', action: 'duplicate', icon: '⧉' },
-      { label: '', action: '', separator: true },
+      { label: '', action: '', separator: true }
+    );
+
+    // Archive-specific menu items
+    if (isZipFile) {
+      menuItems.push(
+        { label: 'Extract Here', action: 'extract-here', icon: '📦' },
+        { label: 'Extract To...', action: 'extract-to', icon: '📂' },
+        { label: 'Open with Archiver', action: 'open-archiver', icon: '🗜️' },
+        { label: '', action: '', separator: true }
+      );
+    } else if (hasSelection && contextMenuItem.value.type === 'file') {
+      // If file(s) selected, show compress option
+      menuItems.push(
+        { label: 'Compress to ZIP', action: 'compress-to-zip', icon: '🗜️' },
+        { label: '', action: '', separator: true }
+      );
+    }
+
+    menuItems.push(
       { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
       { label: 'Delete', action: 'delete', icon: '🗑' },
       { label: '', action: '', separator: true },
@@ -160,18 +227,18 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
     );
   }
-  
+
   // Universal menu items (always available)
   if (hasClipboard) {
     menuItems.push({ label: 'Paste', action: 'paste', icon: '📄', disabled: false });
     menuItems.push({ label: '', action: '', separator: true });
   }
-  
+
   menuItems.push(
     { label: 'New File', action: 'new-file', icon: '📄' },
     { label: 'New Folder', action: 'new-folder', icon: '📁' }
   );
-  
+
   return menuItems;
 });
 
@@ -290,7 +357,7 @@ const openItem = (item: FolderItem) => {
   if (item.type === 'awml-app') {
     // AWML applications - emit as file with .awml extension
     const filePath = item.path || `${currentPath.value}/${item.name}.awml`;
-    emit('openFile', filePath, { ...item, type: 'awml' });
+    emit('openFile', filePath, { ...item, type: 'awml-app' });
   } else if (item.type === 'tool') {
     // Emit tool opening event
     emit('openTool', item.name);
@@ -319,10 +386,13 @@ const handleContextAction = async (action: string) => {
 
   switch (action) {
     case 'open':
-      openItem(item);
+      if (item) openItem(item);
+      break;
+    case 'quick-look':
+      if (item) showQuickLook(item);
       break;
     case 'delete':
-      if (confirm(`Delete "${item.name}"?`)) {
+      if (item && confirm(`Delete "${item.name}"?`)) {
         await deleteItem(item);
       }
       break;
@@ -336,10 +406,10 @@ const handleContextAction = async (action: string) => {
       await pasteItems();
       break;
     case 'rename':
-      await renameItem(item);
+      if (item) await renameItem(item);
       break;
     case 'info':
-      showItemInfo(item);
+      if (item) showItemInfo(item);
       break;
     case 'new-file':
       await createNewFile();
@@ -348,7 +418,19 @@ const handleContextAction = async (action: string) => {
       await createNewFolder();
       break;
     case 'duplicate':
-      await duplicateItem(item);
+      if (item) await duplicateItem(item);
+      break;
+    case 'extract-here':
+      if (item) await extractArchiveHere(item);
+      break;
+    case 'extract-to':
+      if (item) await extractArchiveTo(item);
+      break;
+    case 'open-archiver':
+      if (item) openWithArchiver(item);
+      break;
+    case 'compress-to-zip':
+      await compressToZip();
       break;
     case 'export':
       openExportDialog(item);
@@ -376,43 +458,6 @@ const deleteItem = async (item: FolderItem) => {
   } catch (error) {
     console.error('Error deleting item:', error);
     alert('Error deleting item');
-  }
-};
-
-const copyItem = async (item: FolderItem) => {
-  const newName = prompt(`Copy "${item.name}" as:`, `${item.name}_copy`);
-  if (!newName) return;
-
-  try {
-    const sourcePath = item.path || `${currentPath.value}/${item.name}`;
-    const targetPath = `${currentPath.value}/${newName}`;
-
-    const readResponse = await fetch('/api/files/read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: sourcePath })
-    });
-
-    if (!readResponse.ok) throw new Error('Failed to read source file');
-    const readData = await readResponse.json();
-
-    const writeResponse = await fetch('/api/files/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: targetPath,
-        type: item.type === 'folder' ? 'folder' : 'file',
-        content: readData.content || ''
-      })
-    });
-
-    if (!writeResponse.ok) throw new Error('Failed to create copy');
-
-    alert(`"${item.name}" copied to "${newName}"`);
-    await loadFiles();
-  } catch (error) {
-    console.error('Error copying item:', error);
-    alert('Failed to copy item');
   }
 };
 
@@ -496,7 +541,8 @@ const pasteItems = async () => {
     await loadFiles(); // Refresh the view
   } catch (error) {
     console.error('Paste operation failed:', error);
-    alert(`Paste failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Paste failed: ${message}`);
   }
 };
 
@@ -529,7 +575,8 @@ const createNewFile = async () => {
     await loadFiles();
   } catch (error) {
     console.error('Error creating file:', error);
-    alert(`Failed to create file: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to create file: ${message}`);
   }
 };
 
@@ -557,7 +604,8 @@ const createNewFolder = async () => {
     await loadFiles();
   } catch (error) {
     console.error('Error creating folder:', error);
-    alert(`Failed to create folder: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to create folder: ${message}`);
   }
 };
 
@@ -569,7 +617,7 @@ const duplicateItem = async (item: FolderItem) => {
 
   try {
     const sourcePath = item.path || `${currentPath.value}/${item.name}`;
-    
+
     const response = await fetch('/api/files/copy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -589,7 +637,108 @@ const duplicateItem = async (item: FolderItem) => {
     await loadFiles();
   } catch (error) {
     console.error('Error duplicating item:', error);
-    alert(`Failed to duplicate item: ${error.message}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to duplicate item: ${message}`);
+  }
+};
+
+// Archive operations
+const extractArchiveHere = async (item: FolderItem) => {
+  try {
+    const archivePath = item.path || `${currentPath.value}/${item.name}`;
+
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: currentPath.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files from ${item.name}`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive. Note: Server-side ZIP extraction requires additional dependencies.');
+  }
+};
+
+const extractArchiveTo = async (item: FolderItem) => {
+  const destination = prompt('Extract to path:', currentPath.value);
+  if (!destination) return;
+
+  try {
+    const archivePath = item.path || `${currentPath.value}/${item.name}`;
+
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: destination
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files to ${destination}`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive. Note: Server-side ZIP extraction requires additional dependencies.');
+  }
+};
+
+const openWithArchiver = (_item: FolderItem) => {
+  // Emit event to open the archiver tool
+  emit('openTool', 'Archiver');
+};
+
+const compressToZip = async () => {
+  const selected = getSelectedItems();
+  if (selected.length === 0) {
+    alert('Please select files to compress');
+    return;
+  }
+
+  const archiveName = prompt('Enter archive name (without .zip):', 'archive');
+  if (!archiveName) return;
+
+  const fileName = archiveName.endsWith('.zip') ? archiveName : `${archiveName}.zip`;
+
+  try {
+    const filePaths = selected.map(item => item.path || `${currentPath.value}/${item.name}`);
+
+    const response = await fetch('/api/files/compress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        files: filePaths,
+        archiveName: fileName,
+        destinationPath: currentPath.value,
+        compressionLevel: 'normal'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create archive');
+    }
+
+    const result = await response.json();
+    alert(`Created archive "${fileName}" with ${result.fileCount || selected.length} files`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error creating archive:', error);
+    alert('Failed to create archive. Note: Server-side ZIP compression requires additional dependencies.');
   }
 };
 
@@ -597,6 +746,47 @@ const navigateTo = async (nextPath: string) => {
   if (!nextPath || nextPath === currentPath.value) return;
   currentPath.value = nextPath;
   await loadFiles();
+};
+
+// Quick Look functions
+const showQuickLook = (item: FolderItem) => {
+  if (item.type !== 'file') return;
+  if (!filePreview.isPreviewable(item.name)) return;
+
+  quickLookFile.value = item;
+  quickLookVisible.value = true;
+};
+
+const handleQuickLookOpen = (filePath: string, item: any) => {
+  quickLookVisible.value = false;
+  emit('openFile', filePath, item as FolderItem);
+};
+
+const handleQuickLookExtract = async (archivePath: string) => {
+  quickLookVisible.value = false;
+
+  // Extract archive to current directory
+  try {
+    const response = await fetch('/api/files/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archivePath: archivePath,
+        destinationPath: currentPath.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract archive');
+    }
+
+    const result = await response.json();
+    alert(`Extracted ${result.extractedCount || 0} files`);
+    await loadFiles();
+  } catch (error) {
+    console.error('Error extracting archive:', error);
+    alert('Failed to extract archive');
+  }
 };
 
 // Drag and drop handlers
@@ -754,6 +944,16 @@ const handleKeyDown = async (event: KeyboardEvent) => {
     }
   } else {
     switch (event.key) {
+      case ' ':
+        // Spacebar - Quick Look
+        event.preventDefault();
+        if (selectedItems.value.length === 1) {
+          const item = items.value.find(i => i.id === selectedItems.value[0]);
+          if (item && item.type === 'file' && filePreview.isPreviewable(item.name)) {
+            showQuickLook(item);
+          }
+        }
+        break;
       case 'Delete':
       case 'Backspace':
         if (selectedItems.value.length > 0) {
@@ -782,6 +982,66 @@ const navigateUp = async () => {
   await navigateTo(parentPath.value);
 };
 
+// File upload drag-and-drop handlers
+const handleFolderDragOver = (event: DragEvent) => {
+  // Only handle file drops from outside, not internal drag operations
+  if (event.dataTransfer?.types.includes('Files')) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (folderDragLeaveTimeout) {
+      clearTimeout(folderDragLeaveTimeout);
+      folderDragLeaveTimeout = null;
+    }
+
+    isDraggingFilesOver.value = true;
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+};
+
+const handleFolderDragLeave = (_event: DragEvent) => {
+  // Use timeout to prevent flickering
+  if (folderDragLeaveTimeout) {
+    clearTimeout(folderDragLeaveTimeout);
+  }
+
+  folderDragLeaveTimeout = window.setTimeout(() => {
+    isDraggingFilesOver.value = false;
+  }, 100);
+};
+
+const handleFolderDrop = async (event: DragEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (folderDragLeaveTimeout) {
+    clearTimeout(folderDragLeaveTimeout);
+    folderDragLeaveTimeout = null;
+  }
+
+  isDraggingFilesOver.value = false;
+
+  if (!event.dataTransfer?.files) return;
+
+  const files = Array.from(event.dataTransfer.files);
+  if (files.length === 0) return;
+
+  console.log(`Uploading ${files.length} file(s) to ${currentPath.value}`);
+
+  try {
+    await dragDropManager.addFiles(files, currentPath.value);
+
+    // Set up callback to refresh folder after upload completes
+    dragDropManager.onComplete(() => {
+      loadFiles();
+    });
+  } catch (error) {
+    console.error('Failed to add files to upload queue:', error);
+    alert('Failed to start upload');
+  }
 const openExportDialog = (item: FolderItem) => {
   exportFileName.value = item.name;
   exportFilePath.value = item.path || `${currentPath.value}/${item.name}`;
@@ -906,5 +1166,74 @@ onUnmounted(() => {
   font-size: 7px;
   color: #666666;
   margin-top: 2px;
+}
+
+/* File upload drop zone styling */
+.folder-content.drag-over-folder {
+  position: relative;
+  border: 3px dashed #0055aa;
+  background: rgba(0, 85, 170, 0.05);
+}
+
+.folder-drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 85, 170, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInOverlay 0.2s ease;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.folder-drop-message {
+  text-align: center;
+  color: #ffffff;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 3px dashed #ffffff;
+  border-radius: 6px;
+}
+
+.folder-drop-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  animation: bounceIcon 1s ease-in-out infinite;
+}
+
+@keyframes bounceIcon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.folder-drop-text {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.folder-drop-path {
+  font-size: 8px;
+  opacity: 0.9;
+  font-family: 'Press Start 2P', monospace;
+  color: #ffaa00;
 }
 </style>

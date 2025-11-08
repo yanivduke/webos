@@ -1,0 +1,27 @@
+/* Sample CSS file for WebOS */
+
+.amiga-window {
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 8px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.amiga-button {
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.amiga-button:hover {
+  background: #b0b0b0;
+}
+
+.amiga-button:active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: #888888;
+}

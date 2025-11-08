@@ -1,0 +1,372 @@
+/**
+ * Amiga Workbench Common Styles
+ * Reusable CSS classes for authentic Amiga UI components
+ * Reduces duplication across components
+ */
+
+/* === BEVELED BORDERS === */
+.amiga-bevel-out {
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.amiga-bevel-in {
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+}
+
+.amiga-bevel-out-thin {
+  border: 1px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.amiga-bevel-in-thin {
+  border: 1px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+}
+
+/* === COLORS === */
+:root {
+  --amiga-gray: #a0a0a0;
+  --amiga-blue: #0055aa;
+  --amiga-orange: #ffaa00;
+  --amiga-white: #ffffff;
+  --amiga-black: #000000;
+  --amiga-dark-gray: #707070;
+  --amiga-light-gray: #c0c0c0;
+  --amiga-green: #00ff00;
+  --amiga-red: #ff0000;
+  --amiga-yellow: #ffff00;
+}
+
+/* === BACKGROUNDS === */
+.amiga-bg {
+  background: var(--amiga-gray);
+}
+
+.amiga-bg-dark {
+  background: var(--amiga-dark-gray);
+}
+
+.amiga-bg-light {
+  background: var(--amiga-light-gray);
+}
+
+.amiga-bg-blue {
+  background: var(--amiga-blue);
+}
+
+/* === BUTTONS === */
+.amiga-button {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-family: 'Press Start 2P', monospace;
+  color: #000000;
+  cursor: pointer;
+  user-select: none;
+  transition: none;
+}
+
+.amiga-button:hover {
+  background: var(--amiga-light-gray);
+}
+
+.amiga-button:active,
+.amiga-button.active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: var(--amiga-dark-gray);
+}
+
+.amiga-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.amiga-button-small {
+  padding: 2px 8px;
+  font-size: 8px;
+}
+
+.amiga-button-large {
+  padding: 6px 16px;
+  font-size: 12px;
+}
+
+/* === CONTAINERS === */
+.amiga-container {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.amiga-panel {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 8px;
+}
+
+.amiga-section {
+  background: var(--amiga-gray);
+  border: 1px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px;
+  margin: 4px 0;
+}
+
+/* === INPUTS === */
+.amiga-input {
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #000000;
+  outline: none;
+}
+
+.amiga-input:focus {
+  background: #ffffcc;
+}
+
+.amiga-select {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #000000;
+}
+
+.amiga-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: #ffffff;
+  appearance: none;
+  cursor: pointer;
+}
+
+.amiga-checkbox:checked {
+  background: var(--amiga-blue);
+}
+
+/* === TEXT STYLES === */
+.amiga-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #000000;
+}
+
+.amiga-text-small {
+  font-size: 8px;
+}
+
+.amiga-text-large {
+  font-size: 12px;
+}
+
+.amiga-text-mono {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* === SCROLLBARS === */
+.amiga-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--amiga-dark-gray) var(--amiga-gray);
+}
+
+.amiga-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.amiga-scrollbar::-webkit-scrollbar-track {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+}
+
+.amiga-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--amiga-dark-gray);
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.amiga-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--amiga-light-gray);
+}
+
+.amiga-scrollbar::-webkit-scrollbar-button {
+  background: var(--amiga-gray);
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.amiga-scrollbar::-webkit-scrollbar-button:hover {
+  background: var(--amiga-light-gray);
+}
+
+/* === LISTS === */
+.amiga-list {
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.amiga-list-item {
+  padding: 4px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.amiga-list-item:hover {
+  background: var(--amiga-light-gray);
+}
+
+.amiga-list-item.selected {
+  background: var(--amiga-blue);
+  color: #ffffff;
+}
+
+/* === SEPARATORS === */
+.amiga-separator {
+  height: 2px;
+  background: var(--amiga-dark-gray);
+  border: none;
+  margin: 4px 0;
+}
+
+.amiga-separator-vertical {
+  width: 2px;
+  background: var(--amiga-dark-gray);
+  height: 100%;
+  margin: 0 4px;
+}
+
+/* === TOOLBAR === */
+.amiga-toolbar {
+  background: var(--amiga-gray);
+  border-bottom: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.amiga-statusbar {
+  background: var(--amiga-gray);
+  border-top: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 4px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+}
+
+/* === ICONS === */
+.amiga-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+}
+
+.amiga-icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.amiga-icon-large {
+  width: 64px;
+  height: 64px;
+}
+
+/* === ANIMATIONS === */
+.amiga-fade-in {
+  animation: amiga-fade 0.15s ease-out;
+}
+
+@keyframes amiga-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.amiga-slide-in {
+  animation: amiga-slide 0.15s ease-out;
+}
+
+@keyframes amiga-slide {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* === UTILITIES === */
+.amiga-no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.amiga-cursor-pointer {
+  cursor: pointer;
+}
+
+.amiga-cursor-default {
+  cursor: default;
+}
+
+.amiga-full-width {
+  width: 100%;
+}
+
+.amiga-full-height {
+  height: 100%;
+}
+
+.amiga-flex {
+  display: flex;
+}
+
+.amiga-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.amiga-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.amiga-gap-small {
+  gap: 4px;
+}
+
+.amiga-gap-medium {
+  gap: 8px;
+}
+
+.amiga-gap-large {
+  gap: 12px;
+}
+
+/* === SPACING === */
+.amiga-p-small { padding: 4px; }
+.amiga-p-medium { padding: 8px; }
+.amiga-p-large { padding: 12px; }
+
+.amiga-m-small { margin: 4px; }
+.amiga-m-medium { margin: 8px; }
+.amiga-m-large { margin: 12px; }

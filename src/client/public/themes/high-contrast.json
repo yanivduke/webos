@@ -1,0 +1,59 @@
+{
+  "id": "high-contrast",
+  "name": "High Contrast",
+  "description": "Maximum contrast theme for accessibility and visibility",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#0000ff",
+    "background": "#ffffff",
+    "text": "#000000",
+    "textInverse": "#ffffff",
+    "border": "#000000",
+    "borderLight": "#000000",
+    "borderDark": "#000000",
+    "windowChrome": "#ffffff",
+    "windowTitle": "#000000",
+    "windowTitleText": "#ffffff",
+    "highlight": "#0000ff",
+    "highlightText": "#ffffff",
+    "shadow": "#000000",
+    "accent": "#ff00ff",
+    "success": "#00ff00",
+    "warning": "#ffff00",
+    "error": "#ff0000",
+    "disabled": "#808080",
+    "inputBg": "#ffffff",
+    "inputText": "#000000",
+    "inputBorder": "#000000",
+    "scrollbarTrack": "#ffffff",
+    "scrollbarThumb": "#000000",
+    "menuBg": "#ffffff",
+    "menuText": "#000000",
+    "menuHighlight": "#0000ff",
+    "menuHighlightText": "#ffffff"
+  },
+  "fonts": {
+    "primary": "'Press Start 2P', monospace",
+    "secondary": "monospace",
+    "size": {
+      "small": "10px",
+      "medium": "12px",
+      "large": "14px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "3px",
+    "borderRadius": "0px",
+    "shadow": "none",
+    "titleBarHeight": "24px"
+  },
+  "spacing": {
+    "small": "6px",
+    "medium": "10px",
+    "large": "14px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}

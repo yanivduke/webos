@@ -1,0 +1,596 @@
+/**
+ * Accessibility Styles
+ *
+ * Provides high contrast modes, focus indicators, text scaling,
+ * reduced motion support, and screen reader utilities.
+ */
+
+/* =============================================================================
+   Screen Reader Only (SR-Only)
+   ============================================================================= */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* =============================================================================
+   Focus Indicators
+   ============================================================================= */
+
+/* Default focus indicator (always visible when enabled) */
+.show-focus-indicators *:focus {
+  outline: 3px solid #0055aa;
+  outline-offset: 2px;
+  z-index: 10000;
+}
+
+.show-focus-indicators *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High visibility focus indicator for keyboard navigation */
+.show-focus-indicators *:focus-visible {
+  outline: 3px solid #0055aa;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(0, 85, 170, 0.2);
+}
+
+/* Special focus styles for interactive elements */
+.show-focus-indicators button:focus-visible,
+.show-focus-indicators a:focus-visible,
+.show-focus-indicators [role="button"]:focus-visible {
+  outline: 3px solid #0055aa;
+  outline-offset: 2px;
+  background-color: rgba(0, 85, 170, 0.1);
+}
+
+/* Focus indicator for text inputs */
+.show-focus-indicators input:focus-visible,
+.show-focus-indicators textarea:focus-visible,
+.show-focus-indicators select:focus-visible {
+  outline: 3px solid #0055aa;
+  outline-offset: 1px;
+  border-color: #0055aa;
+}
+
+/* =============================================================================
+   High Contrast Mode
+   ============================================================================= */
+
+.high-contrast {
+  --amiga-gray: #c0c0c0;
+  --amiga-blue: #0000ff;
+  --amiga-orange: #ff8800;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --border-light: #ffffff;
+  --border-dark: #000000;
+  --background-window: #ffffff;
+  --background-desktop: #c0c0c0;
+}
+
+/* High contrast windows */
+.high-contrast .amiga-window {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* High contrast title bars */
+.high-contrast .window-titlebar {
+  background: #000000;
+  color: #ffffff;
+  border-bottom: 3px solid #ffffff;
+}
+
+/* High contrast buttons */
+.high-contrast .amiga-button,
+.high-contrast button {
+  background: #ffffff;
+  color: #000000;
+  border: 3px solid #000000;
+  font-weight: bold;
+}
+
+.high-contrast .amiga-button:hover,
+.high-contrast button:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.high-contrast .amiga-button:active,
+.high-contrast button:active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* High contrast text */
+.high-contrast {
+  color: #000000;
+}
+
+.high-contrast a {
+  color: #0000ff;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.high-contrast a:visited {
+  color: #800080;
+}
+
+/* High contrast borders */
+.high-contrast .amiga-border {
+  border-width: 3px;
+  border-style: solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+/* High contrast selected items */
+.high-contrast .selected,
+.high-contrast [aria-selected="true"] {
+  background: #000000;
+  color: #ffffff;
+  border: 3px solid #ffffff;
+}
+
+/* High contrast disabled state */
+.high-contrast [disabled],
+.high-contrast [aria-disabled="true"] {
+  opacity: 1;
+  background: #c0c0c0;
+  color: #808080;
+  border-color: #808080;
+}
+
+/* =============================================================================
+   Text Scaling (Responsive)
+   ============================================================================= */
+
+/* Base font sizes use rem units to scale with root font size */
+:root {
+  font-size: 100%; /* Default, overridden by accessibility-manager */
+}
+
+/* Ensure all text scales properly */
+* {
+  line-height: 1.5;
+}
+
+/* Prevent text overflow with scaling */
+@media screen {
+  .text-scalable {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+}
+
+/* Adjust layout for large text */
+html[style*="font-size: 150%"] .amiga-window,
+html[style*="font-size: 175%"] .amiga-window,
+html[style*="font-size: 200%"] .amiga-window {
+  min-width: 400px;
+  min-height: 300px;
+}
+
+html[style*="font-size: 150%"] .window-titlebar,
+html[style*="font-size: 175%"] .window-titlebar,
+html[style*="font-size: 200%"] .window-titlebar {
+  min-height: 40px;
+  padding: 8px;
+}
+
+/* Increase click targets for larger text */
+html[style*="font-size: 150%"] button,
+html[style*="font-size: 175%"] button,
+html[style*="font-size: 200%"] button,
+html[style*="font-size: 150%"] .amiga-button,
+html[style*="font-size: 175%"] .amiga-button,
+html[style*="font-size: 200%"] .amiga-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
+}
+
+/* =============================================================================
+   Reduced Motion
+   ============================================================================= */
+
+/* Disable all animations when reduced motion is enabled */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Respect system preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =============================================================================
+   Color Blind Modes
+   ============================================================================= */
+
+/* Deuteranopia (green weak) */
+html[data-colorblind-mode="deuteranopia"] {
+  filter: url(#deuteranopia-filter);
+}
+
+/* Protanopia (red weak) */
+html[data-colorblind-mode="protanopia"] {
+  filter: url(#protanopia-filter);
+}
+
+/* Tritanopia (blue weak) */
+html[data-colorblind-mode="tritanopia"] {
+  filter: url(#tritanopia-filter);
+}
+
+/* Monochromacy (complete color blindness) */
+html[data-colorblind-mode="monochromacy"] {
+  filter: grayscale(100%);
+}
+
+/* Add patterns for monochromacy to distinguish colors */
+html[data-colorblind-mode="monochromacy"] .color-success {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.1) 10px,
+    rgba(0, 0, 0, 0.1) 20px
+  );
+}
+
+html[data-colorblind-mode="monochromacy"] .color-error {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.1) 10px,
+    rgba(0, 0, 0, 0.1) 20px
+  );
+}
+
+html[data-colorblind-mode="monochromacy"] .color-warning {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.1) 10px,
+    rgba(0, 0, 0, 0.1) 20px
+  );
+}
+
+/* =============================================================================
+   Keyboard Navigation Indicators
+   ============================================================================= */
+
+/* Show keyboard shortcuts in tooltips */
+[data-keyboard-shortcut]::after {
+  content: attr(data-keyboard-shortcut);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10000;
+}
+
+[data-keyboard-shortcut]:focus::after,
+[data-keyboard-shortcut]:hover::after {
+  opacity: 1;
+}
+
+/* Keyboard navigation help indicator */
+.keyboard-nav-help {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  z-index: 10000;
+  max-width: 300px;
+}
+
+.keyboard-nav-help h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+}
+
+.keyboard-nav-help ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keyboard-nav-help li {
+  margin: 4px 0;
+}
+
+.keyboard-nav-help kbd {
+  display: inline-block;
+  padding: 2px 4px;
+  background: #333333;
+  border: 1px solid #666666;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+/* =============================================================================
+   ARIA Live Regions
+   ============================================================================= */
+
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* =============================================================================
+   Skip Links
+   ============================================================================= */
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000000;
+  color: #ffffff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100000;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* =============================================================================
+   Accessible Tables
+   ============================================================================= */
+
+table[role="grid"] th[scope="col"],
+table[role="grid"] th[scope="row"] {
+  font-weight: bold;
+  background: #e0e0e0;
+}
+
+table[role="grid"] td:focus,
+table[role="grid"] th:focus {
+  outline: 3px solid #0055aa;
+  outline-offset: -3px;
+}
+
+/* =============================================================================
+   Custom Scrollbars (Accessibility Friendly)
+   ============================================================================= */
+
+.accessible-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.accessible-scrollbar::-webkit-scrollbar-track {
+  background: #d0d0d0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.accessible-scrollbar::-webkit-scrollbar-thumb {
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+
+.accessible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #888888;
+}
+
+/* =============================================================================
+   Print Styles (Accessibility)
+   ============================================================================= */
+
+@media print {
+  .no-print,
+  .skip-link,
+  .keyboard-nav-help {
+    display: none !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
+
+  abbr[title]::after {
+    content: " (" attr(title) ")";
+  }
+}
+
+/* =============================================================================
+   Tooltips (Accessible)
+   ============================================================================= */
+
+[role="tooltip"] {
+  position: absolute;
+  padding: 4px 8px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 11px;
+  border-radius: 3px;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+[aria-describedby] {
+  position: relative;
+}
+
+/* =============================================================================
+   Loading States (Accessible)
+   ============================================================================= */
+
+[aria-busy="true"] {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid #0055aa;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Disable spinner animation in reduced motion mode */
+.reduced-motion [aria-busy="true"]::after {
+  animation: none;
+  border-top-color: #0055aa;
+}
+
+/* =============================================================================
+   Form Validation (Accessible)
+   ============================================================================= */
+
+[aria-invalid="true"] {
+  border-color: #cc0000 !important;
+  outline-color: #cc0000 !important;
+}
+
+[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.2);
+}
+
+.form-error {
+  color: #cc0000;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.form-error::before {
+  content: "⚠";
+  margin-right: 4px;
+}
+
+/* =============================================================================
+   Dialog/Modal Accessibility
+   ============================================================================= */
+
+[role="dialog"],
+[role="alertdialog"] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: #ffffff;
+  border: 3px solid #000000;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+[aria-modal="true"] ~ * {
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+/* =============================================================================
+   Contrast Helpers
+   ============================================================================= */
+
+.high-contrast-text {
+  color: #000000;
+  background: #ffffff;
+  padding: 2px 4px;
+}
+
+.high-contrast-border {
+  border: 2px solid #000000 !important;
+}
+
+/* =============================================================================
+   Responsive Breakpoints for Accessibility
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  /* Larger touch targets on mobile */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

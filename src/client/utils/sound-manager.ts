@@ -139,8 +139,6 @@ class SoundManager {
    * Error sound (harsh beep)
    */
   private playError() {
-    const ctx = this.audioContext!;
-
     for (let i = 0; i < 3; i++) {
       setTimeout(() => {
         this.playBeep(200, 0.1, 'sawtooth', 0.4);
@@ -211,8 +209,6 @@ class SoundManager {
    * System startup sound (Amiga-style)
    */
   private playStartup() {
-    const ctx = this.audioContext!;
-
     // First tone
     setTimeout(() => this.playBeep(440, 0.15, 'sine', 0.3), 0);
     // Second tone

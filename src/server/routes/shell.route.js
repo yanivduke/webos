@@ -137,6 +137,66 @@ router.post('/execute', async (req, res) => {
           output = getAboutText();
           break;
 
+        case 'cp':
+        case 'copy':
+          if (args.length < 2) {
+            error = 'cp: missing operands';
+          } else {
+            output = await executeCP(activePath, args[0], args[1]);
+          }
+          break;
+
+        case 'mv':
+        case 'move':
+        case 'rename':
+          if (args.length < 2) {
+            error = 'mv: missing operands';
+          } else {
+            output = await executeMV(activePath, args[0], args[1]);
+          }
+          break;
+
+        case 'grep':
+        case 'search':
+          if (args.length < 2) {
+            error = 'grep: missing operands';
+          } else {
+            output = await executeGREP(activePath, args[0], args[1]);
+          }
+          break;
+
+        case 'find':
+          if (args.length < 1) {
+            error = 'find: missing operand';
+          } else {
+            output = await executeFIND(activePath, args[0]);
+          }
+          break;
+
+        case 'df':
+          output = await executeDF();
+          break;
+
+        case 'du':
+          output = await executeDU(activePath, args[0]);
+          break;
+
+        case 'env':
+          output = getEnvironment();
+          break;
+
+        case 'ps':
+          output = getProcesses();
+          break;
+
+        case 'touch':
+          if (!args[0]) {
+            error = 'touch: missing operand';
+          } else {
+            output = await executeTOUCH(activePath, args[0]);
+          }
+          break;
+
         default:
           error = `${cmd}: command not found. Type 'help' for available commands.`;
       }
@@ -363,5 +423,373 @@ function getAboutText() {
 ╚═══════════════════════════════════════════╝
 `;
 }
+
+// Execute CP (copy) command
+async function executeCP(currentPath, source, dest) {
+  const sourcePath = combinePaths(currentPath, source);
+  const fullSourcePath = getFullPath(sourcePath);
+
+  // Determine destination path
+  let destPath;
+  if (dest.match(/^(df|dh|ram)\d*:?/i)) {
+    destPath = sanitizePath(dest.replace(':', ''));
+  } else {
+    destPath = combinePaths(currentPath, dest);
+  }
+
+  const fullDestPath = getFullPath(destPath);
+
+  try {
+    const stats = await fs.stat(fullSourcePath);
+    const fileName = path.basename(fullSourcePath);
+
+    if (stats.isDirectory()) {
+      // Copy directory recursively
+      const targetDir = path.join(fullDestPath, fileName);
+      await copyDirectory(fullSourcePath, targetDir);
+      return `Directory copied: ${source} -> ${dest}`;
+    } else {
+      // Copy file
+      const targetFile = path.join(fullDestPath, fileName);
+      await fs.copyFile(fullSourcePath, targetFile);
+      return `File copied: ${source} -> ${dest}`;
+    }
+  } catch (error) {
+    throw new Error(`cp: ${error.code === 'ENOENT' ? 'No such file or directory' : error.message}`);
+  }
+}
+
+// Helper: Copy directory recursively
+async function copyDirectory(src, dest) {
+  await fs.mkdir(dest, { recursive: true });
+  const entries = await fs.readdir(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyDirectory(srcPath, destPath);
+    } else {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+}
+
+// Execute MV (move/rename) command
+async function executeMV(currentPath, source, dest) {
+  const sourcePath = combinePaths(currentPath, source);
+  const fullSourcePath = getFullPath(sourcePath);
+
+  // For simple rename (same directory)
+  if (!dest.includes('/') && !dest.match(/^(df|dh|ram)\d*:?/i)) {
+    const destPath = path.join(path.dirname(fullSourcePath), sanitizeName(dest));
+    await fs.rename(fullSourcePath, destPath);
+    return `Renamed: ${source} -> ${dest}`;
+  }
+
+  // For move to different directory
+  let destPath;
+  if (dest.match(/^(df|dh|ram)\d*:?/i)) {
+    destPath = sanitizePath(dest.replace(':', ''));
+  } else {
+    destPath = combinePaths(currentPath, dest);
+  }
+
+  const fullDestPath = getFullPath(destPath);
+  const fileName = path.basename(fullSourcePath);
+  const targetPath = path.join(fullDestPath, fileName);
+
+  await fs.rename(fullSourcePath, targetPath);
+  return `Moved: ${source} -> ${dest}`;
+}
+
+// Execute GREP command
+async function executeGREP(currentPath, pattern, fileName) {
+  const filePath = combinePaths(currentPath, fileName);
+  const fullPath = getFullPath(filePath);
+
+  try {
+    const content = await fs.readFile(fullPath, 'utf-8');
+    const lines = content.split('\n');
+    const regex = new RegExp(pattern, 'i');
+    const matches = lines.filter(line => regex.test(line));
+
+    if (matches.length === 0) {
+      return `grep: no matches found for '${pattern}'`;
+    }
+
+    return matches.join('\n');
+  } catch (error) {
+    throw new Error(`grep: ${fileName}: ${error.code === 'ENOENT' ? 'No such file' : error.message}`);
+  }
+}
+
+// Execute FIND command
+async function executeFIND(currentPath, pattern) {
+  const fullPath = getFullPath(currentPath);
+  const results = [];
+
+  async function searchDirectory(dir, prefix = '') {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const entryPath = path.join(dir, entry.name);
+        const displayPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+
+        if (entry.name.toLowerCase().includes(pattern.toLowerCase())) {
+          results.push(displayPath);
+        }
+
+        if (entry.isDirectory() && results.length < 100) {
+          await searchDirectory(entryPath, displayPath);
+        }
+      }
+    } catch (error) {
+      // Skip directories we can't read
+    }
+  }
+
+  await searchDirectory(fullPath);
+
+  if (results.length === 0) {
+    return `find: no files found matching '${pattern}'`;
+  }
+
+  return results.join('\n');
+}
+
+// Execute DF (disk free) command
+async function executeDF() {
+  const disks = ['df0', 'dh0', 'dh1', 'ram'];
+  let output = 'Filesystem     Size   Used  Avail  Use%\n';
+
+  for (const disk of disks) {
+    try {
+      const diskPath = getFullPath(disk);
+      const stats = await getDiskUsage(diskPath);
+
+      const total = stats.total > 0 ? stats.total : 10 * 1024 * 1024; // Default 10MB
+      const used = stats.used;
+      const avail = total - used;
+      const pct = Math.round((used / total) * 100);
+
+      output += `${disk.padEnd(15)}${formatSize(total).padEnd(7)}${formatSize(used).padEnd(6)}${formatSize(avail).padEnd(7)}${pct}%\n`;
+    } catch (error) {
+      output += `${disk.padEnd(15)}N/A\n`;
+    }
+  }
+
+  return output;
+}
+
+// Helper: Get disk usage
+async function getDiskUsage(diskPath) {
+  let totalSize = 0;
+
+  async function calculateSize(dir) {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const entryPath = path.join(dir, entry.name);
+        try {
+          if (entry.isDirectory()) {
+            await calculateSize(entryPath);
+          } else {
+            const stats = await fs.stat(entryPath);
+            totalSize += stats.size;
+          }
+        } catch (error) {
+          // Skip inaccessible files
+        }
+      }
+    } catch (error) {
+      // Skip inaccessible directories
+    }
+  }
+
+  await calculateSize(diskPath);
+
+  return {
+    total: 100 * 1024 * 1024, // Mock 100MB total
+    used: totalSize
+  };
+}
+
+// Helper: Format size
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}K`;
+  return `${Math.round(bytes / (1024 * 1024))}M`;
+}
+
+// Execute DU (disk usage) command
+async function executeDU(currentPath, target) {
+  const targetPath = target ? combinePaths(currentPath, target) : currentPath;
+  const fullPath = getFullPath(targetPath);
+
+  let totalSize = 0;
+
+  async function calculateSize(dir) {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const entryPath = path.join(dir, entry.name);
+        try {
+          if (entry.isDirectory()) {
+            await calculateSize(entryPath);
+          } else {
+            const stats = await fs.stat(entryPath);
+            totalSize += stats.size;
+          }
+        } catch (error) {
+          // Skip inaccessible files
+        }
+      }
+    } catch (error) {
+      throw new Error(`du: cannot access '${target || currentPath}': ${error.message}`);
+    }
+  }
+
+  await calculateSize(fullPath);
+
+  return `${formatSize(totalSize)}\t${target || currentPath}`;
+}
+
+// Get environment variables
+function getEnvironment() {
+  return `PATH=/dh0/C:/dh0/System/Utilities
+USER=Workbench
+SHELL=AmigaShell
+HOME=dh0
+TERM=amiga
+VERSION=WebOS 2.0`;
+}
+
+// Get processes (mock)
+function getProcesses() {
+  return `  PID  STATUS    START TIME           COMMAND
+    1  running   ${new Date().toLocaleTimeString().padEnd(20)} AmigaShell
+    2  running   ${new Date().toLocaleTimeString().padEnd(20)} Workbench`;
+}
+
+// Execute TOUCH command
+async function executeTOUCH(currentPath, fileName) {
+  const filePath = combinePaths(currentPath, fileName);
+  const fullPath = getFullPath(filePath);
+
+  try {
+    // Check if file exists
+    await fs.access(fullPath);
+    // File exists, update timestamp
+    const now = new Date();
+    await fs.utimes(fullPath, now, now);
+    return `Updated timestamp: ${fileName}`;
+  } catch (error) {
+    // File doesn't exist, create it
+    await fs.writeFile(fullPath, '', 'utf-8');
+    return `Created file: ${fileName}`;
+  }
+}
+
+// POST /api/shell/script - Execute script file
+router.post('/script', async (req, res) => {
+  try {
+    const { path: scriptPath, args = [] } = req.body;
+
+    if (!scriptPath) {
+      return res.status(400).json({
+        error: 'Script path is required',
+        exitCode: 1
+      });
+    }
+
+    const safePath = sanitizePath(scriptPath);
+    const fullPath = getFullPath(safePath);
+
+    // Read script file
+    let content;
+    try {
+      content = await fs.readFile(fullPath, 'utf-8');
+    } catch (error) {
+      return res.status(404).json({
+        error: `Script not found: ${scriptPath}`,
+        exitCode: 1
+      });
+    }
+
+    // Determine script type
+    const ext = path.extname(fullPath).toLowerCase();
+
+    let output = '';
+    let exitCode = 0;
+
+    if (ext === '.sh' || ext === '.bash') {
+      // Execute shell script line by line
+      const lines = content.split('\n').filter(line => line.trim() && !line.trim().startsWith('#'));
+
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        const cmd = parts[0].toLowerCase();
+        const cmdArgs = parts.slice(1);
+
+        let currentPath = 'dh0';
+
+        switch (cmd) {
+          case 'echo':
+            output += cmdArgs.join(' ') + '\n';
+            break;
+          case 'ls':
+            output += await executeLS(currentPath) + '\n';
+            break;
+          case 'pwd':
+            output += currentPath + ':\n';
+            break;
+          case 'date':
+            output += new Date().toString() + '\n';
+            break;
+          default:
+            output += `${cmd}: command not supported in scripts\n`;
+        }
+      }
+    } else if (ext === '.js') {
+      // Limited JavaScript execution
+      const console_output = [];
+      const mockConsole = {
+        log: (...args) => console_output.push(args.join(' ')),
+        error: (...args) => console_output.push('ERROR: ' + args.join(' '))
+      };
+
+      try {
+        const func = new Function('console', 'args', content);
+        func(mockConsole, args);
+        output = console_output.join('\n');
+      } catch (error) {
+        output = `Script error: ${error.message}`;
+        exitCode = 1;
+      }
+    } else {
+      return res.status(400).json({
+        error: `Unsupported script type: ${ext}`,
+        exitCode: 1
+      });
+    }
+
+    res.json({
+      output,
+      exitCode
+    });
+  } catch (error) {
+    console.error('Script execution error:', error);
+    res.status(500).json({
+      error: 'Script execution failed',
+      message: error.message,
+      exitCode: 1
+    });
+  }
+});
 
 module.exports = router;

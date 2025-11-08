@@ -10,6 +10,14 @@ const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
+const pluginsRoutes = require('./routes/plugins.route');
+const networkRoutes = require('./routes/network.route');
+const batchOperationsRoutes = require('./routes/batch-operations.route');
+const metadataRoutes = require('./routes/metadata.route');
+const systemMonitorRoutes = require('./routes/system-monitor.route');
+const calendarRoutes = require('./routes/calendar.route');
+const emailRoutes = require('./routes/email.route');
+const mediaRoutes = require('./routes/media.route');
 const downloadsRoutes = require('./routes/downloads.route');
 const exportRoutes = require('./routes/export.route');
 const devtoolsRoutes = require('./routes/devtools.route');
@@ -39,6 +47,14 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/plugins', pluginsRoutes);
+app.use('/api/network', networkRoutes);
+app.use('/api/batch', batchOperationsRoutes);
+app.use('/api/metadata', metadataRoutes);
+app.use('/api/monitor', systemMonitorRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/media', mediaRoutes);
 app.use('/api/downloads', downloadsRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/devtools', devtoolsRoutes);
@@ -68,6 +84,14 @@ app.get('/', (req, res) => {
       settings: '/api/settings',
       appState: '/api/app-state',
       shell: '/api/shell',
+      plugins: '/api/plugins',
+      network: '/api/network',
+      batch: '/api/batch',
+      metadata: '/api/metadata',
+      monitor: '/api/monitor',
+      calendar: '/api/calendar',
+      email: '/api/email',
+      media: '/api/media'
       export: '/api/export'
     },
     features: [
@@ -92,6 +116,14 @@ app.use((req, res) => {
       '/api/settings',
       '/api/app-state',
       '/api/shell',
+      '/api/plugins',
+      '/api/network',
+      '/api/batch',
+      '/api/metadata',
+      '/api/monitor',
+      '/api/calendar',
+      '/api/email',
+      '/api/media'
       '/api/export'
     ]
   });
@@ -134,6 +166,13 @@ server.listen(PORT, () => {
   console.log('  🔐 Authentication: /api/auth');
   console.log('  ⚙️  Settings: /api/settings');
   console.log('  📊 System Info: /api/system');
+  console.log('  🧩 Plugins: /api/plugins');
+  console.log('  🌐 Network Browser: /api/network');
+  console.log('  📦 Batch Operations: /api/batch');
+  console.log('  🏷️  File Metadata: /api/metadata');
+  console.log('  📊 Resource Monitor: /api/monitor');
+  console.log('  📅 Calendar & Events: /api/calendar');
+  console.log('  🎵 Media Player: /api/media');
   console.log('  📤 Export Files: /api/export');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');

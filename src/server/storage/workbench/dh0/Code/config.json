@@ -1,0 +1,13 @@
+{
+  "name": "webos-sample-project",
+  "version": "1.0.0",
+  "description": "Sample project for WebOS Code Editor",
+  "main": "hello.js",
+  "author": "WebOS",
+  "license": "MIT",
+  "dependencies": {},
+  "scripts": {
+    "start": "node hello.js",
+    "test": "echo \"No tests yet\""
+  }
+}

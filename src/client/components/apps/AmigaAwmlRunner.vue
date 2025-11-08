@@ -24,7 +24,7 @@
       <div v-if="Object.keys(visibleConfig).length" class="config-list">
         <div class="config-heading">Configuration</div>
         <ul>
-          <li v-for="(value, key) in visibleConfig" :key="key">
+          <li v-for="(value, _key) in visibleConfig" :key="key">
             <strong>{{ key }}:</strong> {{ value }}
           </li>
         </ul>
@@ -84,7 +84,6 @@ const visibleConfig = computed(() => {
 });
 
 const filename = computed(() => props.data?.meta?.name || props.data?.filePath || 'AWML Program');
-const configKeys = computed(() => (descriptor.value ? Object.keys(descriptor.value.config) : []));
 
 // Extract app name from file path for legacy mode
 const appName = computed(() => {
@@ -157,7 +156,7 @@ const runWithConfig = async () => {
       await ensureDescriptor();
     }
 
-    if (Object.keys(activeConfig.value).length) {
+    if (Object.keys(activeConfig.value).length && descriptor.value) {
       descriptor.value = {
         ...descriptor.value,
         config: {
@@ -168,6 +167,9 @@ const runWithConfig = async () => {
     }
 
     statusMessage.value = 'Executing…';
+    if (!descriptor.value) {
+      throw new Error('Descriptor not loaded');
+    }
     await executeAwml(descriptor.value, {
       onLog: (message) => {
         logs.value.push(message);

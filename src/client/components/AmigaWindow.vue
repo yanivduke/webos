@@ -3,31 +3,65 @@
     class="amiga-window"
     :style="windowStyle"
     @mousedown="bringToFront"
+    role="dialog"
+    :aria-label="title"
+    :aria-modal="false"
+    tabindex="-1"
+    ref="windowRef"
   >
     <!-- Title Bar with authentic Amiga styling -->
     <div
       class="window-titlebar"
       @mousedown="startDrag"
       @dblclick="toggleMaximize"
+      role="banner"
+      aria-label="Window title bar"
     >
       <div class="title-bar-left">
-        <div class="title-bar-button close-button" @click.stop="close">
-          <div class="close-icon"></div>
-        </div>
-        <div class="title-bar-button depth-button" @click.stop="sendToBack">
-          <div class="depth-icon"></div>
-        </div>
+        <button
+          class="title-bar-button close-button"
+          @click.stop="close"
+          @keydown.enter.stop="close"
+          @keydown.space.stop="close"
+          aria-label="Close window"
+          title="Close (Alt+F4)"
+          data-keyboard-shortcut="Alt+F4"
+        >
+          <div class="close-icon" aria-hidden="true"></div>
+        </button>
+        <button
+          class="title-bar-button depth-button"
+          @click.stop="sendToBack"
+          @keydown.enter.stop="sendToBack"
+          @keydown.space.stop="sendToBack"
+          aria-label="Send to back"
+          title="Send to back"
+        >
+          <div class="depth-icon" aria-hidden="true"></div>
+        </button>
       </div>
-      <div class="window-title">{{ title }}</div>
+      <div class="window-title" id="window-title">{{ title }}</div>
       <div class="title-bar-right">
-        <div class="title-bar-button zoom-button" @click.stop="toggleMaximize">
-          <div class="zoom-icon"></div>
-        </div>
+        <button
+          class="title-bar-button zoom-button"
+          @click.stop="toggleMaximize"
+          @keydown.enter.stop="toggleMaximize"
+          @keydown.space.stop="toggleMaximize"
+          :aria-label="isMaximized ? 'Restore window' : 'Maximize window'"
+          :title="isMaximized ? 'Restore' : 'Maximize'"
+          :aria-pressed="isMaximized"
+        >
+          <div class="zoom-icon" aria-hidden="true"></div>
+        </button>
       </div>
     </div>
 
     <!-- Window Content Area -->
-    <div class="window-content">
+    <div
+      class="window-content"
+      role="main"
+      :aria-labelledby="'window-title'"
+    >
       <slot></slot>
     </div>
 
@@ -35,12 +69,19 @@
     <div
       class="resize-handle"
       @mousedown.stop="startResize"
+      @keydown="handleResizeKeyboard"
+      role="separator"
+      aria-label="Resize window"
+      tabindex="0"
+      title="Resize (Arrow keys)"
     ></div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { screenReader } from '../utils/screen-reader';
+import { useEscapeKey } from '../composables/useKeyboardNav';
 
 interface Props {
   title?: string;
@@ -63,6 +104,9 @@ const emit = defineEmits<{
   minimize: [];
   maximize: [];
 }>();
+
+// Window reference
+const windowRef = ref<HTMLElement | null>(null);
 
 // Window state
 const windowX = ref(props.x);
@@ -163,6 +207,7 @@ const stopResize = () => {
 // Window actions
 const close = () => {
   emit('close');
+  screenReader.announceAction('Close', props.title);
 };
 
 const toggleMaximize = () => {
@@ -173,6 +218,7 @@ const toggleMaximize = () => {
     windowWidth.value = savedWidth;
     windowHeight.value = savedHeight;
     isMaximized.value = false;
+    screenReader.announceAction('Window restored', props.title);
   } else {
     // Maximize
     savedX = windowX.value;
@@ -185,6 +231,7 @@ const toggleMaximize = () => {
     windowWidth.value = window.innerWidth - 140;
     windowHeight.value = window.innerHeight - 50;
     isMaximized.value = true;
+    screenReader.announceAction('Window maximized', props.title);
   }
 };
 
@@ -194,14 +241,75 @@ const bringToFront = () => {
 
 const sendToBack = () => {
   zIndex.value = 1;
+  screenReader.announceAction('Window sent to back', props.title);
 };
 
-// Cleanup
-onUnmounted(() => {
-  document.removeEventListener('mousemove', onDrag);
-  document.removeEventListener('mouseup', stopDrag);
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', stopResize);
+// Keyboard resize function
+const handleResizeKeyboard = (e: KeyboardEvent) => {
+  const step = e.shiftKey ? 10 : 1;
+
+  switch (e.key) {
+    case 'ArrowRight':
+      e.preventDefault();
+      windowWidth.value += step;
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      windowWidth.value = Math.max(200, windowWidth.value - step);
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      windowHeight.value += step;
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      windowHeight.value = Math.max(150, windowHeight.value - step);
+      break;
+  }
+};
+
+// Escape key to close
+useEscapeKey(() => {
+  if (windowRef.value && document.activeElement && windowRef.value.contains(document.activeElement)) {
+    close();
+  }
+});
+
+// Lifecycle
+onMounted(() => {
+  // Announce window opened
+  screenReader.announceWindowOpened(props.title);
+
+  // Set up keyboard shortcuts
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (windowRef.value && !windowRef.value.contains(document.activeElement)) return;
+
+    // Alt+F4 to close
+    if (e.altKey && e.key === 'F4') {
+      e.preventDefault();
+      close();
+    }
+
+    // F11 to maximize/restore
+    if (e.key === 'F11') {
+      e.preventDefault();
+      toggleMaximize();
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Cleanup
+  onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('mousemove', onResize);
+    document.removeEventListener('mouseup', stopResize);
+
+    // Announce window closed
+    screenReader.announceWindowClosed(props.title);
+  });
 });
 </script>
 
