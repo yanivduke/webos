@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "webos",
+  "buildCommand": "cd src/client && npm install && npm run build",
+  "outputDirectory": "src/client/dist",
+  "installCommand": "npm install && cd src/server && npm install",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/server"
+    }
+  ],
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

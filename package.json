@@ -1,0 +1,29 @@
+{
+  "name": "webos-monorepo",
+  "version": "2.0.0",
+  "description": "Amiga Workbench-style Operating System Interface for the Web",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && cd src/client && npm install && cd ../server && npm install",
+    "dev": "npm run dev:server & npm run dev:client",
+    "dev:client": "cd src/client && npm run dev",
+    "dev:server": "cd src/server && npm run dev",
+    "build": "cd src/client && npm run build",
+    "vercel-build": "cd src/client && npm install && npm run build"
+  },
+  "keywords": [
+    "amiga",
+    "workbench",
+    "retro",
+    "webos",
+    "vue3",
+    "webassembly",
+    "nostalgia"
+  ],
+  "author": "WebOS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yanivduke/webos.git"
+  }
+}

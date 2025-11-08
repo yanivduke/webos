@@ -1,0 +1,37 @@
+# Vercel ignore file - exclude from deployment
+
+# Node modules (will be installed by Vercel)
+node_modules/
+src/client/node_modules/
+src/server/node_modules/
+
+# Build artifacts
+src/client/dist/
+dist/
+
+# Development files
+*.log
+npm-debug.log*
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional - comment out if you want docs deployed)
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Server storage (not needed for serverless deployment)
+src/server/storage/
+
+# Environment files
+.env
+.env.local
+.env.*.local
