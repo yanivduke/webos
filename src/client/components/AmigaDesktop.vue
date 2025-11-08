@@ -129,6 +129,10 @@
       <div class="footer-right">
         <span class="drive-activity" :class="{ active: driveActivity }">●</span>
         <span>{{ selectedCount }} items selected</span>
+        <span class="footer-separator">|</span>
+        <a href="https://buymeacoffee.com/YOUR_USERNAME" target="_blank" class="support-link" title="Support WebOS Development">
+          ☕ Support
+        </a>
       </div>
     </div>
   </div>
@@ -957,6 +961,23 @@ const closeWindow = (windowId: string) => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+.footer-separator {
+  color: #808080;
+  margin: 0 4px;
+}
+
+.support-link {
+  color: #0055aa;
+  text-decoration: none;
+  font-size: 9px;
+  transition: color 0.1s;
+}
+
+.support-link:hover {
+  color: #ffaa00;
+  text-decoration: underline;
 }
 
 /* Retro scanline effect (optional) */

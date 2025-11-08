@@ -14,6 +14,30 @@ Core Features:
 
 WebOS is designed to serve as a comprehensive platform for developers and end-users alike, providing a familiar operating system experience through a web interface accessible from any modern browser.
 
+## Support This Project
+
+WebOS is a labor of love bringing authentic 1980s-90s Amiga computing nostalgia to the modern web. If you enjoy this project and want to help keep development going, consider supporting:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support%20WebOS-orange?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/YOUR_USERNAME)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20WebOS-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/YOUR_USERNAME)
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=for-the-badge&logo=github-sponsors)](https://github.com/sponsors/YOUR_USERNAME)
+[![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?style=for-the-badge&logo=patreon)](https://patreon.com/YOUR_USERNAME)
+
+**Your support helps:**
+- Keep servers running for live demos
+- Fund development of new features (AWML SDK expansion, more Amiga apps, multiplayer features)
+- Pay for retro computing research and testing on real Amiga hardware
+- Create tutorials and documentation for the community
+- Maintain and improve the codebase
+
+**Alternative ways to support:**
+- Star this repository
+- Share WebOS on social media and retro computing communities
+- Contribute code, bug reports, or documentation
+- Create AWML applications and share them with the community
+
+Every coffee fuels another pixel-perfect window border!
+
 ## Architecture
 
 ### Security Best Practices Overview
