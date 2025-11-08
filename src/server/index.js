@@ -10,6 +10,7 @@ const settingsRoutes = require('./routes/settings.route');
 const appStateRoutes = require('./routes/app-state.route');
 const shellRoutes = require('./routes/shell.route');
 const authRoutes = require('./routes/auth.route');
+const downloadsRoutes = require('./routes/downloads.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -35,6 +36,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/app-state', appStateRoutes);
 app.use('/api/shell', shellRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/downloads', downloadsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
