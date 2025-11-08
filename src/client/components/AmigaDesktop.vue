@@ -182,6 +182,10 @@ import NPMManager from './devtools/NPMManager.vue';
 import EnvironmentEditor from './devtools/EnvironmentEditor.vue';
 import LogViewer from './devtools/LogViewer.vue';
 import CodeSnippetsManager from './devtools/CodeSnippetsManager.vue';
+import TelnetClient from './nettools/TelnetClient.vue';
+import FTPClient from './nettools/FTPClient.vue';
+import GopherClient from './nettools/GopherClient.vue';
+import NetworkDiagnostic from './nettools/NetworkDiagnostic.vue';
 
 interface Disk {
   id: string;
@@ -211,6 +215,8 @@ const menus = ref<Menu[]>([
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
   { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Games', 'Preferences'] },
+  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Network', items: ['Telnet Client', 'FTP Client', 'Gopher Browser', 'Network Diagnostic'] },
   { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
 
@@ -310,6 +316,9 @@ const handleMenuAction = (menuName: string, item: string) => {
     case 'Tools':
       handleToolsAction(item);
       break;
+    case 'Network':
+      handleNetworkAction(item);
+      break;
     case 'Dev Tools':
       handleDevToolsAction(item);
       break;
@@ -392,6 +401,10 @@ const handleIconsAction = (action: string) => {
 };
 
 const handleToolsAction = (action: string) => {
+  handleOpenTool(action);
+};
+
+const handleNetworkAction = (action: string) => {
   handleOpenTool(action);
 };
 
@@ -725,6 +738,37 @@ const toolConfigs = {
     component: AmigaGames,
     baseX: 180,
     baseY: 160
+  'Telnet Client': {
+    title: 'Telnet Client',
+    width: 720,
+    height: 500,
+    component: TelnetClient,
+    baseX: 160,
+    baseY: 100
+  },
+  'FTP Client': {
+    title: 'FTP Client',
+    width: 850,
+    height: 600,
+    component: FTPClient,
+    baseX: 140,
+    baseY: 90
+  },
+  'Gopher Browser': {
+    title: 'Gopher Browser',
+    width: 750,
+    height: 550,
+    component: GopherClient,
+    baseX: 150,
+    baseY: 95
+  },
+  'Network Diagnostic': {
+    title: 'Network Diagnostic',
+    width: 800,
+    height: 600,
+    component: NetworkDiagnostic,
+    baseX: 145,
+    baseY: 85
   }
 };
 
