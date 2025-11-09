@@ -151,34 +151,36 @@ try {
   console.warn('WebSocket server initialization failed (optional feature):', error.message);
 }
 
-// Start server
-server.listen(PORT, () => {
-  console.log('');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('  🖥️  WebOS Server v2.0.0 - Amiga Workbench Style');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log(`  Server running on: http://localhost:${PORT}`);
-  console.log(`  WebSocket: ws://localhost:${PORT}/ws ${wsServer ? '✓' : '✗'}`);
-  console.log(`  Health check: http://localhost:${PORT}/api/health`);
-  console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('  ');
-  console.log('  📁 File Operations: /api/files');
-  console.log('  💾 App State: /api/app-state');
-  console.log('  💻 Shell Commands: /api/shell');
-  console.log('  🔐 Authentication: /api/auth');
-  console.log('  ⚙️  Settings: /api/settings');
-  console.log('  📊 System Info: /api/system');
-  console.log('  🧩 Plugins: /api/plugins');
-  console.log('  🌐 Network Browser: /api/network');
-  console.log('  📦 Batch Operations: /api/batch');
-  console.log('  🏷️  File Metadata: /api/metadata');
-  console.log('  📊 Resource Monitor: /api/monitor');
-  console.log('  📅 Calendar & Events: /api/calendar');
-  console.log('  🎵 Media Player: /api/media');
-  console.log('  📤 Export Files: /api/export');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('');
-});
+// Start server only if this file is run directly (not imported by tests)
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('  🖥️  WebOS Server v2.0.0 - Amiga Workbench Style');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(`  Server running on: http://localhost:${PORT}`);
+    console.log(`  WebSocket: ws://localhost:${PORT}/ws ${wsServer ? '✓' : '✗'}`);
+    console.log(`  Health check: http://localhost:${PORT}/api/health`);
+    console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('  ');
+    console.log('  📁 File Operations: /api/files');
+    console.log('  💾 App State: /api/app-state');
+    console.log('  💻 Shell Commands: /api/shell');
+    console.log('  🔐 Authentication: /api/auth');
+    console.log('  ⚙️  Settings: /api/settings');
+    console.log('  📊 System Info: /api/system');
+    console.log('  🧩 Plugins: /api/plugins');
+    console.log('  🌐 Network Browser: /api/network');
+    console.log('  📦 Batch Operations: /api/batch');
+    console.log('  🏷️  File Metadata: /api/metadata');
+    console.log('  📊 Resource Monitor: /api/monitor');
+    console.log('  📅 Calendar & Events: /api/calendar');
+    console.log('  🎵 Media Player: /api/media');
+    console.log('  📤 Export Files: /api/export');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

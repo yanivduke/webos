@@ -1,7 +1,40 @@
 const request = require('supertest');
 const app = require('../index');
+const fs = require('fs').promises;
+const path = require('path');
+
+// Storage path for test cleanup
+const STORAGE_BASE = path.join(__dirname, '../storage/workbench');
 
 describe('File Operations API', () => {
+  // Clean up test files before each test suite
+  beforeAll(async () => {
+    const ramPath = path.join(STORAGE_BASE, 'ram');
+    try {
+      const files = await fs.readdir(ramPath);
+      for (const file of files) {
+        await fs.rm(path.join(ramPath, file), { recursive: true, force: true });
+      }
+    } catch (error) {
+      // Directory might not exist or be empty
+    }
+  });
+
+  afterEach(async () => {
+    // Clean up test files after each test
+    const ramPath = path.join(STORAGE_BASE, 'ram');
+    try {
+      const files = await fs.readdir(ramPath);
+      for (const file of files) {
+        if (file.startsWith('test-') || file.startsWith('delete-')) {
+          await fs.rm(path.join(ramPath, file), { recursive: true, force: true });
+        }
+      }
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  });
+
   describe('GET /api/files/list', () => {
     it('should return files for df0 disk', async () => {
       const res = await request(app).get('/api/files/list?path=df0');

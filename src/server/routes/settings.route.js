@@ -36,6 +36,27 @@ router.get('/', (req, res) => {
   res.json(settings);
 });
 
+// POST /api/settings - Update settings (partial update)
+router.post('/', (req, res) => {
+  const updates = req.body;
+
+  // Merge updates into existing settings
+  for (const [category, categorySettings] of Object.entries(updates)) {
+    if (settings[category]) {
+      settings[category] = {
+        ...settings[category],
+        ...categorySettings
+      };
+    }
+  }
+
+  res.json({
+    success: true,
+    message: 'Settings updated successfully',
+    settings: settings
+  });
+});
+
 // GET /api/settings/:category - Get settings for a specific category
 router.get('/:category', (req, res) => {
   const { category } = req.params;

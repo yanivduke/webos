@@ -7,8 +7,8 @@ router.get('/status', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: {
-      chipMem: '512K',
-      fastMem: '512K',
+      chip: '512K',
+      fast: '512K',
       total: process.memoryUsage().heapTotal,
       used: process.memoryUsage().heapUsed,
       free: process.memoryUsage().heapTotal - process.memoryUsage().heapUsed
@@ -19,10 +19,10 @@ router.get('/status', (req, res) => {
       usage: Math.random() * 100
     },
     disks: [
-      { id: 'df0', name: 'Workbench3.1', type: 'floppy', capacity: '880K', used: '720K', free: '160K' },
-      { id: 'dh0', name: 'System', type: 'hard', capacity: '40MB', used: '28MB', free: '12MB' },
-      { id: 'dh1', name: 'Work', type: 'hard', capacity: '100MB', used: '45MB', free: '55MB' },
-      { id: 'ram', name: 'RAM Disk', type: 'ram', capacity: '2MB', used: '512K', free: '1.5MB' }
+      { id: 'df0', name: 'Workbench3.1', type: 'floppy', capacity: '880K', used: '720K', available: '160K' },
+      { id: 'dh0', name: 'System', type: 'hard', capacity: '40MB', used: '28MB', available: '12MB' },
+      { id: 'dh1', name: 'Work', type: 'hard', capacity: '100MB', used: '45MB', available: '55MB' },
+      { id: 'ram', name: 'RAM Disk', type: 'ram', capacity: '2MB', used: '512K', available: '1.5MB' }
     ],
     screen: {
       width: 640,

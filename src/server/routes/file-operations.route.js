@@ -184,6 +184,7 @@ router.post('/create', async (req, res) => {
     const stats = await getFileStats(fullPath);
 
     res.status(201).json({
+      success: true,
       message: `${type} created successfully`,
       item: {
         id: `${type === 'folder' ? 'd' : 'f'}_${safeName}`,
@@ -292,7 +293,7 @@ router.post('/write', async (req, res) => {
 // DELETE /api/files/delete - Delete a file or folder
 router.delete('/delete', async (req, res) => {
   try {
-    const { path: diskPath } = req.query;
+    const { path: diskPath } = req.body;
 
     if (!diskPath) {
       return res.status(400).json({
@@ -325,6 +326,7 @@ router.delete('/delete', async (req, res) => {
     }
 
     res.json({
+      success: true,
       message: 'Item moved to trash',
       name: fileName
     });
