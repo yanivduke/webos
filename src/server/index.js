@@ -21,7 +21,6 @@ const mediaRoutes = require('./routes/media.route');
 const downloadsRoutes = require('./routes/downloads.route');
 const exportRoutes = require('./routes/export.route');
 const devtoolsRoutes = require('./routes/devtools.route');
-const networkRoutes = require('./routes/network.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -58,7 +57,6 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/downloads', downloadsRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/devtools', devtoolsRoutes);
-app.use('/api/network', networkRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -91,8 +89,10 @@ app.get('/', (req, res) => {
       monitor: '/api/monitor',
       calendar: '/api/calendar',
       email: '/api/email',
-      media: '/api/media'
-      export: '/api/export'
+      media: '/api/media',
+      export: '/api/export',
+      downloads: '/api/downloads',
+      devtools: '/api/devtools'
     },
     features: [
       'Real file system with persistence',
@@ -123,8 +123,10 @@ app.use((req, res) => {
       '/api/monitor',
       '/api/calendar',
       '/api/email',
-      '/api/media'
-      '/api/export'
+      '/api/media',
+      '/api/export',
+      '/api/downloads',
+      '/api/devtools'
     ]
   });
 });

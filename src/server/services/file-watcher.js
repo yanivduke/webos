@@ -26,6 +26,12 @@ class FileWatcher extends EventEmitter {
     }
 
     try {
+      // Check if directory exists before trying to watch
+      if (!fsSync.existsSync(fullPath)) {
+        console.warn(`Directory does not exist, skipping watch: ${fullPath}`);
+        return;
+      }
+
       const watcher = fsSync.watch(fullPath, { recursive: true }, (eventType, filename) => {
         if (!filename) return;
 
