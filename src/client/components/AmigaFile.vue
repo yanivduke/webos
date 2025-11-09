@@ -17,7 +17,7 @@
     <!-- Open Dialog -->
     <v-dialog v-model="showOpenDialog" max-width="400">
       <v-card>
-        <v-card-title>Open File</v-card>
+        <v-card-title>Open File</v-card-title>
         <v-card-text>
           <p>Opening {{ name }}...</p>
         </v-card-text>
@@ -32,7 +32,7 @@
     <!-- Rename Dialog -->
     <v-dialog v-model="showRenameDialog" max-width="400">
       <v-card>
-        <v-card-title>Renaming File</v-card>
+        <v-card-title>Renaming File</v-card-title>
         <v-card-text>
           <v-text-field v-model="newName" label="New Name"></v-text-field>
         </v-card-text>
@@ -47,7 +47,7 @@
     <!-- Delete Dialog -->
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
-        <v-card-title>Confirm Delete</v-card>
+        <v-card-title>Confirm Delete</v-card-title>
         <v-card-text>
           <p>Are you sure you want to delete this file?</p>
         </v-card-text>
