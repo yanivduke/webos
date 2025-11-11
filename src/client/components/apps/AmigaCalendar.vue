@@ -260,11 +260,20 @@
       </div>
     </div>
 
-    <!-- Event Editor Dialog (will be created separately) -->
-    <!-- <AmigaEventEditor ... /> -->
+    <!-- Event Editor Dialog -->
+    <AmigaEventEditor
+      v-if="showEventEditor"
+      :event="editingEvent"
+      @save="handleEventSave"
+      @close="showEventEditor = false"
+    />
 
-    <!-- Calendar Settings Dialog (will be created separately) -->
-    <!-- <AmigaCalendarSettings ... /> -->
+    <!-- Calendar Settings Dialog -->
+    <AmigaCalendarSettings
+      v-if="showSettingsDialog"
+      @save="handleSettingsSave"
+      @close="showSettingsDialog = false"
+    />
   </div>
 </template>
 
@@ -272,6 +281,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { calendarManager, type CalendarEvent, type Calendar } from '../../utils/calendar-manager';
 import { eventRemindersManager } from '../../utils/event-reminders';
+import AmigaEventEditor from '../dialogs/AmigaEventEditor.vue';
+import AmigaCalendarSettings from '../dialogs/AmigaCalendarSettings.vue';
 
 // ============================================================================
 // State
@@ -585,7 +596,19 @@ function createEventAt(date: Date, hour: number) {
   const end = new Date(start);
   end.setHours(hour + 1, 0, 0, 0);
 
-  // TODO: Open editor with pre-filled start/end times
+  // Create a partial event with pre-filled times
+  editingEvent.value = {
+    id: '',
+    title: '',
+    description: '',
+    startTime: start,
+    endTime: end,
+    calendarId: calendars.value[0]?.id || 'default',
+    allDay: false,
+    color: calendars.value[0]?.color || '#0055aa'
+  } as CalendarEvent;
+
+  showEventEditor.value = true;
   console.log('Create event at', start);
 }
 
@@ -605,6 +628,32 @@ function showSettings() {
 function handleSearch() {
   // TODO: Implement search functionality
   console.log('Search:', searchQuery.value);
+}
+
+function handleEventSave(eventData: Partial<CalendarEvent>) {
+  if (editingEvent.value) {
+    // Update existing event
+    calendarManager.updateEvent(editingEvent.value.id, eventData);
+    console.log('Event updated:', editingEvent.value.id);
+  } else {
+    // Create new event
+    calendarManager.createEvent({
+      ...eventData,
+      id: `event-${Date.now()}`,
+      calendarId: calendars.value[0]?.id || 'default',
+    } as CalendarEvent);
+    console.log('Event created');
+  }
+  showEventEditor.value = false;
+  editingEvent.value = null;
+  loadEvents();
+}
+
+function handleSettingsSave(settings: any) {
+  // Save calendar settings
+  console.log('Settings saved:', settings);
+  showSettingsDialog.value = false;
+  loadCalendars();
 }
 
 // ============================================================================
