@@ -167,7 +167,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 100002;
   animation: fadeIn 0.1s;
 }
 
