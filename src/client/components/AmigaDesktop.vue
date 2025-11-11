@@ -95,6 +95,48 @@
           </div>
           <div class="icon-label">Trash</div>
         </div>
+
+        <!-- Linux Terminal Icon -->
+        <div class="disk-icon" @dblclick="handleOpenTool('Linux Terminal')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="terminal-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#000" stroke="#00ff00" stroke-width="2"/>
+              <text x="14" y="28" fill="#00ff00" font-size="10" font-family="monospace">$</text>
+              <rect x="20" y="20" width="8" height="2" fill="#00ff00"/>
+              <rect x="14" y="34" width="16" height="2" fill="#00ff00"/>
+              <rect x="14" y="40" width="24" height="2" fill="#00ff00"/>
+            </svg>
+          </div>
+          <div class="icon-label">Linux</div>
+        </div>
+
+        <!-- C64 Terminal Icon -->
+        <div class="disk-icon" @dblclick="handleOpenTool('C64 Terminal')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="terminal-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#3539BC" stroke="#A5A5FF" stroke-width="2"/>
+              <text x="14" y="26" fill="#A5A5FF" font-size="8" font-family="monospace">READY.</text>
+              <rect x="14" y="30" width="6" height="6" fill="#A5A5FF"/>
+              <rect x="14" y="38" width="20" height="2" fill="#A5A5FF"/>
+              <rect x="14" y="42" width="16" height="2" fill="#A5A5FF"/>
+            </svg>
+          </div>
+          <div class="icon-label">C64</div>
+        </div>
+
+        <!-- DOS Terminal Icon -->
+        <div class="disk-icon" @dblclick="handleOpenTool('DOS Terminal')">
+          <div class="icon-image">
+            <svg viewBox="0 0 64 64" class="terminal-svg">
+              <rect x="8" y="12" width="48" height="40" fill="#000" stroke="#AAA" stroke-width="2"/>
+              <text x="14" y="26" fill="#FFF" font-size="8" font-family="monospace">C:\></text>
+              <rect x="30" y="20" width="6" height="6" fill="#FFF"/>
+              <rect x="14" y="34" width="24" height="2" fill="#AAA"/>
+              <rect x="14" y="40" width="18" height="2" fill="#AAA"/>
+            </svg>
+          </div>
+          <div class="icon-label">DOS</div>
+        </div>
       </div>
 
       <!-- Windows Container -->
