@@ -280,8 +280,6 @@
             @delete="handleSmartFolderDelete"
           />
         </div>
-        </div>
-        </div>
       </div>
 
       <!-- Windows Container -->
