@@ -1,0 +1,19 @@
+{
+  "name": "Blank App Template",
+  "description": "A minimal blank application template to get you started",
+  "icon": "disk",
+  "category": "starter",
+  "manifest": {
+    "id": "blank-app",
+    "name": "My App",
+    "version": "1.0.0",
+    "author": "Your Name",
+    "description": "A new WebOS application",
+    "icon": "disk",
+    "entry": "index.js",
+    "permissions": [
+      "storage"
+    ]
+  },
+  "code": "/**\n * WebOS Application\n * \n * This is a blank application template.\n * Customize this code to build your app.\n */\n\nclass MyApp {\n  constructor() {\n    this.name = 'My App';\n    this.version = '1.0.0';\n  }\n\n  /**\n   * Initialize the application\n   */\n  init() {\n    console.log(`${this.name} v${this.version} initialized`);\n    this.render();\n  }\n\n  /**\n   * Render the application UI\n   */\n  render() {\n    return {\n      type: 'window',\n      title: this.name,\n      content: {\n        type: 'div',\n        children: [\n          {\n            type: 'h1',\n            text: 'Welcome to WebOS!'\n          },\n          {\n            type: 'p',\n            text: 'Start building your application here.'\n          }\n        ]\n      }\n    };\n  }\n\n  /**\n   * Clean up when app is closed\n   */\n  destroy() {\n    console.log(`${this.name} destroyed`);\n  }\n}\n\n// Export the app\nif (typeof module !== 'undefined' && module.exports) {\n  module.exports = MyApp;\n}\n"
+}

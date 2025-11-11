@@ -1,0 +1,11 @@
+{
+  "id": "test-app",
+  "name": "Test Application",
+  "version": "1.0.0",
+  "author": "WebOS Team",
+  "description": "A test application",
+  "icon": "disk",
+  "permissions": [
+    "storage"
+  ]
+}

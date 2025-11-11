@@ -21,6 +21,7 @@ const mediaRoutes = require('./routes/media.route');
 const downloadsRoutes = require('./routes/downloads.route');
 const exportRoutes = require('./routes/export.route');
 const devtoolsRoutes = require('./routes/devtools.route');
+const sdkRoutes = require('./routes/sdk.route');
 
 // Import services
 const WebSocketServer = require('./services/websocket-server');
@@ -57,6 +58,7 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/downloads', downloadsRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/devtools', devtoolsRoutes);
+app.use('/api/sdk', sdkRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -92,7 +94,8 @@ app.get('/', (req, res) => {
       media: '/api/media',
       export: '/api/export',
       downloads: '/api/downloads',
-      devtools: '/api/devtools'
+      devtools: '/api/devtools',
+      sdk: '/api/sdk'
     },
     features: [
       'Real file system with persistence',
@@ -126,7 +129,8 @@ app.use((req, res) => {
       '/api/media',
       '/api/export',
       '/api/downloads',
-      '/api/devtools'
+      '/api/devtools',
+      '/api/sdk'
     ]
   });
 });
@@ -176,6 +180,7 @@ server.listen(PORT, () => {
   console.log('  📅 Calendar & Events: /api/calendar');
   console.log('  🎵 Media Player: /api/media');
   console.log('  📤 Export Files: /api/export');
+  console.log('  🛠️  SDK & App Management: /api/sdk');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 });

@@ -105,6 +105,8 @@
       @close="quickLookVisible = false"
       @openFile="handleQuickLookOpen"
       @extract="handleQuickLookExtract"
+    />
+
     <!-- Export Dialog -->
     <AmigaExportDialog
       :visible="showExportDialog"
@@ -433,7 +435,7 @@ const handleContextAction = async (action: string) => {
       await compressToZip();
       break;
     case 'export':
-      openExportDialog(item);
+      if (item) openExportDialog(item);
       break;
   }
 
@@ -1042,6 +1044,8 @@ const handleFolderDrop = async (event: DragEvent) => {
     console.error('Failed to add files to upload queue:', error);
     alert('Failed to start upload');
   }
+};
+
 const openExportDialog = (item: FolderItem) => {
   exportFileName.value = item.name;
   exportFilePath.value = item.path || `${currentPath.value}/${item.name}`;
