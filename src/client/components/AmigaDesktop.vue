@@ -141,6 +141,7 @@
             </svg>
           </div>
           <div class="icon-label">Search  </div>
+        </div>
         <!-- System Monitor -->
         <div class="disk-icon sysmon" @dblclick="openSystemMonitor">
           <div class="icon-image">
@@ -187,6 +188,7 @@
             </svg>
           </div>
           <div class="icon-label">Capture</div>
+        </div>
         <!-- Archiver -->
         <div class="disk-icon archiver" @dblclick="openArchiver">
           <div class="icon-image">
@@ -800,6 +802,8 @@ const handleGlobalKeyDown = async (event: KeyboardEvent) => {
     event.preventDefault();
     await quickScreenshot('area');
   }
+};
+
 const handleNetworkAction = (action: string) => {
   handleOpenTool(action);
 };
@@ -1311,6 +1315,7 @@ const toolConfigs = {
     component: AmigaGames,
     baseX: 180,
     baseY: 160,
+  },
   'Telnet Client': {
     title: 'Telnet Client',
     width: 720,
