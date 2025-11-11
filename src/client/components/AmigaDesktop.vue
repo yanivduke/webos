@@ -305,6 +305,7 @@
             @editFile="handleEditFile"
             @openFolder="handleOpenFolder"
             @launchGame="handleLaunchGame"
+            @runApp="handleRunApp"
           />
         </AmigaWindow>
       </div>
@@ -417,6 +418,9 @@ const NPMManager = defineAsyncComponent(() => import('./devtools/NPMManager.vue'
 const EnvironmentEditor = defineAsyncComponent(() => import('./devtools/EnvironmentEditor.vue'));
 const LogViewer = defineAsyncComponent(() => import('./devtools/LogViewer.vue'));
 const CodeSnippetsManager = defineAsyncComponent(() => import('./devtools/CodeSnippetsManager.vue'));
+const AppBuilder = defineAsyncComponent(() => import('./devtools/AppBuilder.vue'));
+const AppInspector = defineAsyncComponent(() => import('./devtools/AppInspector.vue'));
+const AppGallery = defineAsyncComponent(() => import('./devtools/AppGallery.vue'));
 const TelnetClient = defineAsyncComponent(() => import('./nettools/TelnetClient.vue'));
 const FTPClient = defineAsyncComponent(() => import('./nettools/FTPClient.vue'));
 const GopherClient = defineAsyncComponent(() => import('./nettools/GopherClient.vue'));
@@ -451,7 +455,7 @@ const menus = ref<Menu[]>([
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
   { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'Games', 'Preferences'] },
   { name: 'Network', items: ['Telnet Client', 'FTP Client', 'Gopher Browser', 'Network Diagnostic'] },
-  { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
+  { name: 'Dev Tools', items: ['App Builder', 'App Inspector', 'App Gallery', '---', 'Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
 
 // System info
@@ -802,6 +806,8 @@ const handleGlobalKeyDown = async (event: KeyboardEvent) => {
     event.preventDefault();
     await quickScreenshot('area');
   }
+};
+
 const handleNetworkAction = (action: string) => {
   handleOpenTool(action);
 };
@@ -930,6 +936,29 @@ const handleLaunchGame = (game: any) => {
     }
   };
   openWindows.value.push(newWindow);
+};
+
+const handleRunApp = (app: any) => {
+  console.log('Running app from gallery:', app);
+  // Open the AWML app in a new window using AWML Runner
+  const config = {
+    title: app.name,
+    width: app.width || 640,
+    height: app.height || 480,
+    component: AmigaAwmlRunner,
+    baseX: 160,
+    baseY: 120,
+  };
+  const data = {
+    filePath: app.filePath,
+    meta: {
+      name: app.name,
+      type: 'awml',
+      description: app.description,
+      icon: app.icon
+    }
+  };
+  addWindow(createWindow(config, data));
 };
 
 const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: string]: any }) => {
@@ -1306,6 +1335,30 @@ const toolConfigs = {
     baseX: 125,
     baseY: 75,
   },
+  'App Builder': {
+    title: 'App Builder',
+    width: 800,
+    height: 650,
+    component: AppBuilder,
+    baseX: 100,
+    baseY: 60,
+  },
+  'App Inspector': {
+    title: 'App Inspector',
+    width: 850,
+    height: 600,
+    component: AppInspector,
+    baseX: 120,
+    baseY: 70,
+  },
+  'App Gallery': {
+    title: 'App Gallery',
+    width: 800,
+    height: 600,
+    component: AppGallery,
+    baseX: 140,
+    baseY: 80,
+  },
   'Games': {
     title: 'Games',
     width: 520,
@@ -1379,6 +1432,11 @@ const createWindow = (config: any, data = {}) => {
 
 const handleOpenTool = (toolName: string) => {
   console.log('Opening tool:', toolName);
+
+  // Ignore menu separators
+  if (toolName === '---') {
+    return;
+  }
 
   if (toolName === 'Preferences') {
     openPreferences();
