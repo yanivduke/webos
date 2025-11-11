@@ -280,8 +280,6 @@
             @delete="handleSmartFolderDelete"
           />
         </div>
-        </div>
-        </div>
       </div>
 
       <!-- Windows Container -->
@@ -802,6 +800,8 @@ const handleGlobalKeyDown = async (event: KeyboardEvent) => {
     event.preventDefault();
     await quickScreenshot('area');
   }
+};
+
 const handleNetworkAction = (action: string) => {
   handleOpenTool(action);
 };
