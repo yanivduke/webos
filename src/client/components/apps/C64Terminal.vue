@@ -54,6 +54,8 @@ const outputRef = ref<HTMLDivElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 const basicProgram = ref<BasicProgram>({});
 const programRunning = ref(false);
+const variables = ref<Record<string, number | string>>({});
+const stringVariables = ref<Record<string, string>>({});
 
 onMounted(() => {
   inputRef.value?.focus();
@@ -160,13 +162,24 @@ const executeCommand = async () => {
       // Shorthand for PRINT
       printValue(args.join(' '));
       break;
+    case 'LET':
+      try {
+        executeLet(args.join(' '));
+      } catch {
+        addOutput('?SYNTAX ERROR', 'error');
+      }
+      break;
     case 'HELP':
       showHelp();
       break;
     default:
-      // Try to evaluate as expression
-      if (command.includes('=') || command.match(/^\d+/)) {
-        addOutput('?SYNTAX ERROR', 'error');
+      // Try to evaluate as variable assignment
+      if (command.toUpperCase().match(/^[A-Z]\$?\s*=/)) {
+        try {
+          executeLet(command);
+        } catch {
+          addOutput('?SYNTAX ERROR', 'error');
+        }
       } else {
         addOutput('?SYNTAX ERROR', 'error');
       }
@@ -190,14 +203,26 @@ const showHelp = () => {
   addOutput('IMMEDIATE COMMANDS:', 'success');
   addOutput('  PRINT <EXPR>  - PRINT VALUE', 'output');
   addOutput('  ? <EXPR>      - SHORT PRINT', 'output');
+  addOutput('  LET VAR=VAL   - SET VARIABLE', 'output');
   addOutput('  POKE ADDR,VAL - POKE MEMORY', 'output');
   addOutput('  PEEK(ADDR)    - PEEK MEMORY', 'output');
   addOutput('  SYS <ADDR>    - SYS CALL', 'output');
   addOutput('  CLS           - CLEAR SCREEN', 'output');
   addOutput('', 'output');
-  addOutput('ENTER PROGRAM LINES:', 'success');
-  addOutput('  10 PRINT "HELLO"', 'output');
-  addOutput('  20 GOTO 10', 'output');
+  addOutput('PROGRAMMING:', 'success');
+  addOutput('  LET A=10      - ASSIGN VARIABLE', 'output');
+  addOutput('  IF A>5 THEN PRINT "YES"', 'output');
+  addOutput('  FOR I=1 TO 10:PRINT I:NEXT I', 'output');
+  addOutput('  GOSUB 1000    - CALL SUBROUTINE', 'output');
+  addOutput('  RETURN        - RETURN FROM GOSUB', 'output');
+  addOutput('  REM COMMENT   - COMMENT LINE', 'output');
+  addOutput('', 'output');
+  addOutput('EXAMPLE PROGRAM:', 'success');
+  addOutput('  10 LET A=1', 'output');
+  addOutput('  20 PRINT A', 'output');
+  addOutput('  30 LET A=A+1', 'output');
+  addOutput('  40 IF A<=10 THEN GOTO 20', 'output');
+  addOutput('  50 END', 'output');
 };
 
 const listProgram = (lineNum?: string) => {
@@ -233,40 +258,231 @@ const runProgram = async () => {
   }
 
   programRunning.value = true;
+  variables.value = {};
 
-  for (const lineNum of lines) {
+  const forStack: Array<{ variable: string, end: number, step: number, lineIndex: number }> = [];
+  const gosubStack: number[] = [];
+  let currentLineIndex = 0;
+
+  while (currentLineIndex < lines.length) {
+    const lineNum = lines[currentLineIndex];
     const line = basicProgram.value[lineNum];
     const upperLine = line.toUpperCase().trim();
 
-    // Parse BASIC statements
-    if (upperLine.startsWith('PRINT ') || upperLine.startsWith('? ')) {
-      const expr = line.substring(upperLine.indexOf(' ') + 1);
-      printValue(expr);
-    } else if (upperLine.startsWith('REM')) {
-      // Comment, skip
-      continue;
-    } else if (upperLine.startsWith('GOTO ')) {
-      // For simplicity, we won't implement full GOTO logic
-      addOutput('GOTO NOT IMPLEMENTED IN WEBOS', 'system');
-      break;
-    } else if (upperLine === 'END') {
-      break;
-    } else if (upperLine.startsWith('INPUT ')) {
-      addOutput('INPUT NOT SUPPORTED IN WEBOS', 'system');
-      break;
-    } else if (upperLine.startsWith('FOR ') || upperLine.startsWith('NEXT')) {
-      addOutput('LOOPS NOT FULLY SUPPORTED', 'system');
-    } else {
-      // Unknown command
-      addOutput(`?SYNTAX ERROR IN ${lineNum}`, 'error');
+    try {
+      // Parse BASIC statements
+      if (upperLine.startsWith('REM')) {
+        // Comment, skip
+      } else if (upperLine.startsWith('LET ')) {
+        executeLet(line.substring(4));
+      } else if (upperLine.startsWith('PRINT ') || upperLine.startsWith('? ')) {
+        const expr = line.substring(upperLine.indexOf(' ') + 1);
+        await printValue(expr);
+      } else if (upperLine.startsWith('IF ')) {
+        const continueExec = executeIf(line.substring(3));
+        if (!continueExec) {
+          // Skip to next line if condition is false
+          currentLineIndex++;
+          continue;
+        }
+      } else if (upperLine.startsWith('FOR ')) {
+        const forInfo = executeFor(line.substring(4));
+        if (forInfo) {
+          forStack.push({ ...forInfo, lineIndex: currentLineIndex });
+        }
+      } else if (upperLine.startsWith('NEXT')) {
+        if (forStack.length > 0) {
+          const forInfo = forStack[forStack.length - 1];
+          variables.value[forInfo.variable] = (variables.value[forInfo.variable] as number) + forInfo.step;
+
+          if (variables.value[forInfo.variable] as number <= forInfo.end) {
+            // Continue loop
+            currentLineIndex = forInfo.lineIndex;
+            continue;
+          } else {
+            // End loop
+            forStack.pop();
+          }
+        } else {
+          addOutput('?NEXT WITHOUT FOR', 'error');
+          break;
+        }
+      } else if (upperLine.startsWith('GOTO ')) {
+        const targetLine = parseInt(line.substring(5).trim());
+        const targetIndex = lines.indexOf(targetLine);
+        if (targetIndex >= 0) {
+          currentLineIndex = targetIndex;
+          continue;
+        } else {
+          addOutput(`?UNDEF'D STATEMENT ERROR IN ${lineNum}`, 'error');
+          break;
+        }
+      } else if (upperLine.startsWith('GOSUB ')) {
+        const targetLine = parseInt(line.substring(6).trim());
+        const targetIndex = lines.indexOf(targetLine);
+        if (targetIndex >= 0) {
+          gosubStack.push(currentLineIndex);
+          currentLineIndex = targetIndex;
+          continue;
+        } else {
+          addOutput(`?UNDEF'D STATEMENT ERROR IN ${lineNum}`, 'error');
+          break;
+        }
+      } else if (upperLine === 'RETURN') {
+        if (gosubStack.length > 0) {
+          currentLineIndex = gosubStack.pop()!;
+        } else {
+          addOutput('?RETURN WITHOUT GOSUB', 'error');
+          break;
+        }
+      } else if (upperLine === 'END' || upperLine === 'STOP') {
+        break;
+      } else if (upperLine.startsWith('INPUT ')) {
+        addOutput('INPUT NOT SUPPORTED IN WEBOS', 'system');
+        break;
+      } else if (line.includes('=') && !upperLine.startsWith('IF')) {
+        // Variable assignment without LET
+        executeLet(line);
+      } else if (upperLine.trim() === '') {
+        // Empty line
+      } else {
+        // Unknown command
+        addOutput(`?SYNTAX ERROR IN ${lineNum}`, 'error');
+        break;
+      }
+
+      // Small delay for effect
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+    } catch (error) {
+      addOutput(`?ERROR IN ${lineNum}`, 'error');
       break;
     }
 
-    // Small delay for effect
-    await new Promise(resolve => setTimeout(resolve, 100));
+    currentLineIndex++;
   }
 
   programRunning.value = false;
+};
+
+const executeLet = (statement: string) => {
+  const match = statement.match(/([A-Z]\$?)\s*=\s*(.+)/i);
+  if (match) {
+    const [, varName, expr] = match;
+    const value = evaluateExpression(expr.trim());
+
+    if (varName.endsWith('$')) {
+      stringVariables.value[varName] = String(value);
+    } else {
+      variables.value[varName.toUpperCase()] = value as number;
+    }
+  } else {
+    throw new Error('Syntax error in LET');
+  }
+};
+
+const executeIf = (statement: string): boolean => {
+  const thenMatch = statement.match(/(.+?)\s+THEN\s+(.+)/i);
+  if (!thenMatch) {
+    throw new Error('Syntax error in IF');
+  }
+
+  const [, condition, thenPart] = thenMatch;
+  const conditionResult = evaluateCondition(condition.trim());
+
+  if (conditionResult) {
+    // Execute the THEN part
+    const upperThen = thenPart.toUpperCase().trim();
+    if (upperThen.startsWith('PRINT ')) {
+      printValue(thenPart.substring(6));
+    } else if (upperThen.startsWith('GOTO ')) {
+      // This would require jumping, handled by returning line number
+    } else if (thenPart.includes('=')) {
+      executeLet(thenPart);
+    }
+    return true;
+  }
+
+  return false;
+};
+
+const executeFor = (statement: string): { variable: string, end: number, step: number } | null => {
+  const match = statement.match(/([A-Z])\s*=\s*(\d+)\s+TO\s+(\d+)(?:\s+STEP\s+(\d+))?/i);
+  if (match) {
+    const [, varName, start, end, step] = match;
+    variables.value[varName.toUpperCase()] = parseInt(start);
+    return {
+      variable: varName.toUpperCase(),
+      end: parseInt(end),
+      step: step ? parseInt(step) : 1
+    };
+  }
+  throw new Error('Syntax error in FOR');
+};
+
+const evaluateCondition = (condition: string): boolean => {
+  // Simple condition evaluator
+  const operators = ['<=', '>=', '<>', '=', '<', '>'];
+
+  for (const op of operators) {
+    if (condition.includes(op)) {
+      const parts = condition.split(op).map(p => p.trim());
+      if (parts.length === 2) {
+        const left = evaluateExpression(parts[0]);
+        const right = evaluateExpression(parts[1]);
+
+        switch (op) {
+          case '=': return left === right;
+          case '<>': return left !== right;
+          case '<': return (left as number) < (right as number);
+          case '>': return (left as number) > (right as number);
+          case '<=': return (left as number) <= (right as number);
+          case '>=': return (left as number) >= (right as number);
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+const evaluateExpression = (expr: string): number | string => {
+  expr = expr.trim();
+
+  // Check if it's a string literal
+  if (expr.startsWith('"') && expr.endsWith('"')) {
+    return expr.substring(1, expr.length - 1);
+  }
+
+  // Check if it's a variable
+  if (expr.match(/^[A-Z]\$?$/i)) {
+    const varName = expr.toUpperCase();
+    if (varName.endsWith('$')) {
+      return stringVariables.value[varName] || '';
+    }
+    return variables.value[varName] || 0;
+  }
+
+  // Check if it's a number
+  if (expr.match(/^-?\d+(\.\d+)?$/)) {
+    return parseFloat(expr);
+  }
+
+  // Try to evaluate as math expression
+  try {
+    // Replace variables with their values
+    let evalExpr = expr.toUpperCase();
+    Object.keys(variables.value).forEach(varName => {
+      const regex = new RegExp(`\\b${varName}\\b`, 'g');
+      evalExpr = evalExpr.replace(regex, String(variables.value[varName]));
+    });
+
+    // Safely evaluate simple math expressions
+    const result = eval(evalExpr.toLowerCase());
+    return typeof result === 'number' ? result : 0;
+  } catch {
+    return 0;
+  }
 };
 
 const newProgram = () => {

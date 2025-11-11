@@ -48,6 +48,16 @@ const commandHistory = ref<string[]>([]);
 const historyIndex = ref(-1);
 const outputRef = ref<HTMLDivElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
+const aliases = ref<Record<string, string>>({
+  'll': 'ls -la',
+  'la': 'ls -a'
+});
+const envVars = ref<Record<string, string>>({
+  'HOME': '/home/user',
+  'USER': 'user',
+  'SHELL': '/bin/bash',
+  'PATH': '/usr/local/bin:/usr/bin:/bin'
+});
 
 onMounted(() => {
   inputRef.value?.focus();
@@ -66,7 +76,7 @@ const addOutput = (text: string, type: OutputLine['type'] = 'output') => {
 };
 
 const executeCommand = async () => {
-  const command = currentInput.value.trim();
+  let command = currentInput.value.trim();
   if (!command) return;
 
   // Add to history
@@ -75,6 +85,20 @@ const executeCommand = async () => {
 
   // Show the command
   addOutput(`${currentUser.value}@webos:${currentPath.value}$ ${command}`, 'prompt');
+
+  // Check for aliases
+  const firstWord = command.split(' ')[0];
+  if (aliases.value[firstWord]) {
+    command = aliases.value[firstWord] + command.substring(firstWord.length);
+  }
+
+  // Check for pipes
+  if (command.includes('|')) {
+    await executePipedCommand(command);
+    currentInput.value = '';
+    addOutput('', 'output');
+    return;
+  }
 
   // Parse command
   const parts = command.split(' ');
@@ -153,6 +177,51 @@ const executeCommand = async () => {
     case 'vi':
       addOutput(`${cmd}: text editor (use NotePad from Tools menu)`, 'info');
       break;
+    case 'find':
+      await findFiles(args);
+      break;
+    case 'which':
+      whichCommand(args[0] || '');
+      break;
+    case 'alias':
+      handleAlias(args);
+      break;
+    case 'export':
+      handleExport(args);
+      break;
+    case 'env':
+      showEnvironment();
+      break;
+    case 'history':
+      showHistory();
+      break;
+    case 'cp':
+      await copyFile(args);
+      break;
+    case 'mv':
+      await moveFile(args);
+      break;
+    case 'head':
+      await headFile(args);
+      break;
+    case 'tail':
+      await tailFile(args);
+      break;
+    case 'wc':
+      await wordCount(args);
+      break;
+    case 'sort':
+      addOutput('sort: use with pipe (cat file | sort)', 'info');
+      break;
+    case 'uniq':
+      addOutput('uniq: use with pipe (cat file | uniq)', 'info');
+      break;
+    case 'kill':
+      killProcess(args[0] || '');
+      break;
+    case 'ln':
+      addOutput('ln: symbolic links not implemented', 'info');
+      break;
     default:
       addOutput(`bash: ${cmd}: command not found`, 'error');
       addOutput('Type "help" for available commands', 'info');
@@ -172,6 +241,17 @@ const showHelp = () => {
   addOutput('  mkdir <dir>   - Create directory', 'output');
   addOutput('  rm <file>     - Remove file or directory', 'output');
   addOutput('  touch <file>  - Create empty file', 'output');
+  addOutput('  cp <src> <dst>- Copy file', 'output');
+  addOutput('  mv <src> <dst>- Move/rename file', 'output');
+  addOutput('  find <pattern>- Find files', 'output');
+  addOutput('', 'output');
+  addOutput('Text Processing:', 'info');
+  addOutput('  head <file>   - Show first lines of file', 'output');
+  addOutput('  tail <file>   - Show last lines of file', 'output');
+  addOutput('  wc <file>     - Count words/lines/chars', 'output');
+  addOutput('  grep <pattern>- Search text (use with pipes)', 'output');
+  addOutput('  sort          - Sort lines (use with pipes)', 'output');
+  addOutput('  uniq          - Remove duplicates (use with pipes)', 'output');
   addOutput('', 'output');
   addOutput('System Info:', 'info');
   addOutput('  whoami        - Display current user', 'output');
@@ -181,12 +261,22 @@ const showHelp = () => {
   addOutput('  top           - Display system monitor', 'output');
   addOutput('  df            - Disk space usage', 'output');
   addOutput('  free          - Memory usage', 'output');
+  addOutput('  kill <pid>    - Kill process by PID', 'output');
+  addOutput('', 'output');
+  addOutput('Environment:', 'info');
+  addOutput('  env           - Show environment variables', 'output');
+  addOutput('  export VAR=val- Set environment variable', 'output');
+  addOutput('  alias name=cmd- Create command alias', 'output');
+  addOutput('  which <cmd>   - Show command location', 'output');
+  addOutput('  history       - Show command history', 'output');
   addOutput('', 'output');
   addOutput('Utilities:', 'info');
   addOutput('  echo <text>   - Display text', 'output');
   addOutput('  man <cmd>     - Display manual page', 'output');
   addOutput('  clear         - Clear screen', 'output');
   addOutput('  help          - Show this help', 'output');
+  addOutput('', 'output');
+  addOutput('Pipes: Use | to chain commands (e.g., cat file | grep pattern)', 'info');
 };
 
 const clearScreen = () => {
@@ -453,6 +543,356 @@ const showManual = (cmd: string) => {
   }
 };
 
+// New command implementations
+const findFiles = async (args: string[]) => {
+  if (args.length === 0) {
+    addOutput('find: missing argument', 'error');
+    return;
+  }
+
+  const pattern = args[0].toLowerCase();
+  try {
+    const amigaPath = currentPath.value === '~' ? 'dh0' : currentPath.value.replace('/home/user/', 'dh0/');
+    const response = await fetch(`/api/files/list?path=${encodeURIComponent(amigaPath)}`);
+
+    if (!response.ok) {
+      addOutput('find: error reading directory', 'error');
+      return;
+    }
+
+    const data = await response.json();
+    if (!data.items || data.items.length === 0) {
+      return;
+    }
+
+    const matches = data.items.filter((item: any) =>
+      item.name.toLowerCase().includes(pattern)
+    );
+
+    if (matches.length === 0) {
+      addOutput('find: no matches found', 'output');
+    } else {
+      matches.forEach((item: any) => {
+        addOutput(`./${item.name}`, 'output');
+      });
+    }
+  } catch (error) {
+    addOutput('find: error', 'error');
+  }
+};
+
+const whichCommand = (cmd: string) => {
+  if (!cmd) {
+    addOutput('which: missing argument', 'error');
+    return;
+  }
+
+  const builtinCommands = ['cd', 'pwd', 'echo', 'export', 'alias', 'history'];
+  const systemCommands = ['ls', 'cat', 'mkdir', 'rm', 'cp', 'mv', 'find', 'grep', 'ps', 'top', 'df', 'free', 'touch', 'head', 'tail', 'wc', 'kill'];
+
+  if (builtinCommands.includes(cmd)) {
+    addOutput(`${cmd}: shell builtin`, 'output');
+  } else if (systemCommands.includes(cmd)) {
+    addOutput(`/usr/bin/${cmd}`, 'output');
+  } else {
+    addOutput(`which: no ${cmd} in (/usr/local/bin:/usr/bin:/bin)`, 'error');
+  }
+};
+
+const handleAlias = (args: string[]) => {
+  if (args.length === 0) {
+    // Show all aliases
+    Object.entries(aliases.value).forEach(([name, cmd]) => {
+      addOutput(`alias ${name}='${cmd}'`, 'output');
+    });
+  } else {
+    const aliasStr = args.join(' ');
+    const match = aliasStr.match(/^(\w+)=(.+)$/);
+    if (match) {
+      const [, name, cmd] = match;
+      aliases.value[name] = cmd.replace(/['"]/g, '');
+      addOutput(`alias ${name}='${aliases.value[name]}'`, 'output');
+    } else {
+      addOutput('alias: invalid format (use: alias name=command)', 'error');
+    }
+  }
+};
+
+const handleExport = (args: string[]) => {
+  if (args.length === 0) {
+    showEnvironment();
+  } else {
+    const exportStr = args.join(' ');
+    const match = exportStr.match(/^(\w+)=(.+)$/);
+    if (match) {
+      const [, name, value] = match;
+      envVars.value[name] = value.replace(/['"]/g, '');
+      addOutput(`export ${name}=${envVars.value[name]}`, 'output');
+    } else {
+      addOutput('export: invalid format (use: export VAR=value)', 'error');
+    }
+  }
+};
+
+const showEnvironment = () => {
+  Object.entries(envVars.value).forEach(([name, value]) => {
+    addOutput(`${name}=${value}`, 'output');
+  });
+};
+
+const showHistory = () => {
+  commandHistory.value.forEach((cmd, index) => {
+    addOutput(`${String(index + 1).padStart(4)} ${cmd}`, 'output');
+  });
+};
+
+const copyFile = async (args: string[]) => {
+  if (args.length < 2) {
+    addOutput('cp: missing file operand', 'error');
+    return;
+  }
+
+  const [src, dst] = args;
+  try {
+    const amigaPath = currentPath.value === '~' ? 'dh0' : currentPath.value.replace('/home/user/', 'dh0/');
+    const srcPath = `${amigaPath}/${src}`;
+
+    // Read source file
+    const readResponse = await fetch('/api/files/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: srcPath })
+    });
+
+    if (!readResponse.ok) {
+      addOutput(`cp: cannot stat '${src}': No such file or directory`, 'error');
+      return;
+    }
+
+    const data = await readResponse.json();
+
+    // Write to destination
+    const writeResponse = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: amigaPath,
+        name: dst,
+        type: 'file',
+        content: data.content
+      })
+    });
+
+    if (!writeResponse.ok) {
+      addOutput(`cp: cannot create '${dst}'`, 'error');
+      return;
+    }
+
+    addOutput('', 'output');
+  } catch (error) {
+    addOutput('cp: error', 'error');
+  }
+};
+
+const moveFile = async (args: string[]) => {
+  if (args.length < 2) {
+    addOutput('mv: missing file operand', 'error');
+    return;
+  }
+
+  // For now, simulate mv as cp + rm
+  await copyFile(args);
+  await deleteItem([args[0]]);
+};
+
+const headFile = async (args: string[]) => {
+  const filename = args[0];
+  const lines = args.includes('-n') ? parseInt(args[args.indexOf('-n') + 1] || '10') : 10;
+
+  if (!filename) {
+    addOutput('head: missing file operand', 'error');
+    return;
+  }
+
+  try {
+    const amigaPath = currentPath.value === '~' ? 'dh0' : currentPath.value.replace('/home/user/', 'dh0/');
+    const filePath = `${amigaPath}/${filename}`;
+
+    const response = await fetch('/api/files/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: filePath })
+    });
+
+    if (!response.ok) {
+      addOutput(`head: ${filename}: No such file`, 'error');
+      return;
+    }
+
+    const data = await response.json();
+    const fileLines = data.content.split('\n').slice(0, lines);
+    fileLines.forEach((line: string) => addOutput(line, 'output'));
+  } catch (error) {
+    addOutput('head: error reading file', 'error');
+  }
+};
+
+const tailFile = async (args: string[]) => {
+  const filename = args[0];
+  const lines = args.includes('-n') ? parseInt(args[args.indexOf('-n') + 1] || '10') : 10;
+
+  if (!filename) {
+    addOutput('tail: missing file operand', 'error');
+    return;
+  }
+
+  try {
+    const amigaPath = currentPath.value === '~' ? 'dh0' : currentPath.value.replace('/home/user/', 'dh0/');
+    const filePath = `${amigaPath}/${filename}`;
+
+    const response = await fetch('/api/files/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: filePath })
+    });
+
+    if (!response.ok) {
+      addOutput(`tail: ${filename}: No such file`, 'error');
+      return;
+    }
+
+    const data = await response.json();
+    const fileLines = data.content.split('\n').slice(-lines);
+    fileLines.forEach((line: string) => addOutput(line, 'output'));
+  } catch (error) {
+    addOutput('tail: error reading file', 'error');
+  }
+};
+
+const wordCount = async (args: string[]) => {
+  const filename = args[0];
+
+  if (!filename) {
+    addOutput('wc: missing file operand', 'error');
+    return;
+  }
+
+  try {
+    const amigaPath = currentPath.value === '~' ? 'dh0' : currentPath.value.replace('/home/user/', 'dh0/');
+    const filePath = `${amigaPath}/${filename}`;
+
+    const response = await fetch('/api/files/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: filePath })
+    });
+
+    if (!response.ok) {
+      addOutput(`wc: ${filename}: No such file`, 'error');
+      return;
+    }
+
+    const data = await response.json();
+    const lines = data.content.split('\n').length;
+    const words = data.content.split(/\s+/).filter((w: string) => w).length;
+    const chars = data.content.length;
+
+    addOutput(`  ${lines}  ${words} ${chars} ${filename}`, 'output');
+  } catch (error) {
+    addOutput('wc: error reading file', 'error');
+  }
+};
+
+const killProcess = (pid: string) => {
+  if (!pid) {
+    addOutput('kill: missing argument', 'error');
+    return;
+  }
+
+  const pidNum = parseInt(pid);
+  if (isNaN(pidNum)) {
+    addOutput('kill: invalid PID', 'error');
+    return;
+  }
+
+  if (pidNum === 1) {
+    addOutput('kill: cannot kill init process', 'error');
+  } else if (pidNum === 142) {
+    addOutput('kill: cannot kill webos process', 'error');
+  } else {
+    addOutput(`kill: (${pidNum}) - process terminated`, 'output');
+  }
+};
+
+const executePipedCommand = async (command: string) => {
+  const commands = command.split('|').map(c => c.trim());
+  let output: string[] = [];
+
+  for (let i = 0; i < commands.length; i++) {
+    const cmd = commands[i];
+    const parts = cmd.split(' ');
+    const cmdName = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    if (i === 0) {
+      // First command - capture output
+      const originalAddOutput = addOutput;
+      const tempOutput: string[] = [];
+
+      // Temporarily redirect output
+      (window as any).tempAddOutput = (text: string) => {
+        tempOutput.push(text);
+      };
+
+      // Execute first command
+      if (cmdName === 'cat') {
+        await readFile(args[0] || '');
+        output = outputLines.value.slice(-100).map(line => line.text);
+        // Remove last few lines that were added
+        outputLines.value = outputLines.value.slice(0, -output.length);
+      } else if (cmdName === 'ls') {
+        await listFiles(args);
+        output = outputLines.value.slice(-100).map(line => line.text);
+        outputLines.value = outputLines.value.slice(0, -output.length);
+      } else {
+        addOutput(`pipe: ${cmdName} not supported as first command`, 'error');
+        return;
+      }
+    } else {
+      // Process output through pipe
+      if (cmdName === 'grep') {
+        const pattern = args[0];
+        if (!pattern) {
+          addOutput('grep: missing pattern', 'error');
+          return;
+        }
+        output = output.filter(line => line.toLowerCase().includes(pattern.toLowerCase()));
+      } else if (cmdName === 'sort') {
+        output = output.sort();
+      } else if (cmdName === 'uniq') {
+        output = [...new Set(output)];
+      } else if (cmdName === 'head') {
+        const lines = args.includes('-n') ? parseInt(args[args.indexOf('-n') + 1] || '10') : 10;
+        output = output.slice(0, lines);
+      } else if (cmdName === 'tail') {
+        const lines = args.includes('-n') ? parseInt(args[args.indexOf('-n') + 1] || '10') : 10;
+        output = output.slice(-lines);
+      } else if (cmdName === 'wc') {
+        const lines = output.length;
+        const words = output.join(' ').split(/\s+/).filter(w => w).length;
+        const chars = output.join('\n').length;
+        output = [`  ${lines}  ${words} ${chars}`];
+      } else {
+        addOutput(`pipe: ${cmdName} not supported in pipe`, 'error');
+        return;
+      }
+    }
+  }
+
+  // Output final result
+  output.forEach(line => addOutput(line, 'output'));
+};
+
 const navigateHistory = (direction: number) => {
   if (commandHistory.value.length === 0) return;
 
@@ -471,7 +911,9 @@ const navigateHistory = (direction: number) => {
 
 const autocomplete = () => {
   const commands = ['help', 'clear', 'ls', 'cd', 'pwd', 'cat', 'mkdir', 'rm', 'echo', 'date',
-                    'whoami', 'uname', 'ps', 'top', 'df', 'free', 'man', 'grep', 'touch'];
+                    'whoami', 'uname', 'ps', 'top', 'df', 'free', 'man', 'grep', 'touch',
+                    'find', 'which', 'alias', 'export', 'env', 'history', 'cp', 'mv',
+                    'head', 'tail', 'wc', 'sort', 'uniq', 'kill'];
   const input = currentInput.value.toLowerCase();
 
   if (!input) return;
