@@ -10,7 +10,8 @@
     <!-- File Menu Dropdown -->
     <div v-if="showFileMenu" class="file-menu-dropdown">
       <div class="dropdown-item" @click="newCanvas">New</div>
-      <div class="dropdown-item" @click="saveImage">Save PNG</div>
+      <div class="dropdown-item" @click="saveImage">Quick Save PNG</div>
+      <div class="dropdown-item" @click="openExportDialog">Export As...</div>
       <div class="dropdown-item" @click="clearCanvas">Clear</div>
     </div>
 
@@ -58,6 +59,7 @@
     <!-- Canvas Container -->
     <div class="canvas-container">
       <canvas
+        :id="canvasId"
         ref="canvasRef"
         :width="canvasWidth"
         :height="canvasHeight"
@@ -74,11 +76,21 @@
       <span>Color: {{ currentColor }}</span>
       <span>{{ statusMessage }}</span>
     </div>
+
+    <!-- Export Dialog -->
+    <AmigaExportDialog
+      :visible="showExportDialog"
+      :fileName="fileName"
+      :elementId="canvasId"
+      @close="closeExportDialog"
+      @exported="handleExported"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import AmigaExportDialog from '../AmigaExportDialog.vue';
 
 interface Props {
   data?: {
@@ -95,6 +107,8 @@ const canvasHeight = ref(400);
 const fileName = ref('Untitled.png');
 const statusMessage = ref('Ready');
 const showFileMenu = ref(false);
+const showExportDialog = ref(false);
+const canvasId = ref('paint-canvas');
 
 // Drawing state
 const isDrawing = ref(false);
@@ -331,6 +345,19 @@ const saveImage = () => {
     statusMessage.value = 'Error saving image';
   }
   showFileMenu.value = false;
+};
+
+const openExportDialog = () => {
+  showFileMenu.value = false;
+  showExportDialog.value = true;
+};
+
+const closeExportDialog = () => {
+  showExportDialog.value = false;
+};
+
+const handleExported = (format: string) => {
+  statusMessage.value = `Canvas exported as ${format.toUpperCase()}`;
 };
 </script>
 

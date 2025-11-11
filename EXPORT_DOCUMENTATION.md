@@ -42,7 +42,17 @@ WebOS now includes comprehensive file export functionality, allowing users to ex
 
 The file will be downloaded to your browser's default download location.
 
-### In Folder Browser (Context Menu)
+### In Paint Application
+
+1. Create or edit a drawing in Paint
+2. Click **File** → **Export As...**
+3. Choose your desired format (PDF, PNG, JPEG, etc.)
+4. Enter a filename
+5. Click **Export**
+
+Quick save option: Click **File** → **Quick Save PNG** for instant PNG export.
+
+### In Folder Browser (Single File)
 
 1. Right-click on any file in a folder
 2. Select **Export** from the context menu
@@ -51,6 +61,17 @@ The file will be downloaded to your browser's default download location.
 5. Click **Export**
 
 Note: Export option is only available for files, not folders.
+
+### Batch Export (Multiple Files)
+
+1. Select multiple files in a folder (Ctrl/Cmd + Click)
+2. Right-click on one of the selected files
+3. Select **Batch Export** from the context menu
+4. Choose the export format for all files
+5. Optionally add a prefix to all exported filenames
+6. Click **Export All**
+
+All selected files will be exported to the chosen format with a progress indicator.
 
 ## API Endpoints
 

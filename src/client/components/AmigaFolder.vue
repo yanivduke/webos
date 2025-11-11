@@ -90,6 +90,14 @@
       @close="closeExportDialog"
       @exported="handleExported"
     />
+
+    <!-- Batch Export Dialog -->
+    <AmigaBatchExportDialog
+      :visible="showBatchExportDialog"
+      :files="selectedFilesForExport"
+      @close="closeBatchExportDialog"
+      @exported="handleBatchExported"
+    />
   </div>
 </template>
 
@@ -97,6 +105,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AmigaContextMenu, { type ContextMenuItem } from './AmigaContextMenu.vue';
 import AmigaExportDialog from './AmigaExportDialog.vue';
+import AmigaBatchExportDialog from './AmigaBatchExportDialog.vue';
 import clipboard, { type ClipboardItem } from './ClipboardManager';
 
 interface Props {
@@ -129,12 +138,24 @@ const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuItem = ref<FolderItem | null>(null);
 const showExportDialog = ref(false);
+const showBatchExportDialog = ref(false);
 const exportFileName = ref('');
 const exportFilePath = ref('');
 
 // Drag and drop state
 const dragOverItem = ref<string | null>(null);
 const draggedItems = ref<FolderItem[]>([]);
+
+// Computed property for selected files for batch export
+const selectedFilesForExport = computed(() => {
+  return getSelectedItems()
+    .filter(item => item.type === 'file')
+    .map(item => ({
+      id: item.id,
+      name: item.name,
+      path: item.path || `${currentPath.value}/${item.name}`
+    }));
+});
 
 const contextMenuItems = computed<ContextMenuItem[]>(() => {
   const hasClipboard = clipboard.hasItems();
@@ -155,10 +176,17 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       { label: '', action: '', separator: true },
       { label: 'Rename', action: 'rename', icon: '✏', disabled: isMultiSelection },
       { label: 'Delete', action: 'delete', icon: '🗑' },
-      { label: '', action: '', separator: true },
-      { label: 'Export', action: 'export', icon: '📤', disabled: isMultiSelection || contextMenuItem.value.type !== 'file' },
-      { label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection }
+      { label: '', action: '', separator: true }
     );
+
+    // Export options
+    if (isMultiSelection && selectedFilesForExport.value.length > 1) {
+      menuItems.push({ label: 'Batch Export', action: 'batch-export', icon: '📤' });
+    } else if (!isMultiSelection && contextMenuItem.value.type === 'file') {
+      menuItems.push({ label: 'Export', action: 'export', icon: '📤' });
+    }
+
+    menuItems.push({ label: 'Info', action: 'info', icon: 'ℹ', disabled: isMultiSelection });
   }
   
   // Universal menu items (always available)
@@ -352,6 +380,9 @@ const handleContextAction = async (action: string) => {
       break;
     case 'export':
       openExportDialog(item);
+      break;
+    case 'batch-export':
+      openBatchExportDialog();
       break;
   }
 
@@ -794,6 +825,23 @@ const closeExportDialog = () => {
 
 const handleExported = (format: string) => {
   console.log(`File exported to ${format.toUpperCase()}`);
+};
+
+const openBatchExportDialog = () => {
+  if (selectedFilesForExport.value.length === 0) {
+    alert('No files selected for export');
+    return;
+  }
+  showBatchExportDialog.value = true;
+};
+
+const closeBatchExportDialog = () => {
+  showBatchExportDialog.value = false;
+};
+
+const handleBatchExported = (count: number) => {
+  console.log(`Batch export completed: ${count} file(s) exported`);
+  selectedItems.value = []; // Clear selection after export
 };
 
 // Lifecycle hooks
