@@ -1983,6 +1983,8 @@ const initializeCommandPalette = () => {
   padding: 4px 8px;
   font-size: 11px;
   box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #ffffff;
+  position: relative;
+  z-index: 100000;
 }
 
 .menu-left {
@@ -2014,7 +2016,7 @@ const initializeCommandPalette = () => {
   border: 2px solid;
   border-color: #ffffff #000000 #000000 #ffffff;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  z-index: 100001;
   min-width: 180px;
   font-size: 11px;
 }
@@ -2167,6 +2169,8 @@ const initializeCommandPalette = () => {
   font-size: 9px;
   color: #000000;
   box-shadow: inset -1px 1px 0 #808080, inset 1px -1px 0 #ffffff;
+  position: relative;
+  z-index: 100000;
 }
 
 .footer-left {

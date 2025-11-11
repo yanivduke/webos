@@ -286,7 +286,7 @@ watch([x, y], ([newX, newY]) => {
   border-color: #ffffff #000000 #000000 #ffffff;
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
   font-family: 'Press Start 2P', monospace;
-  z-index: 9999;
+  z-index: 100002;
   max-height: 500px;
   display: flex;
   flex-direction: column;

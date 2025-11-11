@@ -270,7 +270,7 @@ const highlightMatch = (text: string): string => {
   align-items: flex-start;
   justify-content: center;
   padding-top: 15vh;
-  z-index: 9999;
+  z-index: 100002;
   font-family: 'Press Start 2P', monospace;
 }
 

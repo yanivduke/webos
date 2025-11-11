@@ -104,7 +104,7 @@ watch(() => props.visible, (newVisible) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 100002;
   animation: fadeIn 0.2s ease;
 }
 
