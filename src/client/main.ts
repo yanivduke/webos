@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+import vuetify from './plugins/vuetify';
 import './style.css';
 import './amiga-common.css';
 import './styles/theme-variables.css';
@@ -41,6 +42,9 @@ accessibilityManager.applySystemPreferences();
 colorBlindFilters.initializeSVGFilters();
 
 const app = createApp(App);
+
+// Register Vuetify
+app.use(vuetify);
 
 // Register global directives
 app.directive('focus-trap', vFocusTrap);

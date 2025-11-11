@@ -14,6 +14,7 @@
     "test:ci": "vitest run --coverage"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
@@ -21,6 +22,7 @@
     "jszip": "^3.10.1",
     "prismjs": "^1.30.0",
     "vue": "^3.4.0",
+    "vuetify": "^3.10.10",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -31,7 +33,7 @@
     "happy-dom": "^20.0.10",
     "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "^5.3.3",
-    "vite": "^5.0.0",
+    "vite": "^7.2.2",
     "vitest": "^4.0.8",
     "vue-tsc": "^3.1.3"
   }
