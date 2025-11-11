@@ -397,32 +397,28 @@ import { getAllSmartFolders, refreshSmartFolder, subscribe as subscribeToSmartFo
 import { getSessionManager } from '../utils/session-manager';
 import { getWorkspaceSwitcher } from '../utils/workspace-switcher';
 import { getWindowHistory } from '../utils/window-history';
-import AmigaNotePad from './apps/AmigaNotePad.vue';
-import AmigaPaint from './apps/AmigaPaint.vue';
-import AmigaCalculator from './apps/AmigaCalculator.vue';
-import AmigaShell from './apps/AmigaShell.vue';
-import AmigaClock from './apps/AmigaClock.vue';
-import AmigaMultiView from './apps/AmigaMultiView.vue';
-import AmigaAwmlRunner from './apps/AmigaAwmlRunner.vue';
-import AmigaAwmlWizard from './apps/AmigaAwmlWizard.vue';
-import AmigaFileInfo from './apps/AmigaFileInfo.vue';
-import AmigaPreferences from './apps/AmigaPreferences.vue';
-import AmigaGames from './apps/AmigaGames.vue';
-import GameRunner from './games/GameRunner.vue';
-import LinuxTerminal from './apps/LinuxTerminal.vue';
-import C64Terminal from './apps/C64Terminal.vue';
-import DOSTerminal from './apps/DOSTerminal.vue';
-import RegexTester from './devtools/RegexTester.vue';
-import GitClient from './devtools/GitClient.vue';
-import DockerManager from './devtools/DockerManager.vue';
-import NPMManager from './devtools/NPMManager.vue';
-import EnvironmentEditor from './devtools/EnvironmentEditor.vue';
-import LogViewer from './devtools/LogViewer.vue';
-import CodeSnippetsManager from './devtools/CodeSnippetsManager.vue';
-import TelnetClient from './nettools/TelnetClient.vue';
-import FTPClient from './nettools/FTPClient.vue';
-import GopherClient from './nettools/GopherClient.vue';
-import NetworkDiagnostic from './nettools/NetworkDiagnostic.vue';
+
+// Immediately loaded app components (not async)
+const AmigaPaint = defineAsyncComponent(() => import('./apps/AmigaPaint.vue'));
+const AmigaCalculator = defineAsyncComponent(() => import('./apps/AmigaCalculator.vue'));
+const AmigaShell = defineAsyncComponent(() => import('./apps/AmigaShell.vue'));
+const AmigaClock = defineAsyncComponent(() => import('./apps/AmigaClock.vue'));
+const AmigaGames = defineAsyncComponent(() => import('./apps/AmigaGames.vue'));
+const GameRunner = defineAsyncComponent(() => import('./games/GameRunner.vue'));
+const LinuxTerminal = defineAsyncComponent(() => import('./apps/LinuxTerminal.vue'));
+const C64Terminal = defineAsyncComponent(() => import('./apps/C64Terminal.vue'));
+const DOSTerminal = defineAsyncComponent(() => import('./apps/DOSTerminal.vue'));
+const RegexTester = defineAsyncComponent(() => import('./devtools/RegexTester.vue'));
+const GitClient = defineAsyncComponent(() => import('./devtools/GitClient.vue'));
+const DockerManager = defineAsyncComponent(() => import('./devtools/DockerManager.vue'));
+const NPMManager = defineAsyncComponent(() => import('./devtools/NPMManager.vue'));
+const EnvironmentEditor = defineAsyncComponent(() => import('./devtools/EnvironmentEditor.vue'));
+const LogViewer = defineAsyncComponent(() => import('./devtools/LogViewer.vue'));
+const CodeSnippetsManager = defineAsyncComponent(() => import('./devtools/CodeSnippetsManager.vue'));
+const TelnetClient = defineAsyncComponent(() => import('./nettools/TelnetClient.vue'));
+const FTPClient = defineAsyncComponent(() => import('./nettools/FTPClient.vue'));
+const GopherClient = defineAsyncComponent(() => import('./nettools/GopherClient.vue'));
+const NetworkDiagnostic = defineAsyncComponent(() => import('./nettools/NetworkDiagnostic.vue'));
 
 interface Disk {
   id: string;
@@ -451,9 +447,7 @@ const menus = ref<Menu[]>([
   { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Preferences'] }
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Games', 'Preferences'] },
-  { name: 'Tools', items: ['Calculator', 'Clock', 'NotePad', 'Paint', 'MultiView', 'Shell', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'AWML Runner', 'AWML Wizard', 'Preferences'] },
+  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'Games', 'Preferences'] },
   { name: 'Network', items: ['Telnet Client', 'FTP Client', 'Gopher Browser', 'Network Diagnostic'] },
   { name: 'Dev Tools', items: ['Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
@@ -959,7 +953,7 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
       height: 650,
       component: AmigaCodeEditor,
       baseX: 120,
-      baseY: 80
+      baseY: 80,
     };
     data = { filePath, fileName };
   } else if (lowerName.endsWith('.txt') || lowerName.endsWith('.text') || lowerName.endsWith('.doc')) {
@@ -970,7 +964,7 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
       height: 450,
       component: AmigaNotePad,
       baseX: 150,
-      baseY: 100
+      baseY: 100,
     };
     data = { filePath, fileName };
   } else if (lowerName.endsWith('.awml')) {
@@ -981,7 +975,7 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
       height: 320,
       component: AmigaFileInfo,
       baseX: 160,
-      baseY: 120
+      baseY: 120,
     };
     data = { filePath, meta: fileMeta };
   } else {
@@ -992,7 +986,7 @@ const handleOpenFile = (filePath: string, fileMeta: { name?: string; [key: strin
       height: 320,
       component: AmigaFileInfo,
       baseX: 160,
-      baseY: 120
+      baseY: 120,
     };
     data = { filePath, meta: fileMeta };
   }
@@ -1009,7 +1003,7 @@ const toolConfigs = {
     component: AmigaAwmlRunner,
     baseX: 150,
     baseY: 100,
-    awmlPath: 'dh0/System/Applications/NotePad.awml'
+    awmlPath: 'dh0/System/Applications/NotePad.awml',
   },
   'Code Editor': {
     title: 'Code Editor',
@@ -1017,7 +1011,7 @@ const toolConfigs = {
     height: 650,
     component: AmigaCodeEditor,
     baseX: 120,
-    baseY: 80
+    baseY: 80,
   },
   'Calculator': { 
     title: 'Calculator', 
@@ -1026,7 +1020,7 @@ const toolConfigs = {
     component: AmigaAwmlRunner, 
     baseX: 200, 
     baseY: 120,
-    awmlPath: 'dh0/System/Applications/Calculator.awml'
+    awmlPath: 'dh0/System/Applications/Calculator.awml',
   },
   'Shell': {
     title: 'AmigaShell',
@@ -1034,7 +1028,7 @@ const toolConfigs = {
     height: 500,
     component: AmigaTerminal,
     baseX: 170,
-    baseY: 110
+    baseY: 110,
   },
   'Terminal': {
     title: 'Terminal',
@@ -1042,7 +1036,7 @@ const toolConfigs = {
     height: 500,
     component: AmigaTerminal,
     baseX: 170,
-    baseY: 110
+    baseY: 110,
   },
   'Clock': { 
     title: 'Clock', 
@@ -1051,7 +1045,7 @@ const toolConfigs = {
     component: AmigaAwmlRunner, 
     baseX: 220, 
     baseY: 130,
-    awmlPath: 'dh0/System/Applications/Clock.awml'
+    awmlPath: 'dh0/System/Applications/Clock.awml',
   },
   'Paint': { 
     title: 'Paint', 
@@ -1060,7 +1054,7 @@ const toolConfigs = {
     component: AmigaAwmlRunner, 
     baseX: 160, 
     baseY: 90,
-    awmlPath: 'dh0/System/Applications/Paint.awml'
+    awmlPath: 'dh0/System/Applications/Paint.awml',
   },
   'MultiView': { 
     title: 'MultiView', 
@@ -1068,7 +1062,7 @@ const toolConfigs = {
     height: 450, 
     component: AmigaMultiView, 
     baseX: 160, 
-    baseY: 90
+    baseY: 90,
   },
   'AWML Runner': { 
     title: 'AWML Runner', 
@@ -1084,7 +1078,7 @@ const toolConfigs = {
     height: 500,
     component: AmigaAwmlWizard,
     baseX: 200,
-    baseY: 130
+    baseY: 130,
   },
   'System Monitor': {
     title: 'System Monitor',
@@ -1092,7 +1086,7 @@ const toolConfigs = {
     height: 550,
     component: AmigaSysMonitor,
     baseX: 150,
-    baseY: 80
+    baseY: 80,
   },
   'Resource Monitor': {
     title: 'Resource Monitor',
@@ -1100,7 +1094,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaResourceMonitor,
     baseX: 140,
-    baseY: 70
+    baseY: 70,
   },
   'Task Manager': {
     title: 'Task Manager',
@@ -1108,7 +1102,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaTaskManager,
     baseX: 140,
-    baseY: 70
+    baseY: 70,
   },
   'Clipboard': {
     title: 'Clipboard Manager',
@@ -1116,7 +1110,7 @@ const toolConfigs = {
     height: 450,
     component: AmigaClipboard,
     baseX: 180,
-    baseY: 120
+    baseY: 120,
   },
   'Archiver': {
     title: 'Archiver',
@@ -1124,7 +1118,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaArchiver,
     baseX: 130,
-    baseY: 70
+    baseY: 70,
   },
   'Workspace Manager': {
     title: 'Workspace Manager',
@@ -1132,7 +1126,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaWorkspaceManager,
     baseX: 150,
-    baseY: 70
+    baseY: 70,
   },
   'Plugin Manager': {
     title: 'Plugin Manager',
@@ -1140,7 +1134,7 @@ const toolConfigs = {
     height: 650,
     component: AmigaPluginManager,
     baseX: 130,
-    baseY: 60
+    baseY: 60,
   },
   'Screen Capture': {
     title: 'Screen Capture',
@@ -1148,7 +1142,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaScreenCapture,
     baseX: 150,
-    baseY: 80
+    baseY: 80,
   },
   'Debug Console': {
     title: 'Debug Console',
@@ -1156,7 +1150,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaDebugConsole,
     baseX: 100,
-    baseY: 60
+    baseY: 60,
   },
   'Theme Editor': {
     title: 'Theme Editor',
@@ -1164,7 +1158,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaThemeEditor,
     baseX: 120,
-    baseY: 70
+    baseY: 70,
   },
   'Batch Manager': {
     title: 'Batch Operations Manager',
@@ -1172,7 +1166,7 @@ const toolConfigs = {
     height: 650,
     component: AmigaBatchManager,
     baseX: 120,
-    baseY: 70
+    baseY: 70,
   },
   'Session Manager': {
     title: 'Session Manager',
@@ -1180,7 +1174,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaSessionManager,
     baseX: 110,
-    baseY: 65
+    baseY: 65,
   },
   'Keyboard Shortcuts': {
     title: 'Keyboard Shortcuts',
@@ -1188,7 +1182,7 @@ const toolConfigs = {
     height: 600,
     component: AmigaShortcutsEditor,
     baseX: 140,
-    baseY: 80
+    baseY: 80,
   },
   'Advanced Search': {
     title: 'Advanced Search',
@@ -1196,7 +1190,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaAdvancedSearch,
     baseX: 100,
-    baseY: 60
+    baseY: 60,
   },
   'Calendar': {
     title: 'Calendar',
@@ -1204,7 +1198,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaCalendar,
     baseX: 90,
-    baseY: 50
+    baseY: 50,
   },
   'Email': {
     title: 'Email',
@@ -1212,7 +1206,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaEmail,
     baseX: 80,
-    baseY: 50
+    baseY: 50,
   },
   'Media Player': {
     title: 'Media Player',
@@ -1220,7 +1214,7 @@ const toolConfigs = {
     height: 700,
     component: AmigaMediaPlayer,
     baseX: 80,
-    baseY: 50
+    baseY: 50,
   },
   'Video Player': {
     title: 'Video Player',
@@ -1228,14 +1222,15 @@ const toolConfigs = {
     height: 650,
     component: AmigaVideoPlayer,
     baseX: 100,
-    baseY: 60
+    baseY: 60,
+  },
   'Linux Terminal': {
     title: 'Linux Terminal',
     width: 700,
     height: 500,
     component: LinuxTerminal,
     baseX: 180,
-    baseY: 100
+    baseY: 100,
   },
   'C64 Terminal': {
     title: 'Commodore 64',
@@ -1243,7 +1238,7 @@ const toolConfigs = {
     height: 480,
     component: C64Terminal,
     baseX: 200,
-    baseY: 110
+    baseY: 110,
   },
   'DOS Terminal': {
     title: 'MS-DOS',
@@ -1251,7 +1246,7 @@ const toolConfigs = {
     height: 520,
     component: DOSTerminal,
     baseX: 160,
-    baseY: 90
+    baseY: 90,
   },
   'Regex Tester': {
     title: 'Regex Tester',
@@ -1259,7 +1254,7 @@ const toolConfigs = {
     height: 550,
     component: RegexTester,
     baseX: 150,
-    baseY: 100
+    baseY: 100,
   },
   'Git Client': {
     title: 'Git Client',
@@ -1267,7 +1262,7 @@ const toolConfigs = {
     height: 600,
     component: GitClient,
     baseX: 140,
-    baseY: 90
+    baseY: 90,
   },
   'Docker Manager': {
     title: 'Docker Manager',
@@ -1275,7 +1270,7 @@ const toolConfigs = {
     height: 600,
     component: DockerManager,
     baseX: 130,
-    baseY: 80
+    baseY: 80,
   },
   'NPM Manager': {
     title: 'NPM Manager',
@@ -1283,7 +1278,7 @@ const toolConfigs = {
     height: 600,
     component: NPMManager,
     baseX: 145,
-    baseY: 95
+    baseY: 95,
   },
   'Environment Editor': {
     title: 'Environment Editor',
@@ -1291,7 +1286,7 @@ const toolConfigs = {
     height: 550,
     component: EnvironmentEditor,
     baseX: 155,
-    baseY: 105
+    baseY: 105,
   },
   'Log Viewer': {
     title: 'Log Viewer',
@@ -1299,7 +1294,7 @@ const toolConfigs = {
     height: 600,
     component: LogViewer,
     baseX: 135,
-    baseY: 85
+    baseY: 85,
   },
   'Code Snippets Manager': {
     title: 'Code Snippets Manager',
@@ -1307,7 +1302,7 @@ const toolConfigs = {
     height: 650,
     component: CodeSnippetsManager,
     baseX: 125,
-    baseY: 75
+    baseY: 75,
   },
   'Games': {
     title: 'Games',
@@ -1315,14 +1310,14 @@ const toolConfigs = {
     height: 420,
     component: AmigaGames,
     baseX: 180,
-    baseY: 160
+    baseY: 160,
   'Telnet Client': {
     title: 'Telnet Client',
     width: 720,
     height: 500,
     component: TelnetClient,
     baseX: 160,
-    baseY: 100
+    baseY: 100,
   },
   'FTP Client': {
     title: 'FTP Client',
@@ -1330,7 +1325,7 @@ const toolConfigs = {
     height: 600,
     component: FTPClient,
     baseX: 140,
-    baseY: 90
+    baseY: 90,
   },
   'Gopher Browser': {
     title: 'Gopher Browser',
@@ -1338,7 +1333,7 @@ const toolConfigs = {
     height: 550,
     component: GopherClient,
     baseX: 150,
-    baseY: 95
+    baseY: 95,
   },
   'Network Diagnostic': {
     title: 'Network Diagnostic',
@@ -1346,7 +1341,7 @@ const toolConfigs = {
     height: 600,
     component: NetworkDiagnostic,
     baseX: 145,
-    baseY: 85
+    baseY: 85,
   }
 };
 
@@ -1404,7 +1399,7 @@ const handleExecuteAwml = (filePath: string) => {
     height: 480,
     component: AmigaAwmlRunner,
     baseX: 160,
-    baseY: 120
+    baseY: 120,
   };
   const data = {
     filePath,
@@ -1422,7 +1417,7 @@ const handleEditFile = (filePath: string) => {
     height: 450,
     component: AmigaNotePad,
     baseX: 150,
-    baseY: 100
+    baseY: 100,
   };
   const data = { filePath, fileName };
   addWindow(createWindow(config, data));
@@ -1859,7 +1854,7 @@ const openSmartFolderWindow = async (folder: SmartFolder) => {
       height: 700,
       component: AmigaAdvancedSearch,
       baseX: 100,
-      baseY: 60
+      baseY: 60,
     };
 
     const data = {

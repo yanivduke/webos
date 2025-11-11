@@ -207,7 +207,8 @@ export function getGamesForTheme(themeId: string): Game[] {
     'workbench-20': 'workbench-20',
     'dark-mode': 'workbench-31', // Default to Amiga for dark mode
     'amber': 'dos', // Amber monitor → DOS era
-    'green-screen': 'linux' // Green screen → Unix/Linux era
+    'green-screen': 'linux', // Green screen → Unix/Linux era
+    'c64': 'c64' // Commodore 64 theme
   };
 
   const gameTheme = themeMapping[themeId] || 'workbench-31';
