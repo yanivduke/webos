@@ -316,9 +316,43 @@ const downloadFile = async () => {
   }
 };
 
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
 const uploadFile = () => {
-  addLog('Upload functionality: Select a file to upload', 'info');
-  // TODO: Implement file upload dialog
+  // Create a file input element dynamically
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = async (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file || !sessionId.value) return;
+
+    addLog(`Uploading: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`, 'command');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('sessionId', sessionId.value);
+      formData.append('path', currentPath.value === '/' ? `/${file.name}` : `${currentPath.value}/${file.name}`);
+
+      const response = await fetch('/api/network/ftp/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        addLog(`Upload successful: ${file.name}`, 'success');
+        await listDirectory(); // Refresh directory listing
+      } else {
+        addLog(`Upload failed: ${data.message}`, 'error');
+      }
+    } catch (error: any) {
+      addLog(`Upload error: ${error.message}`, 'error');
+    }
+  };
+  input.click();
 };
 
 const deleteFile = async () => {
