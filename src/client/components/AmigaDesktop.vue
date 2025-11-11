@@ -448,10 +448,10 @@ interface Menu {
 
 // Workbench Menu
 const menus = ref<Menu[]>([
-  { name: 'Workbench', items: ['About', 'Execute Command', 'Redraw All', 'Update', 'Quit'] },
+  { name: 'Workbench', items: ['About', 'Execute Command', 'Themes', 'Preferences', 'Redraw All', 'Update', 'Quit'] },
   { name: 'Window', items: ['New Drawer', 'Open Parent', 'Close Window', 'Update', 'Select Contents', 'Clean Up', 'Snapshot'] },
   { name: 'Icons', items: ['Open', 'Copy', 'Rename', 'Information', 'Snapshot', 'Unsnapshot', 'Leave Out', 'Put Away', 'Delete', 'Format Disk'] },
-  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'Games', 'Preferences'] },
+  { name: 'Tools', items: ['Search Files', 'Advanced Search', 'Calculator', 'Clock', 'NotePad', 'Code Editor', 'Paint', 'MultiView', 'Shell', 'Calendar', 'Email', 'Media Player', 'Video Player', 'System Monitor', 'Resource Monitor', 'Task Manager', 'Clipboard', 'Screen Capture', 'Archiver', 'Batch Manager', 'Session Manager', 'Workspace Manager', 'Plugin Manager', 'Debug Console', 'AWML Runner', 'AWML Wizard', 'Theme Editor', 'Linux Terminal', 'C64 Terminal', 'DOS Terminal', 'Games'] },
   { name: 'Network', items: ['Telnet Client', 'FTP Client', 'Gopher Browser', 'Network Diagnostic'] },
   { name: 'Dev Tools', items: ['App Builder', 'App Inspector', 'App Gallery', '---', 'Regex Tester', 'Git Client', 'Docker Manager', 'NPM Manager', 'Environment Editor', 'Log Viewer', 'Code Snippets Manager'] }
 ]);
@@ -692,6 +692,12 @@ const handleWorkbenchAction = (action: string) => {
       break;
     case 'Execute Command':
       handleOpenTool('Shell');
+      break;
+    case 'Themes':
+      openPreferencesWithTab('theme');
+      break;
+    case 'Preferences':
+      openPreferences();
       break;
     case 'Redraw All':
       // Force re-render of desktop
@@ -1493,6 +1499,20 @@ const openPreferences = () => {
     height: 450,
     component: AmigaPreferences,
     data: {}
+  };
+  addWindow(newWindow);
+};
+
+const openPreferencesWithTab = (tab: string) => {
+  const newWindow: Window = {
+    id: `window-${Date.now()}`,
+    title: 'Preferences',
+    x: 200,
+    y: 150,
+    width: 600,
+    height: 450,
+    component: AmigaPreferences,
+    data: { initialTab: tab }
   };
   addWindow(newWindow);
 };

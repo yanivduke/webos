@@ -13,6 +13,85 @@
     </div>
 
     <div class="prefs-content">
+      <!-- Theme Settings -->
+      <div v-if="activeTab === 'theme'" class="prefs-panel">
+        <h3>Theme Selection</h3>
+
+        <div class="pref-group">
+          <label>Current Theme: {{ currentThemeName }}</label>
+        </div>
+
+        <div class="theme-section">
+          <h4>Built-in Themes</h4>
+          <div class="theme-list">
+            <div
+              v-for="themeId in builtInThemes"
+              :key="themeId"
+              class="theme-item"
+              :class="{ selected: selectedThemeId === themeId }"
+              @click="selectTheme(themeId)"
+            >
+              <div class="theme-preview-mini" :style="getThemePreviewStyle(themeId)"></div>
+              <div class="theme-info">
+                <div class="theme-item-name">{{ formatThemeName(themeId) }}</div>
+                <button
+                  v-if="selectedThemeId === themeId"
+                  class="amiga-button-mini"
+                  @click.stop="applySelectedTheme"
+                >
+                  ✓ Active
+                </button>
+                <button
+                  v-else
+                  class="amiga-button-mini"
+                  @click.stop="previewAndApplyTheme(themeId)"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="customThemes.length > 0" class="theme-section">
+          <h4>Custom Themes</h4>
+          <div class="theme-list">
+            <div
+              v-for="theme in customThemes"
+              :key="theme.id"
+              class="theme-item"
+              :class="{ selected: selectedThemeId === theme.id }"
+              @click="selectTheme(theme.id)"
+            >
+              <div class="theme-preview-mini" :style="getCustomThemePreviewStyle(theme)"></div>
+              <div class="theme-info">
+                <div class="theme-item-name">{{ theme.name }}</div>
+                <button
+                  v-if="selectedThemeId === theme.id"
+                  class="amiga-button-mini"
+                  @click.stop="applySelectedTheme"
+                >
+                  ✓ Active
+                </button>
+                <button
+                  v-else
+                  class="amiga-button-mini"
+                  @click.stop="previewAndApplyTheme(theme.id)"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pref-group">
+          <button class="amiga-button" @click="openThemeEditor">
+            Open Theme Editor
+          </button>
+        </div>
+      </div>
+
       <!-- Display Settings -->
       <div v-if="activeTab === 'display'" class="prefs-panel">
         <h3>Display Settings</h3>
@@ -262,16 +341,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { themeManager, type ThemeDefinition } from '../../utils/theme-manager';
+
+interface Props {
+  data?: {
+    initialTab?: string;
+  };
+}
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
+  (e: 'openTool', toolName: string): void;
 }>();
 
-const activeTab = ref('display');
+const activeTab = ref(props.data?.initialTab || 'display');
+
+// Theme-related state
+const builtInThemes = ref<string[]>([]);
+const customThemes = ref<ThemeDefinition[]>([]);
+const selectedThemeId = ref<string | null>(null);
+
+const currentThemeName = computed(() => {
+  const current = themeManager.getCurrentTheme();
+  return current ? current.name : 'Classic Amiga';
+});
 
 const tabs = [
   { id: 'display', name: 'Display' },
+  { id: 'theme', name: 'Theme' },
   { id: 'sound', name: 'Sound' },
   { id: 'workbench', name: 'Workbench' },
   { id: 'system', name: 'System' },
@@ -396,8 +496,71 @@ const resetToDefaults = () => {
   }
 };
 
+// Theme functions
+const loadThemes = () => {
+  builtInThemes.value = themeManager.getBuiltInThemes();
+  customThemes.value = themeManager.getCustomThemes();
+  const current = themeManager.getCurrentTheme();
+  if (current) {
+    selectedThemeId.value = current.id;
+  }
+};
+
+const selectTheme = (themeId: string) => {
+  selectedThemeId.value = themeId;
+};
+
+const previewAndApplyTheme = async (themeId: string) => {
+  try {
+    await themeManager.loadTheme(themeId);
+    selectedThemeId.value = themeId;
+  } catch (error) {
+    console.error('Failed to apply theme:', error);
+    alert('Failed to apply theme');
+  }
+};
+
+const applySelectedTheme = async () => {
+  if (selectedThemeId.value) {
+    await previewAndApplyTheme(selectedThemeId.value);
+  }
+};
+
+const formatThemeName = (themeId: string): string => {
+  return themeId
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const getThemePreviewStyle = (themeId: string) => {
+  // Simple color preview based on theme ID
+  const colorMap: Record<string, string> = {
+    'classic-amiga': 'linear-gradient(135deg, #a0a0a0 0%, #0055aa 100%)',
+    'dark-mode': 'linear-gradient(135deg, #2d2d2d 0%, #0055aa 100%)',
+    'high-contrast': 'linear-gradient(135deg, #000000 0%, #ffffff 100%)',
+    'modern': 'linear-gradient(135deg, #f5f5f5 0%, #4a90e2 100%)',
+    'workbench-13': 'linear-gradient(135deg, #aaaaaa 0%, #000088 100%)'
+  };
+
+  return {
+    background: colorMap[themeId] || 'linear-gradient(135deg, #a0a0a0 0%, #0055aa 100%)'
+  };
+};
+
+const getCustomThemePreviewStyle = (theme: ThemeDefinition) => {
+  return {
+    background: `linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.primary} 100%)`
+  };
+};
+
+const openThemeEditor = () => {
+  emit('openTool', 'Theme Editor');
+};
+
 onMounted(() => {
   loadPreferences();
+  loadThemes();
 });
 </script>
 
@@ -558,5 +721,91 @@ onMounted(() => {
   color: #666666;
   margin-top: 4px;
   font-style: italic;
+}
+
+/* Theme Selection Styles */
+.theme-section {
+  margin-bottom: 24px;
+  background: #f0f0f0;
+  padding: 12px;
+  border: 2px solid #888888;
+}
+
+.theme-section h4 {
+  font-size: 9px;
+  color: #0055aa;
+  margin: 0 0 12px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #888888;
+}
+
+.theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #000000 #ffffff #ffffff #000000;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.theme-item:hover {
+  background: #e8e8e8;
+}
+
+.theme-item.selected {
+  border-color: #0055aa;
+  border-width: 3px;
+  background: #e0f0ff;
+}
+
+.theme-preview-mini {
+  width: 60px;
+  height: 40px;
+  border: 2px solid #000000;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.theme-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-item-name {
+  font-size: 9px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.amiga-button-mini {
+  background: #a0a0a0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 3px 10px;
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  color: #000000;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.amiga-button-mini:hover {
+  background: #b0b0b0;
+}
+
+.amiga-button-mini:active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  background: #888888;
 }
 </style>
