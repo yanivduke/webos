@@ -322,6 +322,7 @@ const serverUptime = ref('0h 0m 0s');
 const diskInfo = ref<any[]>([]);
 
 let updateInterval: number | undefined;
+let serverStatusInterval: number | undefined;
 
 onMounted(() => {
   // Initial data collection
@@ -334,12 +335,15 @@ onMounted(() => {
   }, 1000);
 
   // Fetch server status every 5 seconds
-  setInterval(fetchServerStatus, 5000);
+  serverStatusInterval = window.setInterval(fetchServerStatus, 5000);
 });
 
 onUnmounted(() => {
   if (updateInterval) {
     clearInterval(updateInterval);
+  }
+  if (serverStatusInterval) {
+    clearInterval(serverStatusInterval);
   }
 });
 

@@ -82,6 +82,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { screenReader } from '../utils/screen-reader';
 import { useEscapeKey } from '../composables/useKeyboardNav';
+import { getNextZIndex } from '../composables/useZIndexManager';
 
 interface Props {
   title?: string;
@@ -116,7 +117,7 @@ const windowHeight = ref(props.height);
 const isMaximized = ref(false);
 const isDragging = ref(false);
 const isResizing = ref(false);
-const zIndex = ref(1);
+const zIndex = ref(getNextZIndex()); // Use centralized z-index manager
 
 // Drag state
 let dragStartX = 0;
@@ -226,17 +227,17 @@ const toggleMaximize = () => {
     savedWidth = windowWidth.value;
     savedHeight = windowHeight.value;
 
-    windowX.value = 120;
-    windowY.value = 0;
-    windowWidth.value = window.innerWidth - 140;
-    windowHeight.value = window.innerHeight - 50;
+    windowX.value = 120; // Avoid desktop icons (120px left margin)
+    windowY.value = 40; // Avoid menu bar (40px top margin)
+    windowWidth.value = window.innerWidth - 140; // Account for left margin + small right padding
+    windowHeight.value = window.innerHeight - 90; // Account for menu bar (40px) + footer (50px)
     isMaximized.value = true;
     screenReader.announceAction('Window maximized', props.title);
   }
 };
 
 const bringToFront = () => {
-  zIndex.value = Date.now();
+  zIndex.value = getNextZIndex();
 };
 
 const sendToBack = () => {
