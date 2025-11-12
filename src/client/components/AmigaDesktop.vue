@@ -846,13 +846,19 @@ const updateSystemInfo = async () => {
 };
 
 const openDisk = (disk: Disk) => {
+  const width = 500;
+  const height = 350;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: disk.name,
-    x: 100 + openWindows.value.length * 30,
-    y: 80 + openWindows.value.length * 30,
-    width: 500,
-    height: 350,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaFolder,
     data: disk
   };
@@ -862,13 +868,19 @@ const openDisk = (disk: Disk) => {
 };
 
 const openRAM = () => {
+  const width = 480;
+  const height = 320;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'RAM Disk',
-    x: 120,
-    y: 100,
-    width: 480,
-    height: 320,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaFolder,
     data: { id: 'ram', name: 'RAM Disk', type: 'ram' }
   };
@@ -876,13 +888,19 @@ const openRAM = () => {
 };
 
 const openUtilities = () => {
+  const width = 520;
+  const height = 380;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Utilities',
-    x: 140,
-    y: 120,
-    width: 520,
-    height: 380,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaFolder,
     data: { id: 'utils', name: 'Utilities', type: 'drawer' }
   };
@@ -890,13 +908,19 @@ const openUtilities = () => {
 };
 
 const openTrash = () => {
+  const width = 450;
+  const height = 300;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Trash',
-    x: 160,
-    y: 140,
-    width: 450,
-    height: 300,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaFolder,
     data: { id: 'trash', name: 'Trash', type: 'trash' }
   };
@@ -904,13 +928,19 @@ const openTrash = () => {
 };
 
 const openGames = () => {
+  const width = 520;
+  const height = 420;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Games',
-    x: 180,
-    y: 160,
-    width: 520,
-    height: 420,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaGames,
     data: { id: 'games', name: 'Games', type: 'games' }
   };
@@ -920,13 +950,19 @@ const openGames = () => {
 const handleLaunchGame = (game: any) => {
   console.log('Launching game from desktop:', game);
   // Open game in a new window
+  const width = 640;
+  const height = 520;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: game.name,
-    x: 200 + openWindows.value.length * 20,
-    y: 180 + openWindows.value.length * 20,
-    width: 640,
-    height: 520,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: GameRunner,
     data: {
       game: game,
@@ -1406,8 +1442,17 @@ const toolConfigs = {
 };
 
 const createWindow = (config: any, data = {}) => {
+  // Calculate center position based on viewport size
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  // Center the window, accounting for desktop icons on the left (120px) and margins
+  const centerX = (viewportWidth - config.width) / 2;
+  const centerY = (viewportHeight - config.height) / 2;
+
+  // Add small offset for multiple windows (cascade effect)
   const offset = openWindows.value.length * 20;
-  
+
   // If this is an AWML app, prepare AWML-specific data
   let windowData = data;
   if (config.awmlPath) {
@@ -1421,12 +1466,12 @@ const createWindow = (config: any, data = {}) => {
       }
     };
   }
-  
+
   return {
     id: `window-${Date.now()}`,
     title: config.title,
-    x: config.baseX + offset,
-    y: config.baseY + offset,
+    x: Math.max(120, centerX + offset),  // Ensure it doesn't overlap with desktop icons
+    y: Math.max(40, centerY + offset),   // Ensure it's below menu bar
     width: config.width,
     height: config.height,
     component: config.component,
@@ -1490,13 +1535,19 @@ const handleEditFile = (filePath: string) => {
 
 // Preferences
 const openPreferences = () => {
+  const width = 600;
+  const height = 450;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Preferences',
-    x: 200,
-    y: 150,
-    width: 600,
-    height: 450,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaPreferences,
     data: {}
   };
@@ -1504,13 +1555,19 @@ const openPreferences = () => {
 };
 
 const openPreferencesWithTab = (tab: string) => {
+  const width = 600;
+  const height = 450;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Preferences',
-    x: 200,
-    y: 150,
-    width: 600,
-    height: 450,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaPreferences,
     data: { initialTab: tab }
   };
@@ -1646,13 +1703,19 @@ const closeWindow = (windowId: string) => {
 
 // Open Task Manager
 const openTaskManager = () => {
+  const width = 750;
+  const height = 600;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Task Manager',
-    x: 140,
-    y: 70,
-    width: 750,
-    height: 600,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaTaskManager,
     data: {}
   };
@@ -1661,13 +1724,19 @@ const openTaskManager = () => {
 
 // Open System Monitor
 const openSystemMonitor = () => {
+  const width = 700;
+  const height = 550;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'System Monitor',
-    x: 150,
-    y: 80,
-    width: 700,
-    height: 550,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaSysMonitor,
     data: {}
   };
@@ -1676,13 +1745,19 @@ const openSystemMonitor = () => {
 
 // Open search window
 const openSearch = () => {
+  const width = 600;
+  const height = 500;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Search Files',
-    x: 180,
-    y: 100,
-    width: 600,
-    height: 500,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaSearch,
     data: {}
   };
@@ -1695,13 +1770,19 @@ const handleOpenFolder = (folderPath: string) => {
   const diskId = pathParts[0];
   const diskName = disks.value.find(d => d.id === diskId)?.name || diskId;
 
+  const width = 500;
+  const height = 350;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: diskName,
-    x: 100 + openWindows.value.length * 30,
-    y: 80 + openWindows.value.length * 30,
-    width: 500,
-    height: 350,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaFolder,
     data: { id: folderPath, name: diskName, type: 'folder' }
   };
@@ -1710,13 +1791,19 @@ const handleOpenFolder = (folderPath: string) => {
 
 // Open screen capture window
 const openScreenCapture = () => {
+  const width = 700;
+  const height = 600;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Screen Capture',
-    x: 150,
-    y: 80,
-    width: 700,
-    height: 600,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaScreenCapture,
     data: {}
   };
@@ -1749,13 +1836,19 @@ const quickScreenshot = async (mode: 'full-desktop' | 'active-window' | 'area' =
 
 // Open archiver window
 const openArchiver = () => {
+  const width = 800;
+  const height = 600;
+  const centerX = (window.innerWidth - width) / 2;
+  const centerY = (window.innerHeight - height) / 2;
+  const offset = openWindows.value.length * 20;
+
   const newWindow: Window = {
     id: `window-${Date.now()}`,
     title: 'Archiver',
-    x: 130,
-    y: 70,
-    width: 800,
-    height: 600,
+    x: Math.max(120, centerX + offset),
+    y: Math.max(40, centerY + offset),
+    width,
+    height,
     component: AmigaArchiver,
     data: {}
   };

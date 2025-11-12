@@ -1101,10 +1101,10 @@ onUnmounted(() => {
 
 .folder-content {
   flex: 1;
-  padding: 12px;
+  padding: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  grid-gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-gap: 20px;
   align-content: start;
   overflow-y: auto;
 }
@@ -1113,63 +1113,84 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px;
+  padding: 10px;
   cursor: pointer;
   user-select: none;
   border: 2px solid transparent;
   background: transparent;
-  transition: all 0.1s;
+  transition: all 0.15s ease;
+  border-radius: 2px;
 }
 
 .folder-item:hover {
-  background: rgba(0, 85, 170, 0.1);
+  background: rgba(0, 85, 170, 0.15);
+  border: 2px solid;
+  border-color: rgba(255, 255, 255, 0.5) rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.2) rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .folder-item.selected {
   background: #0055aa;
-  border-color: #0055aa;
+  border: 2px solid;
+  border-color: #0066cc #003388 #003388 #0066cc;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .folder-item.drag-over {
-  background: rgba(255, 170, 0, 0.3);
-  border-color: #ffaa00;
-  border-style: dashed;
+  background: rgba(255, 170, 0, 0.4);
+  border: 2px dashed #ffaa00;
+  box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
+  transform: scale(1.05);
 }
 
 .folder-item.selected .item-label {
   color: #ffffff;
-  background: #0055aa;
-  text-shadow: none;
+  background: transparent;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .item-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 4px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  transition: transform 0.15s ease;
+}
+
+.folder-item:hover .item-icon {
+  transform: scale(1.1);
 }
 
 .icon-svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.4));
 }
 
 .item-label {
   font-size: 9px;
   text-align: center;
   color: #000000;
-  max-width: 70px;
+  max-width: 80px;
   word-wrap: break-word;
-  line-height: 1.3;
-  padding: 2px 4px;
-  background: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.9);
   font-family: 'Press Start 2P', monospace;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.folder-item:hover .item-label {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .item-size {
   font-size: 7px;
   color: #666666;
-  margin-top: 2px;
+  margin-top: 3px;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
 }
 
 /* File upload drop zone styling */

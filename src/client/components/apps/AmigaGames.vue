@@ -142,9 +142,9 @@ const launchSelectedGame = () => {
 .games-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 24px;
+  padding: 24px;
   overflow-y: auto;
   align-content: start;
 }
@@ -154,38 +154,60 @@ const launchSelectedGame = () => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 8px;
+  padding: 12px;
   border: 2px solid transparent;
-  transition: all 0.1s;
+  transition: all 0.15s ease;
   user-select: none;
+  border-radius: 2px;
 }
 
 .game-item:hover {
-  background: rgba(0, 85, 170, 0.1);
+  background: rgba(0, 85, 170, 0.15);
   border: 2px solid;
-  border-color: #ffffff #808080 #808080 #ffffff;
+  border-color: rgba(255, 255, 255, 0.6) rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .game-item.selected {
-  background: rgba(0, 85, 170, 0.3);
+  background: rgba(0, 85, 170, 0.4);
   border: 2px solid;
-  border-color: #000000 #ffffff #ffffff #000000;
+  border-color: #0066cc #003388 #003388 #0066cc;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 3px 6px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
 }
 
 .game-icon {
-  width: 64px;
-  height: 64px;
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #888888;
+  background: linear-gradient(135deg, #999999 0%, #888888 50%, #777777 100%);
   border: 2px solid;
   border-color: #ffffff #000000 #000000 #ffffff;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-item:hover .game-icon {
+  transform: scale(1.1) rotateZ(2deg);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.game-item.selected .game-icon {
+  border-color: #ffaa00 #ff6600 #ff6600 #ffaa00;
+  background: linear-gradient(135deg, #aaaaaa 0%, #999999 50%, #888888 100%);
 }
 
 .icon-emoji {
-  font-size: 32px;
+  font-size: 36px;
+  transition: transform 0.15s ease;
+}
+
+.game-item:hover .icon-emoji {
+  transform: scale(1.15);
 }
 
 .game-name {
@@ -193,12 +215,24 @@ const launchSelectedGame = () => {
   text-align: center;
   color: #000000;
   word-break: break-word;
-  max-width: 80px;
-  text-shadow:
-    -1px -1px 0 #ffffff,
-    1px -1px 0 #ffffff,
-    -1px 1px 0 #ffffff,
-    1px 1px 0 #ffffff;
+  max-width: 90px;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  text-shadow: none;
+}
+
+.game-item:hover .game-name {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.05);
+}
+
+.game-item.selected .game-name {
+  color: #ffffff;
+  background: rgba(0, 85, 170, 0.8);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .games-footer {
