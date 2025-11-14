@@ -326,6 +326,21 @@
       @close="commandPaletteVisible = false"
     />
 
+    <!-- Notification Container -->
+    <div class="notification-container">
+      <AmigaNotification
+        v-for="notification in activeNotifications"
+        :key="notification.id"
+        :id="notification.id"
+        :type="notification.type"
+        :title="notification.title"
+        :message="notification.message"
+        :duration="notification.duration"
+        :persistent="notification.persistent"
+        @dismiss="notificationManager.dismiss(notification.id)"
+      />
+    </div>
+
     <!-- Amiga Workbench Footer Bar -->
     <div class="workbench-footer">
       <div class="footer-left">
@@ -352,6 +367,7 @@ import AmigaWorkspaceSwitcher from './AmigaWorkspaceSwitcher.vue';
 import AmigaUploadProgress from './AmigaUploadProgress.vue';
 import AmigaDuplicateDialog from './AmigaDuplicateDialog.vue';
 import AmigaCommandPalette from './AmigaCommandPalette.vue';
+import AmigaNotification from './AmigaNotification.vue';
 import SmartFolderItem from './SmartFolderItem.vue';
 
 // Async app components (loaded on demand)
@@ -394,6 +410,7 @@ import dragDropManager from '../utils/drag-drop-manager';
 import { systemLogger } from '../utils/system-logger';
 import keyboardManager from '../utils/keyboard-manager';
 import commandPalette from '../utils/command-palette';
+import notificationManager from '../utils/notification-manager';
 import { getAllSmartFolders, refreshSmartFolder, subscribe as subscribeToSmartFolders, initializeSmartFolders, type SmartFolder } from '../utils/smart-folders';
 import { getSessionManager } from '../utils/session-manager';
 import { getWorkspaceSwitcher } from '../utils/workspace-switcher';
@@ -481,6 +498,9 @@ let duplicateResolve: ((action: 'overwrite' | 'keep-both' | 'skip') => void) | n
 const commandPaletteVisible = ref(false);
 const workspaceSwitcherVisible = ref(false);
 
+// Notifications state
+const activeNotifications = ref<any[]>([]);
+
 // Disks
 const disks = ref<Disk[]>([
   { id: 'df0', name: 'Workbench3.1', type: 'floppy' },
@@ -496,6 +516,7 @@ const activeMenu = ref<string | null>(null);
 
 // Time update
 let timeInterval: number | undefined;
+let workspaceSaveInterval: number | undefined;
 
 onMounted(() => {
   // Log system startup
@@ -543,7 +564,7 @@ onMounted(() => {
   });
 
   // Save windows periodically (in case of crashes)
-  setInterval(() => {
+  workspaceSaveInterval = window.setInterval(() => {
     workspaceManager.setCurrentWindows(openWindows.value);
   }, 5000);
 
@@ -558,6 +579,11 @@ onMounted(() => {
   // Subscribe to smart folder changes
   subscribeToSmartFolders(() => {
     loadSmartFolders();
+  });
+
+  // Subscribe to notification changes
+  notificationManager.subscribe((notifications) => {
+    activeNotifications.value = notifications;
   });
 
   // Initialize session management system
@@ -600,6 +626,9 @@ onUnmounted(() => {
 
   if (timeInterval) {
     clearInterval(timeInterval);
+  }
+  if (workspaceSaveInterval) {
+    clearInterval(workspaceSaveInterval);
   }
   document.removeEventListener('click', closeMenuOnClickOutside);
   document.removeEventListener('keydown', handleGlobalKeyDown);
@@ -836,12 +865,25 @@ Features: 8 working applications
 const updateSystemInfo = async () => {
   try {
     const response = await fetch('/api/system/status');
+
+    // Check if response is successful
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
+    }
+
     const data = await response.json();
     chipMem.value = data.memory?.chipMem || '512K';
     fastMem.value = data.memory?.fastMem || '512K';
     console.log('System info updated');
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to update system info:', error);
+    // Only show notification if this is a persistent error (not during initial load)
+    // Avoid spamming user with notifications on every update failure
+    notificationManager.error(
+      'System Info Error',
+      `Failed to fetch system information: ${message}`
+    );
   }
 };
 
@@ -2435,5 +2477,22 @@ const initializeCommandPalette = () => {
   font-size: 10px;
   opacity: 0.9;
   font-family: 'Press Start 2P', monospace;
+}
+
+/* Notification Container */
+.notification-container {
+  position: fixed;
+  top: 50px; /* Below menu bar */
+  right: 20px;
+  z-index: 200000; /* Above everything including menu */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  pointer-events: none; /* Allow clicks through container */
+}
+
+.notification-container > * {
+  pointer-events: auto; /* But allow clicks on notifications themselves */
 }
 </style>
