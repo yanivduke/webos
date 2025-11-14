@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@types/prismjs": "^1.26.5",
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.5.0",
     "happy-dom": "^20.0.10",
