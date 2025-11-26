@@ -2117,15 +2117,15 @@ const initializeCommandPalette = () => {
 </script>
 
 <style scoped>
-/* Authentic Amiga Workbench Styling */
+/* Authentic Amiga Workbench Styling - Using Theme CSS Variables */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 .amiga-desktop {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  background: #a0a0a0; /* Authentic Amiga gray */
+  font-family: var(--theme-font-primary, 'Press Start 2P'), 'Courier New', monospace;
+  background: var(--theme-background, #a0a0a0);
   overflow: hidden;
 }
 
@@ -2133,11 +2133,11 @@ const initializeCommandPalette = () => {
 .workbench-menu {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-bottom: 2px solid #000000;
+  background: var(--theme-menu-bg, #ffffff);
+  border-bottom: 2px solid var(--theme-border-dark, #000000);
   padding: 4px 8px;
   font-size: 11px;
-  box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #ffffff;
+  box-shadow: inset -1px -1px 0 var(--theme-shadow, #808080), inset 1px 1px 0 var(--theme-border-light, #ffffff);
   position: relative;
   z-index: 100000;
 }
@@ -2151,15 +2151,15 @@ const initializeCommandPalette = () => {
   position: relative;
   cursor: pointer;
   padding: 2px 8px;
-  color: #000000;
-  transition: all 0.1s;
+  color: var(--theme-menu-text, #000000);
+  transition: all var(--theme-animation-duration, 0.1s);
   user-select: none;
 }
 
 .menu-item:hover,
 .menu-item.active {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--theme-menu-highlight, #0055aa);
+  color: var(--theme-menu-highlight-text, #ffffff);
 }
 
 /* Menu Dropdown */
@@ -2167,9 +2167,9 @@ const initializeCommandPalette = () => {
   position: absolute;
   top: 100%;
   left: 0;
-  background: #a0a0a0;
+  background: var(--theme-menu-bg, #a0a0a0);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
   z-index: 100001;
   min-width: 180px;
@@ -2179,10 +2179,10 @@ const initializeCommandPalette = () => {
 .menu-dropdown-item {
   padding: 4px 12px;
   cursor: pointer;
-  color: #000000;
-  background: #a0a0a0;
-  border-bottom: 1px solid #808080;
-  transition: all 0.1s;
+  color: var(--theme-menu-text, #000000);
+  background: var(--theme-menu-bg, #a0a0a0);
+  border-bottom: 1px solid var(--theme-shadow, #808080);
+  transition: all var(--theme-animation-duration, 0.1s);
   white-space: nowrap;
 }
 
@@ -2191,12 +2191,12 @@ const initializeCommandPalette = () => {
 }
 
 .menu-dropdown-item:hover:not(.disabled) {
-  background: #0055aa;
-  color: #ffffff;
+  background: var(--theme-menu-highlight, #0055aa);
+  color: var(--theme-menu-highlight-text, #ffffff);
 }
 
 .menu-dropdown-item.disabled {
-  color: #808080;
+  color: var(--theme-disabled, #808080);
   cursor: not-allowed;
 }
 
@@ -2204,7 +2204,7 @@ const initializeCommandPalette = () => {
   display: flex;
   gap: 20px;
   align-items: center;
-  color: #000000;
+  color: var(--theme-menu-text, #000000);
   font-size: 9px;
 }
 
@@ -2213,14 +2213,14 @@ const initializeCommandPalette = () => {
 }
 
 .memory-indicator {
-  color: #0055aa;
+  color: var(--theme-primary, #0055aa);
 }
 
 .clipboard-indicator {
   font-size: 14px;
   cursor: pointer;
   padding: 2px 4px;
-  transition: all 0.1s;
+  transition: all var(--theme-animation-duration, 0.1s);
 }
 
 .clipboard-indicator:hover {
@@ -2232,7 +2232,7 @@ const initializeCommandPalette = () => {
 .desktop-background {
   flex: 1;
   position: relative;
-  background: #a0a0a0; /* Authentic Amiga Workbench gray */
+  background: var(--theme-background, #a0a0a0);
   overflow: hidden;
   padding: 20px;
 }
@@ -2252,7 +2252,7 @@ const initializeCommandPalette = () => {
   cursor: pointer;
   user-select: none;
   padding: 8px;
-  transition: all 0.1s;
+  transition: all var(--theme-animation-duration, 0.1s);
 }
 
 .smart-folders-section {
@@ -2264,7 +2264,7 @@ const initializeCommandPalette = () => {
 
 .section-divider {
   height: 2px;
-  background: linear-gradient(to right, transparent, #808080 20%, #808080 80%, transparent);
+  background: linear-gradient(to right, transparent, var(--theme-shadow, #808080) 20%, var(--theme-shadow, #808080) 80%, transparent);
   margin: 10px 0;
 }
 
@@ -2288,14 +2288,14 @@ const initializeCommandPalette = () => {
 }
 
 .icon-label {
-  font-size: 9px;
-  color: #000000;
+  font-size: var(--theme-font-size-small, 9px);
+  color: var(--theme-text, #000000);
   text-align: center;
   text-shadow:
-    -1px -1px 0 #ffffff,
-    1px -1px 0 #ffffff,
-    -1px 1px 0 #ffffff,
-    1px 1px 0 #ffffff;
+    -1px -1px 0 var(--theme-border-light, #ffffff),
+    1px -1px 0 var(--theme-border-light, #ffffff),
+    -1px 1px 0 var(--theme-border-light, #ffffff),
+    1px 1px 0 var(--theme-border-light, #ffffff);
   max-width: 80px;
   word-wrap: break-word;
 }
@@ -2318,12 +2318,12 @@ const initializeCommandPalette = () => {
 .workbench-footer {
   display: flex;
   justify-content: space-between;
-  background: #ffffff;
-  border-top: 2px solid #000000;
+  background: var(--theme-menu-bg, #ffffff);
+  border-top: 2px solid var(--theme-border-dark, #000000);
   padding: 4px 12px;
   font-size: 9px;
-  color: #000000;
-  box-shadow: inset -1px 1px 0 #808080, inset 1px -1px 0 #ffffff;
+  color: var(--theme-text, #000000);
+  box-shadow: inset -1px 1px 0 var(--theme-shadow, #808080), inset 1px -1px 0 var(--theme-border-light, #ffffff);
   position: relative;
   z-index: 100000;
 }
@@ -2340,7 +2340,7 @@ const initializeCommandPalette = () => {
 }
 
 .screen-depth {
-  color: #0055aa;
+  color: var(--theme-primary, #0055aa);
   font-weight: bold;
 }
 
@@ -2349,13 +2349,13 @@ const initializeCommandPalette = () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #555555;
+  background: var(--theme-disabled, #555555);
   transition: all 0.2s;
 }
 
 .drive-activity.active {
-  background: #ff0000;
-  box-shadow: 0 0 8px #ff0000;
+  background: var(--theme-error, #ff0000);
+  box-shadow: 0 0 8px var(--theme-error, #ff0000);
   animation: pulse 0.5s ease-in-out;
 }
 
@@ -2365,19 +2365,19 @@ const initializeCommandPalette = () => {
 }
 
 .footer-separator {
-  color: #808080;
+  color: var(--theme-shadow, #808080);
   margin: 0 4px;
 }
 
 .support-link {
-  color: #0055aa;
+  color: var(--theme-primary, #0055aa);
   text-decoration: none;
   font-size: 9px;
-  transition: color 0.1s;
+  transition: color var(--theme-animation-duration, 0.1s);
 }
 
 .support-link:hover {
-  color: #ffaa00;
+  color: var(--theme-accent, #ffaa00);
   text-decoration: underline;
 }
 
@@ -2400,21 +2400,21 @@ const initializeCommandPalette = () => {
   opacity: 0.5;
 }
 
-/* Classic Amiga button style */
+/* Classic Amiga button style - Using Theme Variables */
 .amiga-button {
-  background: #a0a0a0;
+  background: var(--theme-window-chrome, #a0a0a0);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
   padding: 4px 12px;
-  font-size: 10px;
+  font-size: var(--theme-font-size-medium, 10px);
   cursor: pointer;
-  color: #000000;
-  font-family: 'Press Start 2P', monospace;
+  color: var(--theme-text, #000000);
+  font-family: var(--theme-font-primary, 'Press Start 2P'), monospace;
 }
 
 .amiga-button:active {
-  border-color: #000000 #ffffff #ffffff #000000;
-  background: #888888;
+  border-color: var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff) var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000);
+  background: var(--theme-shadow, #888888);
 }
 
 /* Drop overlay for file uploads */

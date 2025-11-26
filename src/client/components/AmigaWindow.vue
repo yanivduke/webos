@@ -315,30 +315,31 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Authentic Amiga Window Styling */
+/* Authentic Amiga Window Styling - Using Theme CSS Variables */
 .amiga-window {
   position: absolute;
-  background: #a0a0a0;
-  border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+  background: var(--theme-window-chrome, #a0a0a0);
+  border: var(--theme-border-width, 2px) solid;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
+  box-shadow: var(--theme-shadow, 4px 4px 8px rgba(0, 0, 0, 0.5));
   display: flex;
   flex-direction: column;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: var(--theme-font-primary, 'Press Start 2P'), 'Courier New', monospace;
 }
 
 /* Title Bar */
 .window-titlebar {
-  background: linear-gradient(180deg, #ffffff 0%, #c0c0c0 50%, #a0a0a0 100%);
-  border-bottom: 2px solid #000000;
+  background: var(--theme-window-chrome, #a0a0a0);
+  background-image: linear-gradient(180deg, var(--theme-border-light, #ffffff) 0%, var(--theme-window-chrome, #c0c0c0) 50%, var(--theme-shadow, #a0a0a0) 100%);
+  border-bottom: 2px solid var(--theme-border-dark, #000000);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 2px 4px;
   cursor: move;
   user-select: none;
-  height: 24px;
-  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+  height: var(--theme-title-bar-height, 24px);
+  box-shadow: inset 1px 1px 0 var(--theme-border-light, #ffffff), inset -1px -1px 0 var(--theme-shadow, #808080);
 }
 
 .window-titlebar:active {
@@ -355,8 +356,8 @@ onMounted(() => {
 .window-title {
   flex: 1;
   text-align: center;
-  font-size: 10px;
-  color: #000000;
+  font-size: var(--theme-font-size-medium, 10px);
+  color: var(--theme-text, #000000);
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
@@ -368,23 +369,23 @@ onMounted(() => {
 .title-bar-button {
   width: 18px;
   height: 18px;
-  background: #a0a0a0;
+  background: var(--theme-window-chrome, #a0a0a0);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.1s;
+  transition: all var(--theme-animation-duration, 0.1s);
 }
 
 .title-bar-button:hover {
-  background: #b0b0b0;
+  filter: brightness(1.1);
 }
 
 .title-bar-button:active {
-  border-color: #000000 #ffffff #ffffff #000000;
-  background: #888888;
+  border-color: var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff) var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000);
+  background: var(--theme-shadow, #888888);
 }
 
 /* Close Button */
@@ -400,7 +401,7 @@ onMounted(() => {
   position: absolute;
   width: 12px;
   height: 2px;
-  background: #ff6600;
+  background: var(--theme-error, #ff6600);
   top: 4px;
   left: -1px;
 }
@@ -417,7 +418,7 @@ onMounted(() => {
 .depth-button .depth-icon {
   width: 8px;
   height: 8px;
-  border: 2px solid #0055aa;
+  border: 2px solid var(--theme-primary, #0055aa);
   background: transparent;
 }
 
@@ -425,7 +426,7 @@ onMounted(() => {
 .zoom-button .zoom-icon {
   width: 10px;
   height: 10px;
-  border: 2px solid #0055aa;
+  border: 2px solid var(--theme-primary, #0055aa);
   background: transparent;
   position: relative;
 }
@@ -437,16 +438,17 @@ onMounted(() => {
   left: -2px;
   right: -2px;
   height: 3px;
-  background: #0055aa;
+  background: var(--theme-primary, #0055aa);
 }
 
 /* Window Content */
 .window-content {
   flex: 1;
-  background: #ffffff;
+  background: var(--theme-input-bg, #ffffff);
+  color: var(--theme-input-text, #000000);
   overflow: auto;
-  padding: 8px;
-  border: 1px solid #808080;
+  padding: var(--theme-spacing-medium, 8px);
+  border: 1px solid var(--theme-shadow, #808080);
   margin: 2px;
   min-height: 100px;
 }
@@ -459,7 +461,7 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 0%, transparent 45%, #000000 45%, #000000 50%, transparent 50%);
+  background: linear-gradient(135deg, transparent 0%, transparent 45%, var(--theme-border-dark, #000000) 45%, var(--theme-border-dark, #000000) 50%, transparent 50%);
 }
 
 .resize-handle::after {
@@ -471,49 +473,49 @@ onMounted(() => {
   height: 8px;
   background: repeating-linear-gradient(
     45deg,
-    #000000,
-    #000000 1px,
+    var(--theme-border-dark, #000000),
+    var(--theme-border-dark, #000000) 1px,
     transparent 1px,
     transparent 2px
   );
 }
 
-/* Scrollbar styling for authentic Amiga look */
+/* Scrollbar styling using theme variables */
 .window-content::-webkit-scrollbar {
   width: 16px;
   height: 16px;
 }
 
 .window-content::-webkit-scrollbar-track {
-  background: #a0a0a0;
+  background: var(--theme-scrollbar-track, #a0a0a0);
   border: 2px solid;
-  border-color: #808080 #ffffff #ffffff #808080;
+  border-color: var(--theme-shadow, #808080) var(--theme-border-light, #ffffff) var(--theme-border-light, #ffffff) var(--theme-shadow, #808080);
 }
 
 .window-content::-webkit-scrollbar-thumb {
-  background: #0055aa;
+  background: var(--theme-scrollbar-thumb, #0055aa);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
 }
 
 .window-content::-webkit-scrollbar-thumb:hover {
-  background: #0066cc;
+  filter: brightness(1.1);
 }
 
 .window-content::-webkit-scrollbar-corner {
-  background: #a0a0a0;
+  background: var(--theme-scrollbar-track, #a0a0a0);
 }
 
 /* Arrow buttons for scrollbar */
 .window-content::-webkit-scrollbar-button {
-  background: #a0a0a0;
+  background: var(--theme-scrollbar-track, #a0a0a0);
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: var(--theme-border-light, #ffffff) var(--theme-border-dark, #000000) var(--theme-border-dark, #000000) var(--theme-border-light, #ffffff);
   height: 16px;
   width: 16px;
 }
 
 .window-content::-webkit-scrollbar-button:hover {
-  background: #b0b0b0;
+  filter: brightness(1.1);
 }
 </style>

@@ -94,6 +94,22 @@ const alienBullets = ref<Bullet[]>([]);
 const barriers = ref<Barrier[]>([]);
 const scorePopups = ref<ScorePopup[]>([]);
 
+// Cached alive aliens array to avoid filtering every frame (performance optimization)
+let cachedAliveAliens: Alien[] = [];
+let aliensNeedUpdate = true;
+
+const getAliveAliens = (): Alien[] => {
+  if (aliensNeedUpdate) {
+    cachedAliveAliens = aliens.value.filter(a => a.alive);
+    aliensNeedUpdate = false;
+  }
+  return cachedAliveAliens;
+};
+
+const invalidateAliveAliensCache = () => {
+  aliensNeedUpdate = true;
+};
+
 let alienDirection = 1;
 let alienSpeed = 0.5;
 let alienDropDistance = 20;
@@ -157,6 +173,7 @@ const gameLoop = () => {
 
 const initAliens = () => {
   aliens.value = [];
+  invalidateAliveAliensCache(); // Performance: invalidate cache when aliens reinitialize
   const rows = 5;
   const cols = 11;
   const spacing = 40;
@@ -222,9 +239,9 @@ const update = () => {
     lastPlayerShot = now;
   }
 
-  // Move aliens
+  // Move aliens (use cached alive aliens for performance)
   let changeDirection = false;
-  const aliveAliens = aliens.value.filter(a => a.alive);
+  const aliveAliens = getAliveAliens();
 
   for (const alien of aliveAliens) {
     alien.x += alienDirection * alienSpeed * wave.value;
@@ -282,6 +299,7 @@ const update = () => {
         bullet.y < alien.y + 30
       ) {
         alien.alive = false;
+        invalidateAliveAliensCache(); // Performance: invalidate cache when alien dies
         playerBullets.value.splice(i, 1);
 
         // Score with multiplier
@@ -409,8 +427,8 @@ const draw = () => {
     ctx.fillRect(x, y, 1, 1);
   }
 
-  // Draw aliens
-  const aliveAliens = aliens.value.filter(a => a.alive);
+  // Draw aliens (use cached alive aliens for performance)
+  const aliveAliens = getAliveAliens();
   aliveAliens.forEach(alien => {
     const colors = ['#00ff00', '#ffff00', '#ff0000'];
     ctx!.fillStyle = colors[alien.type];
@@ -490,6 +508,8 @@ const resetGame = () => {
   playerBullets.value = [];
   alienBullets.value = [];
   scorePopups.value = [];
+  aliens.value = [];
+  invalidateAliveAliensCache(); // Performance: invalidate cache on reset
   player.x = canvasWidth / 2 - 15;
   draw();
 };

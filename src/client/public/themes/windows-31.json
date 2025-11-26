@@ -1,0 +1,59 @@
+{
+  "id": "windows-31",
+  "name": "Windows 3.1",
+  "description": "Classic Microsoft Windows 3.1 Program Manager aesthetic from 1992",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#000080",
+    "background": "#c0c0c0",
+    "text": "#000000",
+    "textInverse": "#ffffff",
+    "border": "#000000",
+    "borderLight": "#ffffff",
+    "borderDark": "#808080",
+    "windowChrome": "#c0c0c0",
+    "windowTitle": "#000080",
+    "windowTitleText": "#ffffff",
+    "highlight": "#000080",
+    "highlightText": "#ffffff",
+    "shadow": "#808080",
+    "accent": "#008080",
+    "success": "#008000",
+    "warning": "#808000",
+    "error": "#800000",
+    "disabled": "#808080",
+    "inputBg": "#ffffff",
+    "inputText": "#000000",
+    "inputBorder": "#808080",
+    "scrollbarTrack": "#c0c0c0",
+    "scrollbarThumb": "#808080",
+    "menuBg": "#c0c0c0",
+    "menuText": "#000000",
+    "menuHighlight": "#000080",
+    "menuHighlightText": "#ffffff"
+  },
+  "fonts": {
+    "primary": "'MS Sans Serif', 'Segoe UI', Arial, sans-serif",
+    "secondary": "'Courier New', monospace",
+    "size": {
+      "small": "10px",
+      "medium": "12px",
+      "large": "14px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "2px",
+    "borderRadius": "0px",
+    "shadow": "2px 2px 0 #000000",
+    "titleBarHeight": "20px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}

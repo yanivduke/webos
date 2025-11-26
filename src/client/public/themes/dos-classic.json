@@ -1,0 +1,59 @@
+{
+  "id": "dos-classic",
+  "name": "DOS Classic",
+  "description": "MS-DOS and command prompt aesthetic with CGA/EGA colors from the 1980s",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#00aaaa",
+    "background": "#000000",
+    "text": "#aaaaaa",
+    "textInverse": "#000000",
+    "border": "#555555",
+    "borderLight": "#ffffff",
+    "borderDark": "#000000",
+    "windowChrome": "#0000aa",
+    "windowTitle": "#00aaaa",
+    "windowTitleText": "#ffffff",
+    "highlight": "#00aaaa",
+    "highlightText": "#000000",
+    "shadow": "#555555",
+    "accent": "#ffff55",
+    "success": "#00aa00",
+    "warning": "#aaaa00",
+    "error": "#aa0000",
+    "disabled": "#555555",
+    "inputBg": "#000055",
+    "inputText": "#ffffff",
+    "inputBorder": "#00aaaa",
+    "scrollbarTrack": "#000055",
+    "scrollbarThumb": "#00aaaa",
+    "menuBg": "#0000aa",
+    "menuText": "#ffffff",
+    "menuHighlight": "#00aaaa",
+    "menuHighlightText": "#000000"
+  },
+  "fonts": {
+    "primary": "'Consolas', 'Courier New', 'IBM Plex Mono', monospace",
+    "secondary": "'Courier New', monospace",
+    "size": {
+      "small": "12px",
+      "medium": "14px",
+      "large": "16px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "2px",
+    "borderRadius": "0px",
+    "shadow": "none",
+    "titleBarHeight": "20px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}

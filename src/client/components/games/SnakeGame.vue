@@ -44,7 +44,9 @@ const isPaused = ref(false);
 const isPlaying = ref(false);
 
 let ctx: CanvasRenderingContext2D | null = null;
-let gameInterval: number | null = null;
+let animationId: number | null = null;
+let lastUpdateTime = 0;
+const UPDATE_INTERVAL = 100; // Game speed in milliseconds
 
 interface Point {
   x: number;
@@ -76,8 +78,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
+  if (animationId) {
+    cancelAnimationFrame(animationId);
   }
 });
 
@@ -101,17 +103,32 @@ const handleKeyDown = (e: KeyboardEvent) => {
 const startGame = () => {
   isPlaying.value = true;
   isPaused.value = false;
+  lastUpdateTime = performance.now();
 
-  if (gameInterval) {
-    clearInterval(gameInterval);
+  if (animationId) {
+    cancelAnimationFrame(animationId);
   }
 
-  gameInterval = window.setInterval(() => {
-    if (!isPaused.value) {
-      update();
-      draw();
-    }
-  }, 100);
+  gameLoop();
+};
+
+// Using requestAnimationFrame for smoother performance
+const gameLoop = (currentTime: number = performance.now()) => {
+  if (!isPlaying.value) return;
+
+  animationId = requestAnimationFrame(gameLoop);
+
+  if (isPaused.value) return;
+
+  // Throttle game updates to UPDATE_INTERVAL for consistent speed
+  const deltaTime = currentTime - lastUpdateTime;
+  if (deltaTime >= UPDATE_INTERVAL) {
+    update();
+    lastUpdateTime = currentTime - (deltaTime % UPDATE_INTERVAL);
+  }
+
+  // Always draw for smooth visuals
+  draw();
 };
 
 const update = () => {
@@ -224,9 +241,9 @@ const spawnFood = () => {
 };
 
 const gameOver = () => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
-    gameInterval = null;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
   }
   isPlaying.value = false;
   alert(`Game Over! Score: ${score.value}`);
@@ -237,9 +254,9 @@ const togglePause = () => {
 };
 
 const resetGame = () => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
-    gameInterval = null;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
   }
 
   snake.value = [

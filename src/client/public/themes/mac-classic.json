@@ -1,0 +1,59 @@
+{
+  "id": "mac-classic",
+  "name": "Mac OS Classic",
+  "description": "Apple Macintosh System 7 aesthetic with platinum appearance from 1991",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#000000",
+    "background": "#dddddd",
+    "text": "#000000",
+    "textInverse": "#ffffff",
+    "border": "#000000",
+    "borderLight": "#ffffff",
+    "borderDark": "#555555",
+    "windowChrome": "#cccccc",
+    "windowTitle": "#000000",
+    "windowTitleText": "#000000",
+    "highlight": "#3366cc",
+    "highlightText": "#ffffff",
+    "shadow": "#888888",
+    "accent": "#0066cc",
+    "success": "#009900",
+    "warning": "#ffcc00",
+    "error": "#cc0000",
+    "disabled": "#999999",
+    "inputBg": "#ffffff",
+    "inputText": "#000000",
+    "inputBorder": "#999999",
+    "scrollbarTrack": "#dddddd",
+    "scrollbarThumb": "#888888",
+    "menuBg": "#ffffff",
+    "menuText": "#000000",
+    "menuHighlight": "#0066cc",
+    "menuHighlightText": "#ffffff"
+  },
+  "fonts": {
+    "primary": "'Chicago', 'Charcoal', 'Geneva', Arial, sans-serif",
+    "secondary": "'Monaco', 'Courier New', monospace",
+    "size": {
+      "small": "10px",
+      "medium": "12px",
+      "large": "14px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "1px",
+    "borderRadius": "0px",
+    "shadow": "1px 1px 3px rgba(0, 0, 0, 0.3)",
+    "titleBarHeight": "22px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0.1s",
+    "easing": "linear"
+  }
+}

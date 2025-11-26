@@ -177,7 +177,10 @@ class ThemeManager {
       'dark-mode',
       'high-contrast',
       'modern',
-      'workbench-13'
+      'workbench-13',
+      'windows-31',
+      'mac-classic',
+      'dos-classic'
     ];
   }
 

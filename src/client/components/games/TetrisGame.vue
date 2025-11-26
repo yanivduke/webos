@@ -59,7 +59,8 @@ const isPlaying = ref(false);
 
 let ctx: CanvasRenderingContext2D | null = null;
 let nextCtx: CanvasRenderingContext2D | null = null;
-let gameInterval: number | null = null;
+let animationId: number | null = null;
+let lastDropTime = 0;
 
 interface Position {
   x: number;
@@ -110,8 +111,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
+  if (animationId) {
+    cancelAnimationFrame(animationId);
   }
 });
 
@@ -149,23 +150,48 @@ const createPiece = (): Tetromino => {
   };
 };
 
+const getDropInterval = (): number => {
+  return Math.max(100, 600 - level.value * 50);
+};
+
 const startGame = () => {
   isPlaying.value = true;
   isPaused.value = false;
   initBoard();
   currentPiece = createPiece();
   nextPiece = createPiece();
+  lastDropTime = performance.now();
 
-  if (gameInterval) {
-    clearInterval(gameInterval);
+  if (animationId) {
+    cancelAnimationFrame(animationId);
   }
 
-  const dropInterval = Math.max(100, 600 - level.value * 50);
-  gameInterval = window.setInterval(() => {
-    if (!isPaused.value) {
-      update();
-    }
-  }, dropInterval);
+  gameLoop();
+};
+
+// Using requestAnimationFrame for smoother performance
+const gameLoop = (currentTime: number = performance.now()) => {
+  if (!isPlaying.value) return;
+
+  animationId = requestAnimationFrame(gameLoop);
+
+  if (isPaused.value) {
+    draw();
+    drawNext();
+    return;
+  }
+
+  // Throttle piece drops based on level speed
+  const dropInterval = getDropInterval();
+  const deltaTime = currentTime - lastDropTime;
+  if (deltaTime >= dropInterval) {
+    update();
+    lastDropTime = currentTime - (deltaTime % dropInterval);
+  }
+
+  // Always draw for smooth visuals
+  draw();
+  drawNext();
 };
 
 const update = () => {
@@ -188,9 +214,7 @@ const update = () => {
       return;
     }
   }
-
-  draw();
-  drawNext();
+  // Note: draw is handled by gameLoop for consistent frame timing
 };
 
 const movePiece = (dx: number, dy: number) => {
@@ -199,7 +223,7 @@ const movePiece = (dx: number, dy: number) => {
   if (canMove(currentPiece, dx, dy)) {
     currentPiece.x += dx;
     currentPiece.y += dy;
-    draw();
+    // Note: draw is handled by gameLoop for consistent frame timing
   }
 };
 
@@ -213,7 +237,7 @@ const rotatePiece = () => {
 
   if (canMove(rotated, 0, 0)) {
     currentPiece.shape = rotated.shape;
-    draw();
+    // Note: draw is handled by gameLoop for consistent frame timing
   }
 };
 
@@ -285,20 +309,11 @@ const clearLines = () => {
     lines.value += linesCleared;
     score.value += [0, 40, 100, 300, 1200][linesCleared] * level.value;
 
-    // Level up every 10 lines
+    // Level up every 10 lines - speed increases dynamically via getDropInterval()
     const newLevel = Math.floor(lines.value / 10) + 1;
     if (newLevel > level.value) {
       level.value = newLevel;
-      // Restart interval with faster speed
-      if (gameInterval) {
-        clearInterval(gameInterval);
-      }
-      const dropInterval = Math.max(100, 600 - level.value * 50);
-      gameInterval = window.setInterval(() => {
-        if (!isPaused.value) {
-          update();
-        }
-      }, dropInterval);
+      // Speed is automatically adjusted in gameLoop via getDropInterval()
     }
   }
 };
@@ -398,9 +413,9 @@ const drawCell = (context: CanvasRenderingContext2D, x: number, y: number, color
 };
 
 const gameOver = () => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
-    gameInterval = null;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
   }
   isPlaying.value = false;
   alert(`Game Over! Score: ${score.value}`);
@@ -411,9 +426,9 @@ const togglePause = () => {
 };
 
 const resetGame = () => {
-  if (gameInterval) {
-    clearInterval(gameInterval);
-    gameInterval = null;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
   }
 
   score.value = 0;
