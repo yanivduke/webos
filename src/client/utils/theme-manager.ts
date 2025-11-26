@@ -173,14 +173,21 @@ class ThemeManager {
    */
   getBuiltInThemes(): string[] {
     return [
+      // Amiga themes
       'classic-amiga',
+      'workbench-13',
+      // Modern themes
       'dark-mode',
       'high-contrast',
       'modern',
-      'workbench-13',
+      // Legacy OS themes
       'windows-31',
       'mac-classic',
-      'dos-classic'
+      'mac-system1',
+      'dos-classic',
+      'atari-st',
+      'commodore-64',
+      'apple-ii'
     ];
   }
 

@@ -20,7 +20,7 @@ export interface GameCategory {
   games: Game[];
 }
 
-// Classic Amiga Games
+// Classic Amiga Games (Workbench 3.1 and 1.3)
 const amigaGames: Game[] = [
   {
     id: 'amiga-pong',
@@ -29,7 +29,7 @@ const amigaGames: Game[] = [
     icon: '🏓',
     type: 'javascript',
     component: 'PongGame',
-    osTheme: ['workbench-31', 'workbench-20']
+    osTheme: ['classic-amiga', 'workbench-13']
   },
   {
     id: 'amiga-breakout',
@@ -38,7 +38,7 @@ const amigaGames: Game[] = [
     icon: '🧱',
     type: 'javascript',
     component: 'BreakoutGame',
-    osTheme: ['workbench-31', 'workbench-20']
+    osTheme: ['classic-amiga', 'workbench-13']
   },
   {
     id: 'amiga-snake',
@@ -47,7 +47,7 @@ const amigaGames: Game[] = [
     icon: '🐍',
     type: 'javascript',
     component: 'SnakeGame',
-    osTheme: ['workbench-31', 'workbench-20']
+    osTheme: ['classic-amiga', 'workbench-13']
   },
   {
     id: 'amiga-tetris',
@@ -56,7 +56,7 @@ const amigaGames: Game[] = [
     icon: '🟦',
     type: 'javascript',
     component: 'TetrisGame',
-    osTheme: ['workbench-31', 'workbench-20']
+    osTheme: ['classic-amiga', 'workbench-13']
   },
   {
     id: 'amiga-asteroids',
@@ -65,7 +65,16 @@ const amigaGames: Game[] = [
     icon: '🚀',
     type: 'javascript',
     component: 'AsteroidsGame',
-    osTheme: ['workbench-31', 'workbench-20']
+    osTheme: ['classic-amiga', 'workbench-13']
+  },
+  {
+    id: 'amiga-space-invaders',
+    name: 'Space Invaders',
+    description: 'Classic arcade shooter',
+    icon: '👾',
+    type: 'javascript',
+    component: 'SpaceInvadersGame',
+    osTheme: ['classic-amiga', 'workbench-13']
   }
 ];
 
@@ -78,7 +87,7 @@ const c64Games: Game[] = [
     icon: '🏓',
     type: 'javascript',
     component: 'PongGame',
-    osTheme: ['c64']
+    osTheme: ['commodore-64']
   },
   {
     id: 'c64-snake',
@@ -87,7 +96,7 @@ const c64Games: Game[] = [
     icon: '🐍',
     type: 'javascript',
     component: 'SnakeGame',
-    osTheme: ['c64']
+    osTheme: ['commodore-64']
   },
   {
     id: 'c64-space-invaders',
@@ -96,7 +105,7 @@ const c64Games: Game[] = [
     icon: '👾',
     type: 'javascript',
     component: 'SpaceInvadersGame',
-    osTheme: ['c64']
+    osTheme: ['commodore-64']
   },
   {
     id: 'c64-breakout',
@@ -105,7 +114,16 @@ const c64Games: Game[] = [
     icon: '🧱',
     type: 'javascript',
     component: 'BreakoutGame',
-    osTheme: ['c64']
+    osTheme: ['commodore-64']
+  },
+  {
+    id: 'c64-tetris',
+    name: 'C64 Tetris',
+    description: 'Tetris on Commodore 64',
+    icon: '🟦',
+    type: 'javascript',
+    component: 'TetrisGame',
+    osTheme: ['commodore-64']
   }
 ];
 
@@ -118,7 +136,7 @@ const dosGames: Game[] = [
     icon: '🏓',
     type: 'javascript',
     component: 'PongGame',
-    osTheme: ['dos']
+    osTheme: ['dos-classic']
   },
   {
     id: 'dos-snake',
@@ -127,7 +145,7 @@ const dosGames: Game[] = [
     icon: '🐍',
     type: 'javascript',
     component: 'SnakeGame',
-    osTheme: ['dos']
+    osTheme: ['dos-classic']
   },
   {
     id: 'dos-sokoban',
@@ -136,7 +154,7 @@ const dosGames: Game[] = [
     icon: '📦',
     type: 'javascript',
     component: 'SokobanGame',
-    osTheme: ['dos']
+    osTheme: ['dos-classic']
   },
   {
     id: 'dos-tetris',
@@ -145,7 +163,203 @@ const dosGames: Game[] = [
     icon: '🟦',
     type: 'javascript',
     component: 'TetrisGame',
-    osTheme: ['dos']
+    osTheme: ['dos-classic']
+  },
+  {
+    id: 'dos-minesweeper',
+    name: 'Minesweeper',
+    description: 'Classic mine finder',
+    icon: '💣',
+    type: 'javascript',
+    component: 'MinesweeperGame',
+    osTheme: ['dos-classic']
+  }
+];
+
+// Atari ST Games
+const atariGames: Game[] = [
+  {
+    id: 'atari-pong',
+    name: 'ST Pong',
+    description: 'Pong on Atari ST',
+    icon: '🏓',
+    type: 'javascript',
+    component: 'PongGame',
+    osTheme: ['atari-st']
+  },
+  {
+    id: 'atari-breakout',
+    name: 'ST Breakout',
+    description: 'Breakout on Atari ST',
+    icon: '🧱',
+    type: 'javascript',
+    component: 'BreakoutGame',
+    osTheme: ['atari-st']
+  },
+  {
+    id: 'atari-asteroids',
+    name: 'ST Asteroids',
+    description: 'Asteroids on Atari ST',
+    icon: '🚀',
+    type: 'javascript',
+    component: 'AsteroidsGame',
+    osTheme: ['atari-st']
+  },
+  {
+    id: 'atari-tetris',
+    name: 'ST Tetris',
+    description: 'Tetris on Atari ST',
+    icon: '🟦',
+    type: 'javascript',
+    component: 'TetrisGame',
+    osTheme: ['atari-st']
+  },
+  {
+    id: 'atari-snake',
+    name: 'ST Snake',
+    description: 'Snake on Atari ST',
+    icon: '🐍',
+    type: 'javascript',
+    component: 'SnakeGame',
+    osTheme: ['atari-st']
+  }
+];
+
+// Apple II Games
+const appleIIGames: Game[] = [
+  {
+    id: 'apple2-snake',
+    name: 'Apple Snake',
+    description: 'Snake on Apple II',
+    icon: '🐍',
+    type: 'javascript',
+    component: 'SnakeGame',
+    osTheme: ['apple-ii']
+  },
+  {
+    id: 'apple2-breakout',
+    name: 'Apple Breakout',
+    description: 'Breakout on Apple II',
+    icon: '🧱',
+    type: 'javascript',
+    component: 'BreakoutGame',
+    osTheme: ['apple-ii']
+  },
+  {
+    id: 'apple2-pong',
+    name: 'Apple Pong',
+    description: 'Pong on Apple II',
+    icon: '🏓',
+    type: 'javascript',
+    component: 'PongGame',
+    osTheme: ['apple-ii']
+  },
+  {
+    id: 'apple2-asteroids',
+    name: 'Apple Asteroids',
+    description: 'Asteroids on Apple II',
+    icon: '🚀',
+    type: 'javascript',
+    component: 'AsteroidsGame',
+    osTheme: ['apple-ii']
+  }
+];
+
+// Mac Games (System 1 and Classic)
+const macGames: Game[] = [
+  {
+    id: 'mac-pong',
+    name: 'Mac Pong',
+    description: 'Pong on Macintosh',
+    icon: '🏓',
+    type: 'javascript',
+    component: 'PongGame',
+    osTheme: ['mac-system1', 'mac-classic']
+  },
+  {
+    id: 'mac-breakout',
+    name: 'Mac Breakout',
+    description: 'Breakout on Macintosh',
+    icon: '🧱',
+    type: 'javascript',
+    component: 'BreakoutGame',
+    osTheme: ['mac-system1', 'mac-classic']
+  },
+  {
+    id: 'mac-tetris',
+    name: 'Mac Tetris',
+    description: 'Tetris on Macintosh',
+    icon: '🟦',
+    type: 'javascript',
+    component: 'TetrisGame',
+    osTheme: ['mac-system1', 'mac-classic']
+  },
+  {
+    id: 'mac-snake',
+    name: 'Mac Snake',
+    description: 'Snake on Macintosh',
+    icon: '🐍',
+    type: 'javascript',
+    component: 'SnakeGame',
+    osTheme: ['mac-system1', 'mac-classic']
+  },
+  {
+    id: 'mac-minesweeper',
+    name: 'Mac Minesweeper',
+    description: 'Minesweeper on Macintosh',
+    icon: '💣',
+    type: 'javascript',
+    component: 'MinesweeperGame',
+    osTheme: ['mac-system1', 'mac-classic']
+  }
+];
+
+// Windows 3.1 Games
+const windowsGames: Game[] = [
+  {
+    id: 'win31-minesweeper',
+    name: 'Minesweeper',
+    description: 'Classic Windows Minesweeper',
+    icon: '💣',
+    type: 'javascript',
+    component: 'MinesweeperGame',
+    osTheme: ['windows-31']
+  },
+  {
+    id: 'win31-tetris',
+    name: 'Win Tetris',
+    description: 'Tetris for Windows',
+    icon: '🟦',
+    type: 'javascript',
+    component: 'TetrisGame',
+    osTheme: ['windows-31']
+  },
+  {
+    id: 'win31-snake',
+    name: 'Win Snake',
+    description: 'Snake for Windows',
+    icon: '🐍',
+    type: 'javascript',
+    component: 'SnakeGame',
+    osTheme: ['windows-31']
+  },
+  {
+    id: 'win31-breakout',
+    name: 'Win Breakout',
+    description: 'Breakout for Windows',
+    icon: '🧱',
+    type: 'javascript',
+    component: 'BreakoutGame',
+    osTheme: ['windows-31']
+  },
+  {
+    id: 'win31-sokoban',
+    name: 'Win Sokoban',
+    description: 'Sokoban for Windows',
+    icon: '📦',
+    type: 'javascript',
+    component: 'SokobanGame',
+    osTheme: ['windows-31']
   }
 ];
 
@@ -158,7 +372,7 @@ const linuxGames: Game[] = [
     icon: '🔢',
     type: 'javascript',
     component: 'Game2048',
-    osTheme: ['linux']
+    osTheme: ['linux', 'dark-mode']
   },
   {
     id: 'linux-minesweeper',
@@ -167,7 +381,7 @@ const linuxGames: Game[] = [
     icon: '💣',
     type: 'javascript',
     component: 'MinesweeperGame',
-    osTheme: ['linux']
+    osTheme: ['linux', 'dark-mode']
   },
   {
     id: 'linux-snake',
@@ -176,7 +390,7 @@ const linuxGames: Game[] = [
     icon: '🐍',
     type: 'javascript',
     component: 'SnakeGame',
-    osTheme: ['linux']
+    osTheme: ['linux', 'dark-mode']
   },
   {
     id: 'linux-tetris',
@@ -185,7 +399,7 @@ const linuxGames: Game[] = [
     icon: '🟦',
     type: 'javascript',
     component: 'TetrisGame',
-    osTheme: ['linux']
+    osTheme: ['linux', 'dark-mode']
   }
 ];
 
@@ -194,6 +408,10 @@ export const allGames: Game[] = [
   ...amigaGames,
   ...c64Games,
   ...dosGames,
+  ...atariGames,
+  ...appleIIGames,
+  ...macGames,
+  ...windowsGames,
   ...linuxGames
 ];
 
@@ -201,30 +419,46 @@ export const allGames: Game[] = [
  * Get games for a specific theme
  */
 export function getGamesForTheme(themeId: string): Game[] {
-  // Map desktop themes to game themes
+  // Direct theme to games mapping
+  const directThemes = [
+    'classic-amiga', 'workbench-13',
+    'commodore-64',
+    'dos-classic',
+    'atari-st',
+    'apple-ii',
+    'mac-system1', 'mac-classic',
+    'windows-31',
+    'linux', 'dark-mode'
+  ];
+
+  // If the theme has direct games, use those
+  if (directThemes.includes(themeId)) {
+    return allGames.filter(game => game.osTheme.includes(themeId));
+  }
+
+  // Fallback mappings for themes without specific games
   const themeMapping: { [key: string]: string } = {
-    'workbench-31': 'workbench-31',
-    'workbench-20': 'workbench-20',
-    'dark-mode': 'workbench-31', // Default to Amiga for dark mode
-    'amber': 'dos', // Amber monitor → DOS era
-    'green-screen': 'linux', // Green screen → Unix/Linux era
-    'c64': 'c64' // Commodore 64 theme
+    'high-contrast': 'classic-amiga',
+    'modern': 'dark-mode'
   };
 
-  const gameTheme = themeMapping[themeId] || 'workbench-31';
-
-  return allGames.filter(game => game.osTheme.includes(gameTheme));
+  const mappedTheme = themeMapping[themeId] || 'classic-amiga';
+  return allGames.filter(game => game.osTheme.includes(mappedTheme));
 }
 
 /**
  * Get games for current terminal type
  */
-export function getGamesForTerminal(terminalType: 'amiga' | 'c64' | 'dos' | 'linux'): Game[] {
+export function getGamesForTerminal(terminalType: 'amiga' | 'c64' | 'dos' | 'linux' | 'mac' | 'atari' | 'apple2' | 'windows'): Game[] {
   const themeMap: { [key: string]: string } = {
-    'amiga': 'workbench-31',
-    'c64': 'c64',
-    'dos': 'dos',
-    'linux': 'linux'
+    'amiga': 'classic-amiga',
+    'c64': 'commodore-64',
+    'dos': 'dos-classic',
+    'linux': 'linux',
+    'mac': 'mac-classic',
+    'atari': 'atari-st',
+    'apple2': 'apple-ii',
+    'windows': 'windows-31'
   };
 
   const theme = themeMap[terminalType];
@@ -238,9 +472,29 @@ export function getGameById(gameId: string): Game | undefined {
   return allGames.find(game => game.id === gameId);
 }
 
+/**
+ * Get all available OS themes with games
+ */
+export function getAvailableOSThemes(): string[] {
+  return [
+    'classic-amiga',
+    'workbench-13',
+    'commodore-64',
+    'dos-classic',
+    'atari-st',
+    'apple-ii',
+    'mac-system1',
+    'mac-classic',
+    'windows-31',
+    'linux',
+    'dark-mode'
+  ];
+}
+
 export default {
   allGames,
   getGamesForTheme,
   getGamesForTerminal,
-  getGameById
+  getGameById,
+  getAvailableOSThemes
 };

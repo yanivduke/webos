@@ -1,0 +1,59 @@
+{
+  "id": "apple-ii",
+  "name": "Apple II",
+  "description": "Apple II green phosphor monitor aesthetic from 1977",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#33ff33",
+    "background": "#001100",
+    "text": "#33ff33",
+    "textInverse": "#001100",
+    "border": "#33ff33",
+    "borderLight": "#66ff66",
+    "borderDark": "#006600",
+    "windowChrome": "#002200",
+    "windowTitle": "#004400",
+    "windowTitleText": "#33ff33",
+    "highlight": "#33ff33",
+    "highlightText": "#001100",
+    "shadow": "#003300",
+    "accent": "#66ff66",
+    "success": "#33ff33",
+    "warning": "#ffff33",
+    "error": "#ff3333",
+    "disabled": "#336633",
+    "inputBg": "#002200",
+    "inputText": "#33ff33",
+    "inputBorder": "#33ff33",
+    "scrollbarTrack": "#002200",
+    "scrollbarThumb": "#33ff33",
+    "menuBg": "#002200",
+    "menuText": "#33ff33",
+    "menuHighlight": "#33ff33",
+    "menuHighlightText": "#001100"
+  },
+  "fonts": {
+    "primary": "'Apple II', 'Courier New', monospace",
+    "secondary": "'Courier New', monospace",
+    "size": {
+      "small": "12px",
+      "medium": "14px",
+      "large": "16px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "1px",
+    "borderRadius": "0px",
+    "shadow": "0 0 10px rgba(51, 255, 51, 0.3)",
+    "titleBarHeight": "18px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}

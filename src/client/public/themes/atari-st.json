@@ -1,0 +1,59 @@
+{
+  "id": "atari-st",
+  "name": "Atari ST GEM",
+  "description": "Atari ST GEM desktop environment from 1985 with mint green windows",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#00aa00",
+    "background": "#55aa55",
+    "text": "#000000",
+    "textInverse": "#ffffff",
+    "border": "#000000",
+    "borderLight": "#ffffff",
+    "borderDark": "#000000",
+    "windowChrome": "#aaffaa",
+    "windowTitle": "#ffffff",
+    "windowTitleText": "#000000",
+    "highlight": "#00aa00",
+    "highlightText": "#ffffff",
+    "shadow": "#228822",
+    "accent": "#00aa00",
+    "success": "#00aa00",
+    "warning": "#aaaa00",
+    "error": "#aa0000",
+    "disabled": "#777777",
+    "inputBg": "#ffffff",
+    "inputText": "#000000",
+    "inputBorder": "#000000",
+    "scrollbarTrack": "#aaffaa",
+    "scrollbarThumb": "#55aa55",
+    "menuBg": "#ffffff",
+    "menuText": "#000000",
+    "menuHighlight": "#000000",
+    "menuHighlightText": "#ffffff"
+  },
+  "fonts": {
+    "primary": "'Atari ST', 'Topaz', 'Courier New', monospace",
+    "secondary": "'Courier New', monospace",
+    "size": {
+      "small": "10px",
+      "medium": "12px",
+      "large": "14px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "1px",
+    "borderRadius": "0px",
+    "shadow": "2px 2px 0 #000000",
+    "titleBarHeight": "18px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "commodore-64",
+  "name": "Commodore 64",
+  "description": "Commodore 64 BASIC with iconic blue screen and light blue text from 1982",
+  "version": "1.0.0",
+  "colors": {
+    "primary": "#6c5eb5",
+    "background": "#4040e0",
+    "text": "#a0a0ff",
+    "textInverse": "#4040e0",
+    "border": "#6c5eb5",
+    "borderLight": "#a0a0ff",
+    "borderDark": "#2020a0",
+    "windowChrome": "#4040e0",
+    "windowTitle": "#6c5eb5",
+    "windowTitleText": "#a0a0ff",
+    "highlight": "#a0a0ff",
+    "highlightText": "#4040e0",
+    "shadow": "#2020a0",
+    "accent": "#e0e000",
+    "success": "#00e000",
+    "warning": "#e0e000",
+    "error": "#e00000",
+    "disabled": "#6060a0",
+    "inputBg": "#4040e0",
+    "inputText": "#a0a0ff",
+    "inputBorder": "#a0a0ff",
+    "scrollbarTrack": "#4040e0",
+    "scrollbarThumb": "#6c5eb5",
+    "menuBg": "#6c5eb5",
+    "menuText": "#a0a0ff",
+    "menuHighlight": "#a0a0ff",
+    "menuHighlightText": "#4040e0"
+  },
+  "fonts": {
+    "primary": "'C64 Pro', 'Courier New', monospace",
+    "secondary": "'Courier New', monospace",
+    "size": {
+      "small": "12px",
+      "medium": "14px",
+      "large": "16px"
+    }
+  },
+  "windowChrome": {
+    "borderWidth": "2px",
+    "borderRadius": "0px",
+    "shadow": "none",
+    "titleBarHeight": "20px"
+  },
+  "spacing": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px"
+  },
+  "animation": {
+    "duration": "0s",
+    "easing": "linear"
+  }
+}
